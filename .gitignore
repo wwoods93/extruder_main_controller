@@ -1,0 +1,70 @@
+# Prerequisites
+*.d
+
+# Linker output
+*.ilk
+*.map
+*.exp
+
+# Precompiled Headers
+*.gch
+*.pch
+
+# Compiled Object files
+*.slo
+*.lo
+*.ko
+*.o
+*.obj
+*.elf
+*.elf*
+
+# Shared objects (inc. Windows DLLs)
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Executables
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Kernel Module Compile Results
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+Mkfile.old
+dkms.conf
+
+# Libraries
+*.lib
+*.a
+*.la
+
+# Include makefiles
+!Makefile
+*~
+
+# Misc
+*.map
+*.m
+*.png
+
+out/
+cmake-build-debug/
+community.*
+cubemx-clion.jar
+.idea/workspace.xml
+.idea/dictionaries/

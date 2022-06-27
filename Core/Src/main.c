@@ -22,7 +22,8 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "os_abstraction_layer.h"
+#include "mcu_clock_timers.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -45,7 +46,6 @@
 CAN_HandleTypeDef hcan1;
 
 I2C_HandleTypeDef hi2c2;
-I2C_HandleTypeDef hi2c3;
 
 QSPI_HandleTypeDef hqspi;
 
@@ -54,17 +54,50 @@ SPI_HandleTypeDef hspi2;
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim10;
+TIM_HandleTypeDef htim11;
 
 UART_HandleTypeDef huart4;
 
-/* Definitions for defaultTask */
-osThreadId_t defaultTaskHandle;
-const osThreadAttr_t defaultTask_attributes = {
-  .name = "defaultTask",
-  .stack_size = 128 * 4,
-  .priority = (osPriority_t) osPriorityNormal,
+/* Definitions for initialization_task */
+osThreadId_t initialization_taskHandle;
+const osThreadAttr_t initialization_task_attributes = {
+  .name = "initialization_task",
+  .stack_size = 256 * 4,
+  .priority = (osPriority_t) osPriorityNormal4,
+};
+/* Definitions for preparation_process_task */
+osThreadId_t preparation_process_taskHandle;
+const osThreadAttr_t preparation_process_task_attributes = {
+  .name = "preparation_process_task",
+  .stack_size = 384 * 4,
+  .priority = (osPriority_t) osPriorityNormal4,
+};
+/* Definitions for extrusion_process_task */
+osThreadId_t extrusion_process_taskHandle;
+const osThreadAttr_t extrusion_process_task_attributes = {
+  .name = "extrusion_process_task",
+  .stack_size = 384 * 4,
+  .priority = (osPriority_t) osPriorityNormal4,
+};
+/* Definitions for spooling_process_task */
+osThreadId_t spooling_process_taskHandle;
+const osThreadAttr_t spooling_process_task_attributes = {
+  .name = "spooling_process_task",
+  .stack_size = 384 * 4,
+  .priority = (osPriority_t) osPriorityNormal4,
+};
+/* Definitions for comms_updater_task */
+osThreadId_t comms_updater_taskHandle;
+const osThreadAttr_t comms_updater_task_attributes = {
+  .name = "comms_updater_task",
+  .stack_size = 384 * 4,
+  .priority = (osPriority_t) osPriorityNormal4,
 };
 /* USER CODE BEGIN PV */
+osThreadId_t preparationProcessTaskHandle;
+osThreadId_t extrusionProcessTaskHandle;
+osThreadId_t spoolingProcessTaskHandle;
+osThreadId_t commsUpdaterTaskHandle;
 
 /* USER CODE END PV */
 
@@ -79,9 +112,13 @@ static void MX_TIM6_Init(void);
 static void MX_TIM7_Init(void);
 static void MX_TIM10_Init(void);
 static void MX_UART4_Init(void);
-static void MX_I2C3_Init(void);
 static void MX_QUADSPI_Init(void);
-void StartDefaultTask(void *argument);
+static void MX_TIM11_Init(void);
+void start_initialization_task(void *argument);
+void start_preparation_process_task(void *argument);
+void start_extrusion_process_task(void *argument);
+void start_spooling_process_task(void *argument);
+void start_comms_updater_task(void *argument);
 
 /* USER CODE BEGIN PFP */
 
@@ -128,8 +165,8 @@ int main(void)
   MX_TIM7_Init();
   MX_TIM10_Init();
   MX_UART4_Init();
-  MX_I2C3_Init();
   MX_QUADSPI_Init();
+  MX_TIM11_Init();
   /* USER CODE BEGIN 2 */
 
   /* USER CODE END 2 */
@@ -154,8 +191,20 @@ int main(void)
   /* USER CODE END RTOS_QUEUES */
 
   /* Create the thread(s) */
-  /* creation of defaultTask */
-  defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
+  /* creation of initialization_task */
+  initialization_taskHandle = osThreadNew(start_initialization_task, NULL, &initialization_task_attributes);
+
+  /* creation of preparation_process_task */
+  preparation_process_taskHandle = osThreadNew(start_preparation_process_task, NULL, &preparation_process_task_attributes);
+
+  /* creation of extrusion_process_task */
+  extrusion_process_taskHandle = osThreadNew(start_extrusion_process_task, NULL, &extrusion_process_task_attributes);
+
+  /* creation of spooling_process_task */
+  spooling_process_taskHandle = osThreadNew(start_spooling_process_task, NULL, &spooling_process_task_attributes);
+
+  /* creation of comms_updater_task */
+  comms_updater_taskHandle = osThreadNew(start_comms_updater_task, NULL, &comms_updater_task_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
@@ -202,11 +251,11 @@ void SystemClock_Config(void)
   RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
   RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
   RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI;
-  RCC_OscInitStruct.PLL.PLLM = 16;
-  RCC_OscInitStruct.PLL.PLLN = 336;
+  RCC_OscInitStruct.PLL.PLLM = 8;
+  RCC_OscInitStruct.PLL.PLLN = 128;
   RCC_OscInitStruct.PLL.PLLP = RCC_PLLP_DIV4;
-  RCC_OscInitStruct.PLL.PLLQ = 2;
-  RCC_OscInitStruct.PLL.PLLR = 2;
+  RCC_OscInitStruct.PLL.PLLQ = 8;
+  RCC_OscInitStruct.PLL.PLLR = 0;
   if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
   {
     Error_Handler();
@@ -218,13 +267,14 @@ void SystemClock_Config(void)
                               |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
   RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
   RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
-  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV4;
   RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
 
   if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
   {
     Error_Handler();
   }
+  HAL_RCC_MCOConfig(RCC_MCO1, RCC_MCO1SOURCE_HSI, RCC_MCODIV_1);
 }
 
 /**
@@ -248,7 +298,7 @@ static void MX_ADC1_Init(void)
   /** Configure the global features of the ADC (Clock, Resolution, Data Alignment and number of conversion)
   */
   hadc1.Instance = ADC1;
-  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV4;
+  hadc1.Init.ClockPrescaler = ADC_CLOCK_SYNC_PCLK_DIV2;
   hadc1.Init.Resolution = ADC_RESOLUTION_12B;
   hadc1.Init.ScanConvMode = DISABLE;
   hadc1.Init.ContinuousConvMode = DISABLE;
@@ -332,7 +382,7 @@ static void MX_I2C2_Init(void)
 
   /* USER CODE END I2C2_Init 1 */
   hi2c2.Instance = I2C2;
-  hi2c2.Init.ClockSpeed = 400000;
+  hi2c2.Init.ClockSpeed = 100000;
   hi2c2.Init.DutyCycle = I2C_DUTYCYCLE_2;
   hi2c2.Init.OwnAddress1 = 0;
   hi2c2.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
@@ -347,40 +397,6 @@ static void MX_I2C2_Init(void)
   /* USER CODE BEGIN I2C2_Init 2 */
 
   /* USER CODE END I2C2_Init 2 */
-
-}
-
-/**
-  * @brief I2C3 Initialization Function
-  * @param None
-  * @retval None
-  */
-static void MX_I2C3_Init(void)
-{
-
-  /* USER CODE BEGIN I2C3_Init 0 */
-
-  /* USER CODE END I2C3_Init 0 */
-
-  /* USER CODE BEGIN I2C3_Init 1 */
-
-  /* USER CODE END I2C3_Init 1 */
-  hi2c3.Instance = I2C3;
-  hi2c3.Init.ClockSpeed = 100000;
-  hi2c3.Init.DutyCycle = I2C_DUTYCYCLE_2;
-  hi2c3.Init.OwnAddress1 = 0;
-  hi2c3.Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-  hi2c3.Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-  hi2c3.Init.OwnAddress2 = 0;
-  hi2c3.Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-  hi2c3.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-  if (HAL_I2C_Init(&hi2c3) != HAL_OK)
-  {
-    Error_Handler();
-  }
-  /* USER CODE BEGIN I2C3_Init 2 */
-
-  /* USER CODE END I2C3_Init 2 */
 
 }
 
@@ -475,7 +491,7 @@ static void MX_TIM6_Init(void)
 
   /* USER CODE END TIM6_Init 1 */
   htim6.Instance = TIM6;
-  htim6.Init.Prescaler = 0;
+  htim6.Init.Prescaler = 32;
   htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim6.Init.Period = 65535;
   htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -513,7 +529,7 @@ static void MX_TIM7_Init(void)
 
   /* USER CODE END TIM7_Init 1 */
   htim7.Instance = TIM7;
-  htim7.Init.Prescaler = 0;
+  htim7.Init.Prescaler = 32;
   htim7.Init.CounterMode = TIM_COUNTERMODE_UP;
   htim7.Init.Period = 65535;
   htim7.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
@@ -576,6 +592,37 @@ static void MX_TIM10_Init(void)
 
   /* USER CODE END TIM10_Init 2 */
   HAL_TIM_MspPostInit(&htim10);
+
+}
+
+/**
+  * @brief TIM11 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_TIM11_Init(void)
+{
+
+  /* USER CODE BEGIN TIM11_Init 0 */
+
+  /* USER CODE END TIM11_Init 0 */
+
+  /* USER CODE BEGIN TIM11_Init 1 */
+
+  /* USER CODE END TIM11_Init 1 */
+  htim11.Instance = TIM11;
+  htim11.Init.Prescaler = 64;
+  htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim11.Init.Period = 65535;
+  htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+  htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM11_Init 2 */
+
+  /* USER CODE END TIM11_Init 2 */
 
 }
 
@@ -675,28 +722,114 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
+  /*Configure GPIO pin : PA8 */
+  GPIO_InitStruct.Pin = GPIO_PIN_8;
+  GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  GPIO_InitStruct.Alternate = GPIO_AF0_MCO;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
 }
 
 /* USER CODE BEGIN 4 */
 
 /* USER CODE END 4 */
 
-/* USER CODE BEGIN Header_StartDefaultTask */
+/* USER CODE BEGIN Header_start_initialization_task */
 /**
-  * @brief  Function implementing the defaultTask thread.
+  * @brief  Function implementing the initialization_task thread.
   * @param  argument: Not used
   * @retval None
   */
-/* USER CODE END Header_StartDefaultTask */
-void StartDefaultTask(void *argument)
+/* USER CODE END Header_start_initialization_task */
+void start_initialization_task(void *argument)
 {
   /* USER CODE BEGIN 5 */
   /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
+    for(;;)
+    {
+
+
+
+
+        osDelay(1);
+    }
+    // run_initialization_task_functions();
   /* USER CODE END 5 */
+}
+
+/* USER CODE BEGIN Header_start_preparation_process_task */
+/**
+* @brief Function implementing the preparation_process_task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_start_preparation_process_task */
+void start_preparation_process_task(void *argument)
+{
+  /* USER CODE BEGIN start_preparation_process_task */
+  /* Infinite loop */
+    run_preparation_process_task_functions();
+  /* USER CODE END start_preparation_process_task */
+}
+
+/* USER CODE BEGIN Header_start_extrusion_process_task */
+/**
+* @brief Function implementing the extrusion_process_task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_start_extrusion_process_task */
+void start_extrusion_process_task(void *argument)
+{
+  /* USER CODE BEGIN start_extrusion_process_task */
+  /* Infinite loop */
+    run_extrusion_process_task_functions();
+  /* USER CODE END start_extrusion_process_task */
+}
+
+/* USER CODE BEGIN Header_start_spooling_process_task */
+/**
+* @brief Function implementing the spooling_process_task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_start_spooling_process_task */
+void start_spooling_process_task(void *argument)
+{
+  /* USER CODE BEGIN start_spooling_process_task */
+  /* Infinite loop */
+    run_spooling_process_task_functions();
+  /* USER CODE END start_spooling_process_task */
+}
+
+/* USER CODE BEGIN Header_start_comms_updater_task */
+/**
+* @brief Function implementing the comms_updater_task thread.
+* @param argument: Not used
+* @retval None
+*/
+/* USER CODE END Header_start_comms_updater_task */
+void start_comms_updater_task(void *argument)
+{
+  /* USER CODE BEGIN start_comms_updater_task */
+  /* Infinite loop */
+    timer_enable(&htim6);
+    timer_start(&htim6);
+    static uint32_t led_timer = 0;
+    for(;;)
+    {
+        ms_timer(&htim6);
+        if (get_ms_timer_count() - led_timer > 1000)
+        {
+            HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+            led_timer = get_ms_timer_count();
+        }
+        osDelay(1);
+    }
+    // run_comms_updater_task_functions();
+  /* USER CODE END start_comms_updater_task */
 }
 
 /**

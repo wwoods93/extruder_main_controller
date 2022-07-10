@@ -31,8 +31,8 @@ typedef enum
     FLAG_SET = 0x01U
 } flag_status_t;
 
-I2C_HandleTypeDef* i2c_get_module(void);
+I2C_HandleTypeDef* i2c_get_peripheral(void);
 void MX_I2C2_Init(void);
-HAL_StatusTypeDef i2c_controller_write(I2C_HandleTypeDef *i2c_module, uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t timeout);
+i2c_status_t i2c_controller_write(uint16_t DevAddress, uint8_t *pData, uint16_t Size, uint32_t timeout);
 
 #endif //MAIN_CONTROLLER_I2C_H

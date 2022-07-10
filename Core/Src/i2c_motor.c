@@ -100,13 +100,12 @@ void i2c_motor_send_command( uint8_t flag, uint8_t data_byte_1, uint8_t data_byt
 {
     uint8_t addr = 0x0C << 1;
     uint8_t motor_command_data[3] = { flag, data_byte_1, data_byte_2 };
-    I2C_HandleTypeDef* i2c_module = i2c_get_module();
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &flag, 1, HAL_MAX_DELAY);
 //    us_delay(10);
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_1, 1, HAL_MAX_DELAY);
 //    us_delay(10);
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_2, 1, HAL_MAX_DELAY);
-    i2c_controller_write(i2c_module, (0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
+    i2c_controller_write((0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
     //HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
 }
 

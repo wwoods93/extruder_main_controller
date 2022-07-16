@@ -75,6 +75,8 @@
 
 /**********************************************************************************************************************/
 
+I2C_HandleTypeDef hi2c2;
+
 typedef enum
 {
     I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED = 0,
@@ -104,8 +106,6 @@ typedef struct
 
 static uint8_t i2c_controller_error_message_code;
 I2C_CONTROLLER_WRITE_PROCEDURE i2c_controller_write_procedure;
-
-I2C_HandleTypeDef hi2c2;
 
 void MX_I2C2_Init()
 {

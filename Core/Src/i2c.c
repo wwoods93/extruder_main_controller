@@ -363,14 +363,12 @@ static i2c_status_t i2c_controller_request_write(volatile uint32_t current_trans
     // if the controller has just finished receiving, generate a start bit
     else if (i2c_peripheral_get_previous_state() == I2C_STATE_CONTROLLER_RECEIVING)
         i2c_generate_start_bit();
-
     // wait until start bit is set
     if (i2c_wait_for_flag(I2C_FLAG_START_BIT_SET, FLAG_CLEAR, timeout, tick_start) != I2C_STATUS_OK)
     {
         // confirm start bit set, throw error if not
         if (i2c_read_control_register_bit(I2C_CR1_REG_GENERATION_START_BIT) == I2C_CR1_REG_GENERATION_START_BIT)
             i2c_peripheral_set_error_code(I2C_WRONG_START);
-
         return I2C_STATUS_TIMEOUT;
     }
 
@@ -434,10 +432,8 @@ i2c_status_t i2c_controller_write(uint16_t target_address, uint8_t *data_buffer_
         case I2C_STATE_PREPARE_AND_REQUEST_TRANSFER:
         {
             i2c_lock_process();
-
             if (i2c_read_control_register_bit(I2C_CR1_REG_PERIPHERAL_ENABLE_BIT) != I2C_CR1_REG_PERIPHERAL_ENABLE_BIT)
                 i2c_enable_peripheral();
-
             i2c_clear_control_register_bit(I2C_CR1_REG_POSITION_ENABLE_BIT);
 
             volatile uint32_t current_transfer_options = I2C_TRANSFER_OPTIONS_DEFAULT;
@@ -483,10 +479,7 @@ i2c_status_t i2c_controller_write(uint16_t target_address, uint8_t *data_buffer_
                         i2c_controller_error_message_code = TRANSMIT_BUFFER_NOT_EMPTY_AND_ACK_FAILURE;
                     }
                     else
-                    {
                         i2c_controller_error_message_code = TRANSMIT_BUFFER_NOT_EMPTY;
-                    }
-
                     i2c_status_error_has_occurred = true;
                     break;
                 }
@@ -504,10 +497,7 @@ i2c_status_t i2c_controller_write(uint16_t target_address, uint8_t *data_buffer_
                         i2c_controller_error_message_code = BYTE_TRANSFER_NOT_FINISHED_AND_ACK_FAILURE;
                     }
                     else
-                    {
                         i2c_controller_error_message_code = BYTE_TRANSFER_NOT_FINISHED;
-                    }
-
                     i2c_status_error_has_occurred = true;
                     break;
                 }
@@ -524,7 +514,6 @@ i2c_status_t i2c_controller_write(uint16_t target_address, uint8_t *data_buffer_
             i2c_peripheral_set_state(I2C_STATE_READY);
             i2c_peripheral_set_device_mode(I2C_MODE_NONE);
             i2c_unlock_process();
-
             return I2C_STATUS_OK;
         }
 

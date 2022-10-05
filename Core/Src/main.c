@@ -58,37 +58,37 @@
 /* Definitions for initialization_task */
 osThreadId_t initialization_taskHandle;
 const osThreadAttr_t initialization_task_attributes = {
-  .name = "initialization_task",
-  .stack_size = 256 * 4,
-  .priority = (osPriority_t) osPriorityNormal4,
+        .name = "initialization_task",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t) osPriorityNormal4,
 };
 /* Definitions for preparation_process_task */
 osThreadId_t preparation_process_taskHandle;
 const osThreadAttr_t preparation_process_task_attributes = {
-  .name = "preparation_process_task",
-  .stack_size = 384 * 4,
-  .priority = (osPriority_t) osPriorityNormal4,
+        .name = "preparation_process_task",
+        .stack_size = 384 * 4,
+        .priority = (osPriority_t) osPriorityNormal4,
 };
 /* Definitions for extrusion_process_task */
 osThreadId_t extrusion_process_taskHandle;
 const osThreadAttr_t extrusion_process_task_attributes = {
-  .name = "extrusion_process_task",
-  .stack_size = 384 * 4,
-  .priority = (osPriority_t) osPriorityNormal4,
+        .name = "extrusion_process_task",
+        .stack_size = 384 * 4,
+        .priority = (osPriority_t) osPriorityNormal4,
 };
 /* Definitions for spooling_process_task */
 osThreadId_t spooling_process_taskHandle;
 const osThreadAttr_t spooling_process_task_attributes = {
-  .name = "spooling_process_task",
-  .stack_size = 384 * 4,
-  .priority = (osPriority_t) osPriorityNormal4,
+        .name = "spooling_process_task",
+        .stack_size = 384 * 4,
+        .priority = (osPriority_t) osPriorityNormal4,
 };
 /* Definitions for comms_updater_task */
 osThreadId_t comms_updater_taskHandle;
 const osThreadAttr_t comms_updater_task_attributes = {
-  .name = "comms_updater_task",
-  .stack_size = 384 * 4,
-  .priority = (osPriority_t) osPriorityNormal4,
+        .name = "comms_updater_task",
+        .stack_size = 384 * 4,
+        .priority = (osPriority_t) osPriorityNormal4,
 };
 /* USER CODE BEGIN PV */
 osThreadId_t preparationProcessTaskHandle;
@@ -118,6 +118,7 @@ int main(void)
     MX_CAN1_Init();
     MX_I2C2_Init();
     MX_SPI2_Init();
+    MX_SPI3_Init();
     MX_TIM6_Init();
     MX_TIM7_Init();
     MX_TIM10_Init();
@@ -152,7 +153,7 @@ int main(void)
 /* USER CODE END Header_start_initialization_task */
 void start_initialization_task(void *argument)
 {
-  /* USER CODE BEGIN 5 */
+    /* USER CODE BEGIN 5 */
     /* Infinite loop */
     for(;;)
     {
@@ -161,7 +162,7 @@ void start_initialization_task(void *argument)
         osDelay(1);
     }
     // run_initialization_task_functions();
-  /* USER CODE END 5 */
+    /* USER CODE END 5 */
 }
 
 /* USER CODE BEGIN Header_start_preparation_process_task */
@@ -173,10 +174,10 @@ void start_initialization_task(void *argument)
 /* USER CODE END Header_start_preparation_process_task */
 void start_preparation_process_task(void *argument)
 {
-  /* USER CODE BEGIN start_preparation_process_task */
+    /* USER CODE BEGIN start_preparation_process_task */
     /* Infinite loop */
     run_preparation_process_task_functions();
-  /* USER CODE END start_preparation_process_task */
+    /* USER CODE END start_preparation_process_task */
 }
 
 /* USER CODE BEGIN Header_start_extrusion_process_task */
@@ -188,10 +189,10 @@ void start_preparation_process_task(void *argument)
 /* USER CODE END Header_start_extrusion_process_task */
 void start_extrusion_process_task(void *argument)
 {
-  /* USER CODE BEGIN start_extrusion_process_task */
+    /* USER CODE BEGIN start_extrusion_process_task */
     /* Infinite loop */
     run_extrusion_process_task_functions();
-  /* USER CODE END start_extrusion_process_task */
+    /* USER CODE END start_extrusion_process_task */
 }
 
 /* USER CODE BEGIN Header_start_spooling_process_task */
@@ -203,10 +204,10 @@ void start_extrusion_process_task(void *argument)
 /* USER CODE END Header_start_spooling_process_task */
 void start_spooling_process_task(void *argument)
 {
-  /* USER CODE BEGIN start_spooling_process_task */
+    /* USER CODE BEGIN start_spooling_process_task */
     /* Infinite loop */
     run_spooling_process_task_functions();
-  /* USER CODE END start_spooling_process_task */
+    /* USER CODE END start_spooling_process_task */
 }
 
 /* USER CODE BEGIN Header_start_comms_updater_task */
@@ -218,7 +219,7 @@ void start_spooling_process_task(void *argument)
 /* USER CODE END Header_start_comms_updater_task */
 void start_comms_updater_task(void *argument)
 {
-  /* USER CODE BEGIN start_comms_updater_task */
+    /* USER CODE BEGIN start_comms_updater_task */
     /* Infinite loop */
     // uint8_t data_to_send[4] = { 0x01, 0x02, 0x03, 0x04 };
 
@@ -250,7 +251,7 @@ void start_comms_updater_task(void *argument)
 //        ms_delay(250);
     }
     // run_comms_updater_task_functions();
-  /* USER CODE END start_comms_updater_task */
+    /* USER CODE END start_comms_updater_task */
 }
 
 /**

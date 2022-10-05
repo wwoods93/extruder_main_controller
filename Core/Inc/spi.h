@@ -18,5 +18,6 @@
 #define MAIN_CONTROLLER_SPI_H
 
 void MX_SPI2_Init(void);
+void MX_SPI3_Init(void);
 
 #endif //MAIN_CONTROLLER_SPI_H

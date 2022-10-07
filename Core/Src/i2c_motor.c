@@ -105,7 +105,7 @@ void i2c_motor_send_command( uint8_t flag, uint8_t data_byte_1, uint8_t data_byt
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_1, 1, HAL_MAX_DELAY);
 //    us_delay(10);
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_2, 1, HAL_MAX_DELAY);
-    i2c_controller_write((0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
+    hal_i2c_controller_send((0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
     //HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
 }
 

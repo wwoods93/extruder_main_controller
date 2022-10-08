@@ -17,6 +17,10 @@
 #ifndef MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 #define MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void run_initialization_task_functions(void);
 
 void run_preparation_process_task_functions(void);
@@ -27,5 +31,8 @@ void run_spooling_process_task_functions(void);
 
 void run_comms_updater_task_functions(void);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H

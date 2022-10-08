@@ -1,25 +1,35 @@
 /***********************************************************************************************************************
  * Main_Controller
- * i2c_motor.c
+ * motor.cpp
  *
  * wilson
- * 6/29/22
- * 8:39 PM
+ * 10/7/22
+ * 10:28 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#include <stdint.h>
+#include "motor.h"
+
+
+#include <cstdint>
 
 #include "stm32f4xx.h"
 
 #include "mcu_clock_timers.h"
-#include "i2c.h"
-#include "i2c_motor.h"
+#include "hal_i2c.h"
 
 const char CLOCKWISE = 1;
 const char COUNTERCLOCKWISE = -1;
+
+I2C_HandleTypeDef hi2c2;
+
+namespace hal
+{
+    i2c i2c_2(&hi2c2);
+}
+
 
 typedef enum
 {
@@ -76,7 +86,7 @@ int DIRECTION_MOTOR_2 = 1;
 
 
 
-void i2c_motor_init( void )
+void i2c_motor_init()
 {
     i2c_motor_set_pwm_frequency();
 }
@@ -105,7 +115,7 @@ void i2c_motor_send_command( uint8_t flag, uint8_t data_byte_1, uint8_t data_byt
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_1, 1, HAL_MAX_DELAY);
 //    us_delay(10);
 //    HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), &data_byte_2, 1, HAL_MAX_DELAY);
-    hal_i2c_controller_send((0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
+    hal::i2c_2.controller_send((0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
     //HAL_I2C_Master_Transmit(i2c_instance, (0x0C << 1), motor_command_data, 3, HAL_MAX_DELAY);
 }
 

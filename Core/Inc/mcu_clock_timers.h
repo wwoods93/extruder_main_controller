@@ -15,6 +15,10 @@
 #ifndef MAIN_CONTROLLER_MCU_CLOCK_TIMERS_H
 #define MAIN_CONTROLLER_MCU_CLOCK_TIMERS_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MX_TIM6_Init(void);
 void MX_TIM7_Init(void);
 void MX_TIM11_Init(void);
@@ -47,5 +51,8 @@ void us_delay(uint16_t microseconds);
 
 void timers_initialize(void);
 
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MAIN_CONTROLLER_MCU_CLOCK_TIMERS_H

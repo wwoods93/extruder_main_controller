@@ -17,6 +17,14 @@
 #ifndef MAIN_CONTROLLER_UART_H
 #define MAIN_CONTROLLER_UART_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MX_UART4_Init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MAIN_CONTROLLER_UART_H

@@ -26,6 +26,14 @@
 #define TCK_Pin GPIO_PIN_14
 #define TCK_GPIO_Port GPIOA
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void MX_GPIO_Init(void);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif //MAIN_CONTROLLER_GPIO_H

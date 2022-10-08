@@ -2,7 +2,7 @@
   ******************************************************************************
   * @file    stm32f4xx_hal.h
   * @author  MCD Application Team
-  * @brief   This file contains all the functions prototypes for the HAL 
+  * @brief   This file contains all the functions prototypes for the HAL
   *          module driver.
   ******************************************************************************
   * @attention
@@ -15,7 +15,7 @@
   * If no LICENSE file comes with this software, it is provided AS-IS.
   *
   ******************************************************************************
-  */ 
+  */
 
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __STM32F4xx_HAL_H
@@ -34,7 +34,7 @@
 
 /** @addtogroup HAL
   * @{
-  */ 
+  */
 
 /* Exported types ------------------------------------------------------------*/
 /* Exported constants --------------------------------------------------------*/
@@ -60,13 +60,13 @@ typedef enum
 /**
   * @}
   */
-   
+
 /* Exported macro ------------------------------------------------------------*/
 /** @defgroup HAL_Exported_Macros HAL Exported Macros
   * @{
   */
 
-/** @brief  Freeze/Unfreeze Peripherals in Debug mode 
+/** @brief  Freeze/Unfreeze Peripherals in Debug mode
   */
 #define __HAL_DBGMCU_FREEZE_TIM2()           (DBGMCU->APB1FZ |= (DBGMCU_APB1_FZ_DBG_TIM2_STOP))
 #define __HAL_DBGMCU_FREEZE_TIM3()           (DBGMCU->APB1FZ |= (DBGMCU_APB1_FZ_DBG_TIM3_STOP))
@@ -151,7 +151,7 @@ typedef enum
 #define __HAL_SYSCFG_REMAPMEMORY_FMC_SDRAM()       do {SYSCFG->MEMRMP &= ~(SYSCFG_MEMRMP_MEM_MODE);\
                                                        SYSCFG->MEMRMP |= (SYSCFG_MEMRMP_MEM_MODE_2);\
                                                       }while(0);
-#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */ 
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */
 
 #if defined(STM32F410Tx) || defined(STM32F410Cx) || defined(STM32F410Rx) || defined(STM32F413xx) || defined(STM32F423xx)
 /** @defgroup Cortex_Lockup_Enable Cortex Lockup Enable
@@ -217,10 +217,14 @@ extern HAL_TickFreqTypeDef uwTickFreq;
   */
 /* Initialization and Configuration functions  ******************************/
 HAL_StatusTypeDef HAL_Init(void);
+
 HAL_StatusTypeDef HAL_DeInit(void);
+
 void HAL_MspInit(void);
+
 void HAL_MspDeInit(void);
-HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority);
+
+HAL_StatusTypeDef HAL_InitTick(uint32_t TickPriority);
 /**
   * @}
   */
@@ -230,32 +234,54 @@ HAL_StatusTypeDef HAL_InitTick (uint32_t TickPriority);
   */
 /* Peripheral Control functions  ************************************************/
 void HAL_IncTick(void);
+
 void HAL_Delay(uint32_t Delay);
+
 uint32_t HAL_GetTick(void);
+
 uint32_t HAL_GetTickPrio(void);
+
 HAL_StatusTypeDef HAL_SetTickFreq(HAL_TickFreqTypeDef Freq);
+
 HAL_TickFreqTypeDef HAL_GetTickFreq(void);
+
 void HAL_SuspendTick(void);
+
 void HAL_ResumeTick(void);
+
 uint32_t HAL_GetHalVersion(void);
+
 uint32_t HAL_GetREVID(void);
+
 uint32_t HAL_GetDEVID(void);
+
 void HAL_DBGMCU_EnableDBGSleepMode(void);
+
 void HAL_DBGMCU_DisableDBGSleepMode(void);
+
 void HAL_DBGMCU_EnableDBGStopMode(void);
+
 void HAL_DBGMCU_DisableDBGStopMode(void);
+
 void HAL_DBGMCU_EnableDBGStandbyMode(void);
+
 void HAL_DBGMCU_DisableDBGStandbyMode(void);
+
 void HAL_EnableCompensationCell(void);
+
 void HAL_DisableCompensationCell(void);
+
 uint32_t HAL_GetUIDw0(void);
+
 uint32_t HAL_GetUIDw1(void);
+
 uint32_t HAL_GetUIDw2(void);
-#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx)|| defined(STM32F439xx) ||\
+
+#if defined(STM32F427xx) || defined(STM32F437xx) || defined(STM32F429xx) || defined(STM32F439xx) || \
     defined(STM32F469xx) || defined(STM32F479xx)
 void HAL_EnableMemorySwappingBank(void);
 void HAL_DisableMemorySwappingBank(void);
-#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */ 
+#endif /* STM32F427xx || STM32F437xx || STM32F429xx || STM32F439xx || STM32F469xx || STM32F479xx */
 /**
   * @}
   */
@@ -286,12 +312,10 @@ void HAL_DisableMemorySwappingBank(void);
 
 /**
   * @}
-  */ 
-  
+  */
+
 #ifdef __cplusplus
 }
 #endif
 
 #endif /* __STM32F4xx_HAL_H */
-
-

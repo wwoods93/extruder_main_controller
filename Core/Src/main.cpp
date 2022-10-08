@@ -23,7 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "i2c.h"
+#include "motor.h"
+#include "hal_i2c.h"
 #include "can.h"
 #include "uart.h"
 #include "spi.h"
@@ -35,7 +36,7 @@
 #include "os_abstraction_layer.h"
 #include "system_clock.h"
 #include "mcu_clock_timers.h"
-#include "i2c_motor.h"
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -103,11 +104,12 @@ void start_extrusion_process_task(void *argument);
 void start_spooling_process_task(void *argument);
 void start_comms_updater_task(void *argument);
 
+
 /**
   * @brief  The application entry point.
   * @retval int
   */
-int main(void)
+int main()
 {
     HAL_Init();
 
@@ -116,7 +118,7 @@ int main(void)
     MX_GPIO_Init();
     MX_ADC1_Init();
     MX_CAN1_Init();
-    MX_I2C2_Init();
+    //MX_I2C2_Init();
     MX_SPI2_Init();
     MX_SPI3_Init();
     MX_TIM6_Init();
@@ -225,8 +227,8 @@ void start_comms_updater_task(void *argument)
 
     timers_initialize();
     uint32_t count = 0;
+    uint8_t motor_command_data[3] = { 0x05, 0x07, 0x02 };
     i2c_motor_init();
-
     static uint32_t led_timer = 0;
     for(;;)
     {
@@ -237,7 +239,7 @@ void start_comms_updater_task(void *argument)
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
 
             if (count % 2 == 0)
-                i2c_motor_set_speed(0, 100);
+                 i2c_motor_set_speed(0, 100);
             else
                 i2c_motor_set_speed(0, 25);
 

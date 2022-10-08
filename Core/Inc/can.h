@@ -17,7 +17,16 @@
 #ifndef MAIN_CONTROLLER_CAN_H
 #define MAIN_CONTROLLER_CAN_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
 
 void MX_CAN1_Init(void);
+
+#ifdef __cplusplus
+}
+#endif
+
+
 
 #endif //MAIN_CONTROLLER_CAN_H

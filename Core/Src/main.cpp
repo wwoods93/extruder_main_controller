@@ -23,8 +23,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
-#include "motor.h"
-#include "hal_i2c.h"
+#include "../driver_layer/driver_dc_motor_controller.h"
+#include "../hardware_abstraction_layer/hal_i2c.h"
 #include "can.h"
 #include "uart.h"
 #include "spi.h"
@@ -104,6 +104,12 @@ void start_extrusion_process_task(void *argument);
 void start_spooling_process_task(void *argument);
 void start_comms_updater_task(void *argument);
 
+namespace driver
+{
+    dc_motor_controller motor_controller_1;
+}
+
+
 
 /**
   * @brief  The application entry point.
@@ -112,13 +118,10 @@ void start_comms_updater_task(void *argument);
 int main()
 {
     HAL_Init();
-
     SystemClock_Config();
-
     MX_GPIO_Init();
     MX_ADC1_Init();
     MX_CAN1_Init();
-    //MX_I2C2_Init();
     MX_SPI2_Init();
     MX_SPI3_Init();
     MX_TIM6_Init();
@@ -129,7 +132,6 @@ int main()
     MX_TIM11_Init();
     MX_TIM13_Init();
     MX_TIM14_Init();
-
     osKernelInitialize();
 
     initialization_taskHandle         = osThreadNew(start_initialization_task,        NULL, &initialization_task_attributes);
@@ -140,10 +142,7 @@ int main()
 
     osKernelStart();
 
-    while (1)
-    {
-
-    }
+    while (1) { }
 }
 
 
@@ -224,11 +223,13 @@ void start_comms_updater_task(void *argument)
     /* USER CODE BEGIN start_comms_updater_task */
     /* Infinite loop */
     // uint8_t data_to_send[4] = { 0x01, 0x02, 0x03, 0x04 };
-
     timers_initialize();
+
+    driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
     uint32_t count = 0;
     uint8_t motor_command_data[3] = { 0x05, 0x07, 0x02 };
-    i2c_motor_init();
+    //i2c_motor_init();
+    driver::motor_controller_1.set_speed(dc_motor_controller::M1, 20);
     static uint32_t led_timer = 0;
     for(;;)
     {
@@ -237,20 +238,14 @@ void start_comms_updater_task(void *argument)
         {
             HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-
             if (count % 2 == 0)
-                 i2c_motor_set_speed(0, 100);
-            else
-                i2c_motor_set_speed(0, 25);
-
+                driver::motor_controller_1.nudge_speed_up(dc_motor_controller::M1, 10);
+//                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 255);
+//            else
+//                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);
             count++;
             led_timer = ms_timer();
         }
-
-//        i2c_motor_set_speed(0, 100);
-//        ms_delay(250);
-//        i2c_motor_stop(0);
-//        ms_delay(250);
     }
     // run_comms_updater_task_functions();
     /* USER CODE END start_comms_updater_task */

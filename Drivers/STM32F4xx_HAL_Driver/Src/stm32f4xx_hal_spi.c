@@ -3912,4 +3912,3 @@ static void SPI_AbortTx_ISR(SPI_HandleTypeDef *hspi)
 /**
   * @}
   */
-

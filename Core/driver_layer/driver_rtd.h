@@ -70,4 +70,6 @@ class rtd
     private:
 };
 
+void MX_SPI2_Init();
+
 #endif //MAIN_CONTROLLER_DRIVER_RTD_H

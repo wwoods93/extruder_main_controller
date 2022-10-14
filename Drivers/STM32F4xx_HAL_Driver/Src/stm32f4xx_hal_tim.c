@@ -396,7 +396,7 @@ __weak void HAL_TIM_Base_MspDeInit(TIM_HandleTypeDef *htim)
   * @param  htim TIM Base handle
   * @retval HAL status
   */
-HAL_StatusTypeDef HAL_TIM_Base_Start(TIM_HandleTypeDef *htim)
+HAL_StatusTypeDef  HAL_TIM_Base_Start(TIM_HandleTypeDef *htim)
 {
   uint32_t tmpsmcr;
 

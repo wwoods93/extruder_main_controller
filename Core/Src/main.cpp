@@ -25,6 +25,7 @@
 
 #include "../driver_layer/driver_dc_motor_controller.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
+#include "../driver_layer/driver_rtd.h"
 #include "can.h"
 #include "uart.h"
 #include "spi.h"
@@ -55,6 +56,11 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+
+void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef * hspi)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+}
 
 /* Definitions for initialization_task */
 osThreadId_t initialization_taskHandle;
@@ -107,9 +113,8 @@ void start_comms_updater_task(void *argument);
 namespace driver
 {
     dc_motor_controller motor_controller_1;
+    rtd rtd_1;
 }
-
-
 
 /**
   * @brief  The application entry point.
@@ -223,23 +228,25 @@ void start_comms_updater_task(void *argument)
     /* USER CODE BEGIN start_comms_updater_task */
     /* Infinite loop */
     // uint8_t data_to_send[4] = { 0x01, 0x02, 0x03, 0x04 };
+    float temp_1 = 0;
     timers_initialize();
-
-    driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
+    driver::rtd_1.rtd_begin(rtd::MAX31865_3WIRE);
+   // driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
     uint32_t count = 0;
     uint8_t motor_command_data[3] = { 0x05, 0x07, 0x02 };
     //i2c_motor_init();
-    driver::motor_controller_1.set_speed(dc_motor_controller::M1, 20);
+    //driver::motor_controller_1.set_speed(dc_motor_controller::M1, 20);
     static uint32_t led_timer = 0;
     for(;;)
     {
         //i2c_motor_set_speed(0, 100);
         if (ms_timer() - led_timer > 1000)
         {
-            HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
-            if (count % 2 == 0)
-                driver::motor_controller_1.nudge_speed_up(dc_motor_controller::M1, 10);
+            HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+            if (count % 5 == 0)
+                temp_1 = driver::rtd_1.read_rtd_and_calculate_temperature();
+                //driver::motor_controller_1.nudge_speed_up(dc_motor_controller::M1, 10);
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 255);
 //            else
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);

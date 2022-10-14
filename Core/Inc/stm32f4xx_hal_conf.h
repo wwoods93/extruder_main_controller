@@ -178,7 +178,7 @@
 #define  USE_HAL_NOR_REGISTER_CALLBACKS         0U /* NOR register callback disabled       */
 #define  USE_HAL_PCCARD_REGISTER_CALLBACKS      0U /* PCCARD register callback disabled    */
 #define  USE_HAL_PCD_REGISTER_CALLBACKS         0U /* PCD register callback disabled       */
-#define  USE_HAL_QSPI_REGISTER_CALLBACKS        0U /* QSPI register callback disabled      */
+#define  USE_HAL_QSPI_REGISTER_CALLBACKS        1U /* QSPI register callback disabled      */
 #define  USE_HAL_RNG_REGISTER_CALLBACKS         0U /* RNG register callback disabled       */
 #define  USE_HAL_RTC_REGISTER_CALLBACKS         0U /* RTC register callback disabled       */
 #define  USE_HAL_SAI_REGISTER_CALLBACKS         0U /* SAI register callback disabled       */
@@ -188,7 +188,7 @@
 #define  USE_HAL_SRAM_REGISTER_CALLBACKS        0U /* SRAM register callback disabled      */
 #define  USE_HAL_SPDIFRX_REGISTER_CALLBACKS     0U /* SPDIFRX register callback disabled   */
 #define  USE_HAL_SMBUS_REGISTER_CALLBACKS       0U /* SMBUS register callback disabled     */
-#define  USE_HAL_SPI_REGISTER_CALLBACKS         0U /* SPI register callback disabled       */
+#define  USE_HAL_SPI_REGISTER_CALLBACKS         1U /* SPI register callback disabled       */
 #define  USE_HAL_TIM_REGISTER_CALLBACKS         0U /* TIM register callback disabled       */
 #define  USE_HAL_UART_REGISTER_CALLBACKS        0U /* UART register callback disabled      */
 #define  USE_HAL_USART_REGISTER_CALLBACKS       0U /* USART register callback disabled     */

@@ -17,10 +17,10 @@
 #ifndef MAIN_CONTROLLER_HAL_GENERAL_H
 #define MAIN_CONTROLLER_HAL_GENERAL_H
 
-#define HAL_SET_BIT(REG, BIT)     ((REG) |= (BIT))
-#define HAL_CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
-#define HAL_READ_REG(REG)         ((REG))
-#define HAL_UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
+#define HAL_GENERAL_SET_BIT(REG, BIT)     ((REG) |= (BIT))
+#define HAL_GENERAL_CLEAR_BIT(REG, BIT)   ((REG) &= ~(BIT))
+#define HAL_GENERAL_READ_REG(REG)         ((REG))
+#define HAL_GENERAL_UNUSED(X) (void)X      /* To avoid gcc/g++ warnings */
 
 #define HAL_GENERAL_IS_BIT_SET(REG, BIT)         (((REG) & (BIT)) == (BIT))
 #define HAL_GENERAL_IS_BIT_CLR(REG, BIT)         (((REG) & (BIT)) == 0U)

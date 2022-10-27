@@ -15,68 +15,6 @@
 #include "hal_general.h"
 #include "hal_spi.h"
 
-#if (HAL_SPI_USE_REGISTER_CALLBACKS == 1U)
-    #define SPI_ERROR_NONE                              (0x00000000U)
-    #define SPI_ERROR_MODE_FAULT                        (0x00000001U)
-    #define SPI_ERROR_DURING_CRC_CALCULATION            (0x00000002U)
-    #define SPI_ERROR_OVERRUN                           (0x00000004U)
-    #define SPI_ERROR_TI_MODE_FRAME_FORMAT              (0x00000008U)
-    #define SPI_ERROR_DMA_TRANSFER                      (0x00000010U)
-    #define SPI_ERROR_WAITING_FOR_FLAG                  (0x00000020U)
-    #define SPI_ERROR_DURING_ABORT                      (0x00000040U)
-    #define SPI_ERROR_CALLBACK_INVALID                  (0x00000080U)
-#endif
-
-#define SPI_FLAG_RX_BUFFER_NOT_EMPTY                SPI_SR_RXNE   /* SPI status flag: Rx buffer not empty flag       */
-#define SPI_FLAG_TX_BUFFER_EMPTY                    SPI_SR_TXE    /* SPI status flag: Tx buffer empty flag           */
-#define SPI_FLAG_BUSY                               SPI_SR_BSY    /* SPI status flag: Busy flag                      */
-#define SPI_FLAG_CRC_ERROR                          SPI_SR_CRCERR /* SPI Error flag: CRC error flag                  */
-#define SPI_FLAG_MODE_FAULT                         SPI_SR_MODF   /* SPI Error flag: Mode fault flag                 */
-#define SPI_FLAG_OVERRUN                            SPI_SR_OVR    /* SPI Error flag: Overrun flag                    */
-#define SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR         SPI_SR_FRE    /* SPI Error flag: TI mode frame format error flag */
-#define SPI_FLAG_BIT_MASK                           (SPI_SR_RXNE | SPI_SR_TXE | SPI_SR_BSY | SPI_SR_CRCERR\
-                                                   | SPI_SR_MODF | SPI_SR_OVR | SPI_SR_FRE)
-
-#define SPI_MODE_PERIPHERAL                         (0x00000000U)
-#define SPI_MODE_CONTROLLER                         (SPI_CR1_MSTR | SPI_CR1_SSI)
-
-#define SPI_DIRECTION_2_LINE                        (0x00000000U)
-#define SPI_DIRECTION_2_LINE_RX_ONLY                SPI_CR1_RXONLY
-#define SPI_DIRECTION_1_LINE                        SPI_CR1_BIDIMODE
-#define SPI_DATA_SIZE_8_BIT                         (0x00000000U)
-#define SPI_DATA_SIZE_16_BIT                        SPI_CR1_DFF
-#define SPI_DATA_MSB_FIRST                          (0x00000000U)
-#define SPI_DATA_LSB_FIRST                          SPI_CR1_LSBFIRST
-#define SPI_CLOCK_POLARITY_LOW                      (0x00000000U)
-#define SPI_CLOCK_POLARITY_HIGH                     SPI_CR1_CPOL
-#define SPI_CLOCK_PHASE_LEADING_EDGE                (0x00000000U)
-#define SPI_CLOCK_PHASE_TRAILING_EDGE               SPI_CR1_CPHA
-#define SPI_CHIP_SELECT_SOFTWARE                    SPI_CR1_SSM
-#define SPI_CHIP_SELECT_HARDWARE_INPUT              (0x00000000U)
-#define SPI_CHIP_SELECT_HARDWARE_OUTPUT             (SPI_CR2_SSOE << 16U)
-
-#define SPI_BAUD_RATE_PRESCALER_2                   (0x00000000U)
-#define SPI_BAUD_RATE_PRESCALER_4                   (SPI_CR1_BR_0)
-#define SPI_BAUD_RATE_PRESCALER_8                   (SPI_CR1_BR_1)
-#define SPI_BAUD_RATE_PRESCALER_16                  (SPI_CR1_BR_1 | SPI_CR1_BR_0)
-#define SPI_BAUD_RATE_PRESCALER_32                  (SPI_CR1_BR_2)
-#define SPI_BAUD_RATE_PRESCALER_64                  (SPI_CR1_BR_2 | SPI_CR1_BR_0)
-#define SPI_BAUD_RATE_PRESCALER_128                 (SPI_CR1_BR_2 | SPI_CR1_BR_1)
-#define SPI_BAUD_RATE_PRESCALER_256                 (SPI_CR1_BR_2 | SPI_CR1_BR_1 | SPI_CR1_BR_0)
-
-#define SPI_TI_MODE_DISABLE                         (0x00000000U)
-#define SPI_TI_MODE_ENABLE                          SPI_CR2_FRF
-
-#define SPI_CRC_CALCULATION_DISABLE                 (0x00000000U)
-#define SPI_CRC_CALCULATION_ENABLE                  SPI_CR1_CRCEN
-
-#define SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE        SPI_CR2_TXEIE
-#define SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE    SPI_CR2_RXNEIE
-#define SPI_ERROR_INTERRUPT_ENABLE                  SPI_CR2_ERRIE
-
-#define SPI_DEFAULT_TIMEOUT_100_US 100U
-#define SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US 1000U /*!< flag_timeout 1000 µs             */
-
 HAL_StatusTypeDef spi::initialize_module()
 {
     if (spi_module_handle == nullptr)
@@ -133,24 +71,22 @@ HAL_StatusTypeDef spi::initialize_module()
             HAL_SPI_MspInit(hspi);
         #endif /* USE_HAL_SPI_REGISTER_CALLBACKS */
     }
-
     spi_module_handle->State = HAL_SPI_STATE_BUSY;
     __HAL_SPI_DISABLE(spi_module_handle);
-    /*----------------------- SPIx CR1 & CR2 Configuration ---------------------*/
-    /* Configure : SPI Mode, Communication Mode, Data size, Clock polarity and phase, NSS management,
-    Communication speed, First bit and CRC calculation state */
-    WRITE_REG(spi_module_handle->Instance->CR1, ((spi_module_handle->Init.Mode & (SPI_CR1_MSTR | SPI_CR1_SSI)) |
-                                    (spi_module_handle->Init.Direction & (SPI_CR1_RXONLY | SPI_CR1_BIDIMODE)) |
-                                    (spi_module_handle->Init.DataSize & SPI_CR1_DFF) |
-                                    (spi_module_handle->Init.CLKPolarity & SPI_CR1_CPOL) |
-                                    (spi_module_handle->Init.CLKPhase & SPI_CR1_CPHA) |
-                                    (spi_module_handle->Init.NSS & SPI_CR1_SSM) |
-                                    (spi_module_handle->Init.BaudRatePrescaler & SPI_CR1_BR_Msk) |
-                                    (spi_module_handle->Init.FirstBit  & SPI_CR1_LSBFIRST) |
-                                    (spi_module_handle->Init.CRCCalculation & SPI_CR1_CRCEN)));
 
-    /* Configure : NSS management, TI Mode */
-    WRITE_REG(spi_module_handle->Instance->CR2, (((spi_module_handle->Init.NSS >> 16U) & SPI_CR2_SSOE) | (spi_module_handle->Init.TIMode & SPI_CR2_FRF)));
+    WRITE_REG(spi_module_handle->Instance->CR1, (
+            (spi_module_handle->Init.Mode & (SPI_CR1_MODE_CONTROLLER | SPI_CR1_INTERNAL_CHIP_SELECT)) |
+            (spi_module_handle->Init.Direction & (SPI_CR1_RECEIVE_ONLY | SPI_CR1_BIDIRECTIONAL_MODE)) |
+            (spi_module_handle->Init.DataSize & SPI_CR1_DATA_FRAME_FORMAT) |
+            (spi_module_handle->Init.CLKPolarity & SPI_CR1_CLOCK_POLARITY) |
+            (spi_module_handle->Init.CLKPhase & SPI_CR1_CLOCK_PHASE) |
+            (spi_module_handle->Init.NSS & SPI_CR1_SOFTWARE_CHIP_SELECT) |
+            (spi_module_handle->Init.BaudRatePrescaler & SPI_CR1_BAUD_RATE_CONTROL_MASK) |
+            (spi_module_handle->Init.FirstBit  & SPI_CR1_LSB_FIRST) |
+            (spi_module_handle->Init.CRCCalculation & SPI_CR1_CRC_ENABLE)));
+    WRITE_REG(spi_module_handle->Instance->CR2, ((
+            (spi_module_handle->Init.NSS >> 16U) & SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE) |
+            (spi_module_handle->Init.TIMode & SPI_CR2_FRAME_FORMAT)));
 
     #if (USE_SPI_CRC != 0U)
         /*---------------------------- SPIx CRCPOLY Configuration ------------------*/
@@ -163,7 +99,7 @@ HAL_StatusTypeDef spi::initialize_module()
 
     #if defined(SPI_I2SCFGR_I2SMOD)
         /* Activate the SPI mode (Make sure that I2SMOD bit in I2SCFGR register is reset) */
-        CLEAR_BIT(spi_module_handle->Instance->I2SCFGR, SPI_I2SCFGR_I2SMOD);
+        HAL_GENERAL_CLEAR_BIT(spi_module_handle->Instance->I2SCFGR, SPI_I2SCFGR_I2SMOD);
     #endif /* SPI_I2SCFGR_I2SMOD */
 
     spi_module_handle->ErrorCode = SPI_ERROR_NONE;
@@ -292,7 +228,7 @@ HAL_StatusTypeDef spi::end_rx_transaction(uint32_t flag_timeout, uint32_t start_
         {
             if (wait_for_flag_until_timeout(SPI_FLAG_BSY, RESET, flag_timeout, start_time_from_hal_get_tick) != HAL_OK)
             {
-                HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+                HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
                 return HAL_TIMEOUT;
             }
         }
@@ -300,7 +236,7 @@ HAL_StatusTypeDef spi::end_rx_transaction(uint32_t flag_timeout, uint32_t start_
         {
             if (wait_for_flag_until_timeout(SPI_FLAG_RXNE, RESET, flag_timeout, start_time_from_hal_get_tick) != HAL_OK)
             {
-                HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+                HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
                 return HAL_TIMEOUT;
             }
         }
@@ -309,7 +245,7 @@ HAL_StatusTypeDef spi::end_rx_transaction(uint32_t flag_timeout, uint32_t start_
     {
         if (wait_for_flag_until_timeout(SPI_FLAG_RXNE, RESET, flag_timeout, start_time_from_hal_get_tick) != HAL_OK)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
             return HAL_TIMEOUT;
         }
     }
@@ -323,7 +259,7 @@ HAL_StatusTypeDef spi::end_rx_tx_transaction(uint32_t flag_timeout, uint32_t sta
     {
         if (wait_for_flag_until_timeout(SPI_FLAG_BUSY, RESET, flag_timeout, start_time_from_hal_get_tick) != HAL_OK)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
             return HAL_TIMEOUT;
         }
     }
@@ -348,14 +284,14 @@ void spi::close_rx_tx_isr()
     {
         if (count == 0U)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
             break;
         }
         count--;
     }   while ((spi_module_handle->Instance->SR & SPI_FLAG_TX_BUFFER_EMPTY) == RESET);
 
     if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != HAL_OK)
-        HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+        HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
     if (spi_module_handle->Init.Direction == SPI_DIRECTION_2_LINE)
         SPI_CLEAR_OVERRUN_FLAG(spi_module_handle);
 
@@ -363,7 +299,7 @@ void spi::close_rx_tx_isr()
         if (SPI_GET_FLAG(spi_module_handle, SPI_FLAG_CRC_ERROR) != RESET)
         {
             spi_module_handle->State = SPI_STATE_READY;
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_CRC_CALCULATION);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_CRC_CALCULATION);
             __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
             #if (HAL_SPI_USE_REGISTER_CALLBACKS == 1U)
                 spi_module_handle->ErrorCallback(spi_module_handle);
@@ -413,8 +349,8 @@ void spi::close_rx_tx_isr()
     static void rx_2_line_16_bit_isrCRC(struct __SPI_HandleTypeDef *spi_module_handle)
     {
         __IO uint32_t tmpreg = 0U;
-        tmpreg = HAL_READ_REG(spi_module_handle->Instance->DR);      // read 16-bit crc to flush data register
-        HAL_UNUSED(tmpreg);
+        tmpreg = HAL_GENERAL_READ_REG(spi_module_handle->Instance->DR);      // read 16-bit crc to flush data register
+        HAL_GENERAL_UNUSED(tmpreg);
         SPI_DISABLE_INTERRUPTS(spi_module_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
         close_rx_tx_isr(spi_module_handle);
     }
@@ -429,7 +365,7 @@ void spi::close_rx_tx_isr()
 
         ptmpreg8 = (__IO uint8_t *)&spi_module_handle->Instance->DR;
         tmpreg8 = *ptmpreg8;        // read crc to flush data register
-        HAL_UNUSED(tmpreg8);
+        HAL_GENERAL_UNUSED(tmpreg8);
         SPI_DISABLE_INTERRUPTS(spi_module_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
         if (spi_module_handle->TxXferCount == 0U)
             close_rx_tx_isr(spi_module_handle);
@@ -473,7 +409,7 @@ void spi::close_rx_isr()
 {
     SPI_DISABLE_INTERRUPTS(spi_module_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
     if (end_rx_transaction(SPI_DEFAULT_TIMEOUT_100_US, HAL_GetTick()) != HAL_OK)
-        HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+        HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
     if (spi_module_handle->Init.Direction == SPI_DIRECTION_2_LINE)
         SPI_CLEAR_OVERRUN_FLAG(spi_module_handle);
     spi_module_handle->State = HAL_SPI_STATE_READY;
@@ -481,7 +417,7 @@ void spi::close_rx_isr()
     #if (USE_SPI_CRC != 0U)
         if (SPI_GET_FLAG(spi_module_handle, SPI_FLAG_CRC_ERROR) != RESET)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_CRC_CALCULATION);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_CRC_CALCULATION);
             __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
             #if (HAL_SPI_USE_REGISTER_CALLBACKS == 1U)
                 spi_module_handle->ErrorCallback(spi_module_handle);
@@ -522,7 +458,7 @@ void spi::close_tx_isr()
     {
         if (count == 0U)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
             break;
         }
         count--;
@@ -530,7 +466,7 @@ void spi::close_tx_isr()
 
     SPI_DISABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
     if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != HAL_OK)
-        HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
+        HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_WAITING_FOR_FLAG);
     if (spi_module_handle->Init.Direction == SPI_DIRECTION_2_LINE)
         SPI_CLEAR_OVERRUN_FLAG(spi_module_handle);
     spi_module_handle->State = HAL_SPI_STATE_READY;
@@ -560,22 +496,22 @@ void spi::abort_rx_isr()
     {
         if (count == 0U)
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_ABORT );
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_DURING_ABORT );
             break;
         }
         count--;
     }   while ((spi_module_handle->Instance->SR & SPI_FLAG_TX_BUFFER_EMPTY) == RESET);
 
     SPI_DISABLE_MODULE(spi_module_handle);
-    HAL_CLEAR_BIT(spi_module_handle->Instance->CR2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-    tmpreg = HAL_READ_REG(spi_module_handle->Instance->DR);  // flush data register
-    HAL_UNUSED(tmpreg);                         // avoid compiler warning
+    HAL_GENERAL_CLEAR_BIT(spi_module_handle->Instance->CR2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    tmpreg = HAL_GENERAL_READ_REG(spi_module_handle->Instance->DR);     // flush data register
+    HAL_GENERAL_UNUSED(tmpreg);                                         // avoid compiler warning
     spi_module_handle->State = HAL_SPI_STATE_ABORT;
 }
 
 void spi::abort_tx_isr()
 {
-    HAL_CLEAR_BIT(spi_module_handle->Instance->CR2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE));
+    HAL_GENERAL_CLEAR_BIT(spi_module_handle->Instance->CR2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE));
     SPI_DISABLE_MODULE(spi_module_handle);
     spi_module_handle->State = HAL_SPI_STATE_ABORT;
 }
@@ -627,7 +563,7 @@ void spi::abort_tx_isr()
                     spi_module_handle->MspDeInitCallback = pCallback;
                     break;
                 default:
-                    HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+                    HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
                     status =  HAL_ERROR;
                 break;
             }
@@ -643,14 +579,14 @@ void spi::abort_tx_isr()
                     spi_module_handle->MspDeInitCallback = pCallback;
                     break;
                 default:
-                    HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+                    HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
                     status =  HAL_ERROR;
                     break;
             }
         }
         else
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
             status =  HAL_ERROR;
         }
         HAL_UNLOCK_MODULE(spi_module_handle);
@@ -697,7 +633,7 @@ void spi::abort_tx_isr()
                     spi_module_handle->MspDeInitCallback = reinterpret_cast<void (*)(__SPI_HandleTypeDef *)>(HAL_SPI_MspDeInit);
                     break;
                 default :
-                    HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+                    HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
                     status =  HAL_ERROR;
                     break;
             }
@@ -713,14 +649,14 @@ void spi::abort_tx_isr()
                     spi_module_handle->MspDeInitCallback = reinterpret_cast<void (*)(__SPI_HandleTypeDef *)>(HAL_SPI_MspDeInit);
                     break;
                 default :
-                    HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+                    HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
                     status =  HAL_ERROR;
                     break;
             }
         }
         else
         {
-            HAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
+            HAL_GENERAL_SET_BIT(spi_module_handle->ErrorCode, SPI_ERROR_CALLBACK_INVALID);
             status =  HAL_ERROR;
         }
         HAL_UNLOCK_MODULE(spi_module_handle);
@@ -736,14 +672,14 @@ void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::__SPI_HandleTypeDef *sp
     if (spi_handle->TxXferCount == 0U)
     {
         #if (USE_SPI_CRC != 0U)
-                if (spi_module_handle->Init.CRCCalculation == SPI_CRC_CALCULATION_ENABLE)
-                    {
-                        HAL_SET_BIT(spi_handle->Instance->CR1, SPI_CR1_CRCNEXT);
-                        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-                        return;
-                    }
+            if (spi_module_handle->Init.CRCCalculation == SPI_CRC_CALCULATION_ENABLE)
+            {
+                HAL_GENERAL_SET_BIT(spi_handle->Instance->CR1, SPI_CR1_CRCNEXT);
+                SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+                return;
+            }
         #endif /* USE_SPI_CRC */
-        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->RxXferCount == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -763,14 +699,13 @@ void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::__SPI_HandleTypeDef *sp
                 return;
             }
         #endif /* USE_SPI_CRC */
-        SPI_DISABLE_INTERRUPTS(spi_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+        SPI_DISABLE_INTERRUPTS(spi_handle, (spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | spi::SPI_ERROR_INTERRUPT_ENABLE));
         if (spi_handle->TxXferCount == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
 
 void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::__SPI_HandleTypeDef *spi_handle)
 {
-    /* Transmit data in 16 Bit mode */
     spi_handle->Instance->DR = *((uint16_t *)spi_handle->pTxBuffPtr);
     spi_handle->pTxBuffPtr += sizeof(uint16_t);
     spi_handle->TxXferCount--;
@@ -780,13 +715,12 @@ void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::__SPI_HandleTypeDef *s
         #if (USE_SPI_CRC != 0U)
             if (spi_module_handle->Init.CRCCalculation == SPI_CRC_CALCULATION_ENABLE)
             {
-                HAL_SET_BIT(spi_module_handle->Instance->CR1, SPI_CR1_CRCNEXT);      // set crc next bit to send crc
+                HAL_GENERAL_SET_BIT(spi_module_handle->Instance->CR1, SPI_CR1_CRCNEXT);      // set crc next bit to send crc
                 SPI_DISABLE_INTERRUPTS(spi_module_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
                 return;
             }
         #endif /* USE_SPI_CRC */
-
-        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->RxXferCount == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -806,8 +740,7 @@ void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::__SPI_HandleTypeDef *s
                 return;
             }
         #endif /* USE_SPI_CRC */
-
-        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->TxXferCount == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -817,8 +750,6 @@ void SPI_DMAAbortOnError(DMA_HandleTypeDef *hdma)
     SPI_HandleTypeDef *hspi = (SPI_HandleTypeDef *)(((DMA_HandleTypeDef *)hdma)->Parent); /* Derogation MISRAC2012-Rule-11.5 */
     hspi->RxXferCount = 0U;
     hspi->TxXferCount = 0U;
-
-    /* Call user error callback */
     #if (USE_HAL_SPI_REGISTER_CALLBACKS == 1U)
         hspi->ErrorCallback(hspi);
     #else
@@ -868,7 +799,7 @@ void spi_irq_handler(spi* spi_object)
         {
             if (spi_object->spi_module_handle->State != HAL_SPI_STATE_BUSY_TX)
             {
-                SET_BIT(spi_object->spi_module_handle->ErrorCode, SPI_ERROR_OVERRUN);
+                HAL_GENERAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, spi::SPI_ERROR_OVERRUN);
                 __HAL_SPI_CLEAR_OVRFLAG(spi_object->spi_module_handle);
             }
             else
@@ -879,39 +810,35 @@ void spi_irq_handler(spi* spi_object)
         }
         if (SPI_CHECK_FLAG(itflag, SPI_FLAG_MODF) != RESET)
         {
-            HAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, SPI_ERROR_MODE_FAULT);
+            HAL_GENERAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, spi::SPI_ERROR_MODE_FAULT);
             SPI_CLEAR_MODE_FAULT_FLAG(spi_object->spi_module_handle);
         }
         if (SPI_CHECK_FLAG(itflag, SPI_FLAG_FRE) != RESET)
         {
-            HAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, SPI_ERROR_TI_MODE_FRAME_FORMAT);
+            HAL_GENERAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, spi::SPI_ERROR_TI_MODE_FRAME_FORMAT);
             HAL_SPI_CLEAR_FORMAT_ERROR_FLAG(spi_object->spi_module_handle);
         }
 
-        if (spi_object->spi_module_handle->ErrorCode != SPI_ERROR_NONE)
+        if (spi_object->spi_module_handle->ErrorCode != spi::SPI_ERROR_NONE)
         {
-            SPI_DISABLE_INTERRUPTS(spi_object->spi_module_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE);
+            SPI_DISABLE_INTERRUPTS(spi_object->spi_module_handle, spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | spi::SPI_ERROR_INTERRUPT_ENABLE);
 
             spi_object->spi_module_handle->State = HAL_SPI_STATE_READY;
             if ((HAL_GENERAL_IS_BIT_SET(itsource, SPI_CR2_TXDMAEN)) || (HAL_IS_BIT_SET(itsource, SPI_CR2_RXDMAEN)))
             {
-                HAL_CLEAR_BIT(spi_object->spi_module_handle->Instance->CR2, (SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN));
+                HAL_GENERAL_CLEAR_BIT(spi_object->spi_module_handle->Instance->CR2, (SPI_CR2_TXDMAEN | SPI_CR2_RXDMAEN));
 
                 if (spi_object->spi_module_handle->hdmarx != nullptr)
                 {
                     spi_object->spi_module_handle->hdmarx->XferAbortCallback = SPI_DMAAbortOnError;
                     if (HAL_OK != HAL_DMA_Abort_IT(spi_object->spi_module_handle->hdmarx))
-                    {
-                        SET_BIT(spi_object->spi_module_handle->ErrorCode, SPI_ERROR_DURING_ABORT);
-                    }
+                        HAL_GENERAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, spi::SPI_ERROR_DURING_ABORT);
                 }
                 if (spi_object->spi_module_handle->hdmatx != nullptr)
                 {
                     spi_object->spi_module_handle->hdmatx->XferAbortCallback = SPI_DMAAbortOnError;
                     if (HAL_OK != HAL_DMA_Abort_IT(spi_object->spi_module_handle->hdmatx))
-                    {
-                        SET_BIT(spi_object->spi_module_handle->ErrorCode, SPI_ERROR_DURING_ABORT);
-                    }
+                        HAL_GENERAL_SET_BIT(spi_object->spi_module_handle->ErrorCode, spi::SPI_ERROR_DURING_ABORT);
                 }
             }
             else

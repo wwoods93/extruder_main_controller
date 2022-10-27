@@ -16,28 +16,28 @@
 
 i2c::i2c(I2C_HandleTypeDef* handle)
 {
-    peripheral_handle = handle;
-    initialize_peripheral();
+    i2c_module_handle = handle;
+    initialize_i2c_module();
     i2c_controller_error_message_code = ERROR_MESSAGE_CODE_NO_ERROR;
     i2c_controller_write_procedure.state = I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED;
 }
 
-void i2c::initialize_peripheral()
+void i2c::initialize_i2c_module()
 {
-    peripheral_handle->Instance = I2C2;
-    peripheral_handle->Init.ClockSpeed = 100000U;
-    peripheral_handle->Init.DutyCycle = I2C_DUTYCYCLE_2;
-    peripheral_handle->Init.OwnAddress1 = 0;
-    peripheral_handle->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
-    peripheral_handle->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
-    peripheral_handle->Init.OwnAddress2 = 0;
-    peripheral_handle->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
-    peripheral_handle->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
-    if (HAL_I2C_Init(peripheral_handle) != HAL_OK)
+    i2c_module_handle->Instance = I2C2;
+    i2c_module_handle->Init.ClockSpeed = 100000U;
+    i2c_module_handle->Init.DutyCycle = I2C_DUTYCYCLE_2;
+    i2c_module_handle->Init.OwnAddress1 = 0;
+    i2c_module_handle->Init.AddressingMode = I2C_ADDRESSINGMODE_7BIT;
+    i2c_module_handle->Init.DualAddressMode = I2C_DUALADDRESS_DISABLE;
+    i2c_module_handle->Init.OwnAddress2 = 0;
+    i2c_module_handle->Init.GeneralCallMode = I2C_GENERALCALL_DISABLE;
+    i2c_module_handle->Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
+    if (HAL_I2C_Init(i2c_module_handle) != HAL_OK)
         Error_Handler();
 }
 
-i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer_pointer, uint16_t size, uint32_t timeout)
+i2c::i2c_status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer_pointer, uint16_t size, uint32_t timeout)
 {
     uint32_t tick_start = 0;
     i2c_controller_error_message_code = ERROR_MESSAGE_CODE_NO_ERROR;
@@ -47,7 +47,7 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
     {
         case I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED:
         {
-            if (get_peripheral_state() != I2C_STATE_READY)
+            if (get_i2c_module_state() != I2C_STATE_READY)
             {
                 i2c_controller_error_message_code = PERIPHERAL_NOT_READY;
                 i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_BUSY;
@@ -69,14 +69,14 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
         }
         case I2C_STATE_PREPARE_AND_REQUEST_TRANSFER:
         {
-            lock_peripheral();
+            lock_i2c_module();
             if (read_control_register_bit(I2C_CR1_REG_PERIPHERAL_ENABLE_BIT) != I2C_CR1_REG_PERIPHERAL_ENABLE_BIT)
-                enable_peripheral();
+                enable_i2c_module();
             clear_control_register_bit(I2C_CR1_REG_POSITION_ENABLE_BIT);
             volatile uint32_t current_transfer_options = I2C_TRANSFER_OPTIONS_DEFAULT;
             set_transfer_state();
             set_transfer_parameters(data_buffer_pointer, size, current_transfer_options);
-            status_t request_result = controller_request_send(current_transfer_options, target_address, timeout, tick_start);
+            i2c_status_t request_result = controller_request_send(current_transfer_options, target_address, timeout, tick_start);
 
             if (request_result != I2C_STATUS_OK)
             {
@@ -141,22 +141,22 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
         case I2C_STATE_FINISH_TRANSFER:
         {
             generate_stop_bit();
-            set_peripheral_state(I2C_STATE_READY);
+            set_i2c_module_state(I2C_STATE_READY);
             set_device_mode(I2C_MODE_NONE);
-            unlock_peripheral();
+            unlock_i2c_module();
             return I2C_STATUS_OK;
         }
         case I2C_STATE_PERIPHERAL_BUSY:
         {
             /*
-             * error handling for busy peripheral
+             * error handling for busy module
              */
             return I2C_STATUS_BUSY;
         }
         case I2C_STATE_PERIPHERAL_ERROR:
         {
             /*
-             * error handling for peripheral error
+             * error handling for module error
              */
             return I2C_STATUS_ERROR;
         }
@@ -166,163 +166,163 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
     return I2C_STATUS_OK;
 }
 
-I2C_HandleTypeDef* i2c::get_peripheral_handle()
+I2C_HandleTypeDef* i2c::get_i2c_module_handle()
 {
-    return peripheral_handle;
+    return i2c_module_handle;
 }
 
-void i2c::enable_peripheral()
+void i2c::enable_i2c_module()
 {
-    __HAL_I2C_ENABLE(peripheral_handle);
+    __HAL_I2C_ENABLE(i2c_module_handle);
 }
 
-void i2c::disable_peripheral()
+void i2c::disable_i2c_module()
 {
-    __HAL_I2C_DISABLE(peripheral_handle);
+    __HAL_I2C_DISABLE(i2c_module_handle);
 }
 
-uint8_t i2c::get_peripheral_state()
+uint8_t i2c::get_i2c_module_state()
 {
-    return (uint8_t) peripheral_handle->State;
+    return (uint8_t) i2c_module_handle->State;
 }
 
-void i2c::set_peripheral_state(uint8_t i2c_state)
+void i2c::set_i2c_module_state(uint8_t i2c_state)
 {
-    peripheral_handle->State = (stm32_i2c_state_t) i2c_state;
+    i2c_module_handle->State = (stm32_i2c_state_t) i2c_state;
 }
 
-volatile uint32_t i2c::get_peripheral_previous_state()
+volatile uint32_t i2c::get_i2c_module_previous_state()
 {
-    return peripheral_handle->PreviousState;
+    return i2c_module_handle->PreviousState;
 }
 
 uint16_t i2c::get_transfer_size()
 {
-    return peripheral_handle->XferSize;
+    return i2c_module_handle->XferSize;
 }
 
  volatile uint32_t i2c::get_error_code()
 {
-    return peripheral_handle->ErrorCode;
+    return i2c_module_handle->ErrorCode;
 }
 
 void i2c::set_error_code(volatile uint32_t error_code)
 {
-    peripheral_handle->ErrorCode = error_code;
+    i2c_module_handle->ErrorCode = error_code;
 }
 
 uint32_t i2c::get_addressing_mode()
 {
-    return peripheral_handle->Init.AddressingMode;
+    return i2c_module_handle->Init.AddressingMode;
 }
 
 void i2c::set_device_mode(uint8_t i2c_device_mode)
 {
-    peripheral_handle->Mode = (volatile HAL_I2C_ModeTypeDef) i2c_device_mode;
+    i2c_module_handle->Mode = (volatile HAL_I2C_ModeTypeDef) i2c_device_mode;
 }
 
 void i2c::write_data_register(volatile uint32_t data_register_value)
 {
-    peripheral_handle->Instance->DR = data_register_value;
+    i2c_module_handle->Instance->DR = data_register_value;
 }
 
 bool i2c::check_flag(uint32_t flag)
 {
-    return __HAL_I2C_GET_FLAG(peripheral_handle, flag);
+    return __HAL_I2C_GET_FLAG(i2c_module_handle, flag);
 }
 
 void i2c::clear_flag(uint32_t flag)
 {
-    __HAL_I2C_CLEAR_FLAG(peripheral_handle, flag);
+    __HAL_I2C_CLEAR_FLAG(i2c_module_handle, flag);
 }
 
 void i2c::clear_address_flag()
 {
-    __HAL_I2C_CLEAR_ADDRFLAG(peripheral_handle);
+    __HAL_I2C_CLEAR_ADDRFLAG(i2c_module_handle);
 }
 
-i2c::status_t i2c::lock_peripheral()
+i2c::i2c_status_t i2c::lock_i2c_module()
 {
-    if (peripheral_handle->Lock == HAL_LOCKED)
+    if (i2c_module_handle->Lock == HAL_LOCKED)
         return I2C_STATUS_BUSY;
-    peripheral_handle->Lock = HAL_LOCKED;
+    i2c_module_handle->Lock = HAL_LOCKED;
     return I2C_STATUS_OK;
 }
 
-void i2c::unlock_peripheral()
+void i2c::unlock_i2c_module()
 {
-    peripheral_handle->Lock = HAL_UNLOCKED;
+    i2c_module_handle->Lock = HAL_UNLOCKED;
 }
 
 void i2c::set_control_register_bit(uint32_t control_register_bit)
 {
-    SET_BIT(peripheral_handle->Instance->CR1, control_register_bit);
+    SET_BIT(i2c_module_handle->Instance->CR1, control_register_bit);
 }
 
 void i2c::clear_control_register_bit(uint32_t control_register_bit)
 {
-    CLEAR_BIT(peripheral_handle->Instance->CR1, control_register_bit);
+    CLEAR_BIT(i2c_module_handle->Instance->CR1, control_register_bit);
 }
 
 uint32_t i2c::read_control_register_bit(uint32_t control_register_bit)
 {
-    return READ_BIT(peripheral_handle->Instance->CR1, control_register_bit);
+    return READ_BIT(i2c_module_handle->Instance->CR1, control_register_bit);
 }
 
 void i2c::generate_start_bit()
 {
-    SET_BIT(peripheral_handle->Instance->CR1, I2C_CR1_REG_GENERATION_START_BIT);
+    SET_BIT(i2c_module_handle->Instance->CR1, I2C_CR1_REG_GENERATION_START_BIT);
 }
 
 void i2c::generate_stop_bit()
 {
-    SET_BIT(peripheral_handle->Instance->CR1, I2C_CR1_REG_GENERATION_STOP_BIT);
+    SET_BIT(i2c_module_handle->Instance->CR1, I2C_CR1_REG_GENERATION_STOP_BIT);
 }
 
 void i2c::set_error_state(uint32_t i2c_error)
 {
-    peripheral_handle->PreviousState = I2C_STATE_NONE;
-    peripheral_handle->State         = (stm32_i2c_state_t) I2C_STATE_READY;
-    peripheral_handle->Mode          = (stm32_i2c_mode_t) I2C_MODE_NONE;
-    peripheral_handle->ErrorCode     |= i2c_error;
+    i2c_module_handle->PreviousState = I2C_STATE_NONE;
+    i2c_module_handle->State         = (stm32_i2c_state_t) I2C_STATE_READY;
+    i2c_module_handle->Mode          = (stm32_i2c_mode_t) I2C_MODE_NONE;
+    i2c_module_handle->ErrorCode     |= i2c_error;
 }
 
 void i2c::set_transfer_state()
 {
-    peripheral_handle->State = (stm32_i2c_state_t) I2C_STATE_BUSY_TRANSFERRING;
-    peripheral_handle->Mode = (stm32_i2c_mode_t) I2C_MODE_CONTROLLER;
-    peripheral_handle->ErrorCode = I2C_ERROR_NONE;
+    i2c_module_handle->State = (stm32_i2c_state_t) I2C_STATE_BUSY_TRANSFERRING;
+    i2c_module_handle->Mode = (stm32_i2c_mode_t) I2C_MODE_CONTROLLER;
+    i2c_module_handle->ErrorCode = I2C_ERROR_NONE;
 }
 
 void i2c::set_transfer_parameters(uint8_t *data_buffer_pointer, uint16_t size, volatile uint32_t transfer_options)
 {
-    peripheral_handle->pBuffPtr = data_buffer_pointer;
-    peripheral_handle->XferCount = size;
-    peripheral_handle->XferSize = peripheral_handle->XferCount;
-    peripheral_handle->XferOptions = transfer_options;
+    i2c_module_handle->pBuffPtr = data_buffer_pointer;
+    i2c_module_handle->XferCount = size;
+    i2c_module_handle->XferSize = i2c_module_handle->XferCount;
+    i2c_module_handle->XferOptions = transfer_options;
 }
 
 void i2c::write_next_byte_to_tx_register()
 {
-    peripheral_handle->Instance->DR = *peripheral_handle->pBuffPtr;
-    peripheral_handle->pBuffPtr++;
-    peripheral_handle->XferCount--;
-    peripheral_handle->XferSize--;
+    i2c_module_handle->Instance->DR = *i2c_module_handle->pBuffPtr;
+    i2c_module_handle->pBuffPtr++;
+    i2c_module_handle->XferCount--;
+    i2c_module_handle->XferSize--;
 }
 
-i2c::status_t i2c::check_for_nack()
+i2c::i2c_status_t i2c::check_for_nack()
 {
     if (check_flag(I2C_FLAG_ACKNOWLEDGE_FAILED) == FLAG_SET)
     {
         clear_flag(I2C_FLAG_ACKNOWLEDGE_FAILED);
         set_error_state(I2C_ERROR_ACKNOWLEDGE_FAILED);
-        unlock_peripheral();
+        unlock_i2c_module();
         return I2C_STATUS_ERROR;
     }
     return I2C_STATUS_OK;
 }
 
-i2c::status_t i2c::wait_for_flag(uint32_t flag, flag_t status, uint32_t timeout, uint32_t tick_start)
+i2c::i2c_status_t i2c::wait_for_flag(uint32_t flag, flag_t status, uint32_t timeout, uint32_t tick_start)
 {
     while (check_flag(flag) == status)
     {
@@ -334,7 +334,7 @@ i2c::status_t i2c::wait_for_flag(uint32_t flag, flag_t status, uint32_t timeout,
             if (((HAL_GetTick() - tick_start) > timeout) || (timeout == 0U))
             {
                 set_error_state(I2C_ERROR_TIMEOUT);
-                unlock_peripheral();
+                unlock_i2c_module();
                 return I2C_STATUS_ERROR;
             }
         }
@@ -342,7 +342,7 @@ i2c::status_t i2c::wait_for_flag(uint32_t flag, flag_t status, uint32_t timeout,
     return I2C_STATUS_OK;
 }
 
-i2c::status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t timeout, uint32_t tick_start)
+i2c::i2c_status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t timeout, uint32_t tick_start)
 {
     while (check_flag(flag) == FLAG_CLEAR)
     {
@@ -351,7 +351,7 @@ i2c::status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t time
             generate_stop_bit();
             clear_flag(I2C_FLAG_ACKNOWLEDGE_FAILED);
             set_error_state(I2C_ERROR_ACKNOWLEDGE_FAILED);
-            unlock_peripheral();
+            unlock_i2c_module();
             return I2C_STATUS_ERROR;
         }
         if (timeout != HAL_MAX_DELAY)
@@ -359,7 +359,7 @@ i2c::status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t time
             if (((HAL_GetTick() - tick_start) > timeout) || (timeout == 0U))
             {
                 set_error_state(I2C_ERROR_TIMEOUT);
-                unlock_peripheral();
+                unlock_i2c_module();
                 return I2C_STATUS_ERROR;
             }
         }
@@ -367,13 +367,13 @@ i2c::status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t time
     return I2C_STATUS_OK;
 }
 
-i2c::status_t i2c::controller_request_send(volatile uint32_t current_transfer_options, uint16_t target_address, uint32_t timeout, uint32_t tick_start)
+i2c::i2c_status_t i2c::controller_request_send(volatile uint32_t current_transfer_options, uint16_t target_address, uint32_t timeout, uint32_t tick_start)
 {
     // if this is the first frame or module has just received a byte, generate a start bit
     if (current_transfer_options == I2C_FIRST_AND_LAST_FRAME
      || current_transfer_options == I2C_FIRST_FRAME
      || current_transfer_options == I2C_TRANSFER_OPTIONS_DEFAULT
-     || get_peripheral_previous_state() == I2C_STATE_CONTROLLER_RECEIVING)
+     || get_i2c_module_previous_state() == I2C_STATE_CONTROLLER_RECEIVING)
         generate_start_bit();
     // wait until start bit is set
     if (wait_for_flag(I2C_FLAG_START_BIT_SET, FLAG_CLEAR, timeout, tick_start) != I2C_STATUS_OK)

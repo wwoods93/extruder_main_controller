@@ -1538,6 +1538,8 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive_IT(SPI_HandleTypeDef *hspi, uint8_t *p
   HAL_SPI_StateTypeDef tmp_state;
   HAL_StatusTypeDef    errorcode = HAL_OK;
 
+
+
   /* Check Direction parameter */
   assert_param(IS_SPI_DIRECTION_2LINES(hspi->Init.Direction));
 
@@ -1596,6 +1598,7 @@ HAL_StatusTypeDef HAL_SPI_TransmitReceive_IT(SPI_HandleTypeDef *hspi, uint8_t *p
   }
 #endif /* USE_SPI_CRC */
 
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
   /* Enable TXE, RXNE and ERR interrupt */
   __HAL_SPI_ENABLE_IT(hspi, (SPI_IT_TXE | SPI_IT_RXNE | SPI_IT_ERR));
 
@@ -3119,6 +3122,7 @@ static void SPI_DMARxAbortCallback(DMA_HandleTypeDef *hdma)
   */
 static void SPI_2linesRxISR_8BIT(struct __SPI_HandleTypeDef *hspi)
 {
+//    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
   /* Receive data in 8bit mode */
   *hspi->pRxBuffPtr = *((__IO uint8_t *)&hspi->Instance->DR);
   hspi->pRxBuffPtr++;
@@ -3182,6 +3186,7 @@ static void SPI_2linesRxISR_8BITCRC(struct __SPI_HandleTypeDef *hspi)
   */
 static void SPI_2linesTxISR_8BIT(struct __SPI_HandleTypeDef *hspi)
 {
+//    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
   *(__IO uint8_t *)&hspi->Instance->DR = (*hspi->pTxBuffPtr);
   hspi->pTxBuffPtr++;
   hspi->TxXferCount--;

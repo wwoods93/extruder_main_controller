@@ -24,6 +24,7 @@
 /* USER CODE BEGIN Includes */
 
 #include "../driver_layer/driver_dc_motor_controller.h"
+#include "../hardware_abstraction_layer/hal_spi.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
 #include "../driver_layer/driver_rtd.h"
 #include "can.h"
@@ -56,10 +57,18 @@
 
 /* Private variables ---------------------------------------------------------*/
 
+SPI_HandleTypeDef hspi2;
 
-void HAL_SPI_TxRxCpltCallback(SPI_HandleTypeDef * hspi)
+void HAL_SPI_TxRxCpltCallback(spi::SPI_HandleTypeDef *hspi)
 {
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+}
+
+void HAL_SPI_ErrorCallback(spi::SPI_HandleTypeDef *hspi)
+{
+    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
+        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 }
 
 /* Definitions for initialization_task */
@@ -104,17 +113,35 @@ osThreadId_t spoolingProcessTaskHandle;
 osThreadId_t commsUpdaterTaskHandle;
 
 
+
+
 void start_initialization_task(void *argument);
 void start_preparation_process_task(void *argument);
 void start_extrusion_process_task(void *argument);
 void start_spooling_process_task(void *argument);
 void start_comms_updater_task(void *argument);
 
+namespace hal
+{
+    spi spi_2;
+}
 namespace driver
 {
     dc_motor_controller motor_controller_1;
-    rtd rtd_1;
+    //rtd rtd_1(&hspi2);
 }
+
+void SPI2_IRQHandler()
+{
+    /* USER CODE BEGIN SPI2_IRQn 0 */
+
+    /* USER CODE END SPI2_IRQn 0 */
+    spi_irq_handler(&hal::spi_2);
+    /* USER CODE BEGIN SPI2_IRQn 1 */
+
+    /* USER CODE END SPI2_IRQn 1 */
+}
+
 
 /**
   * @brief  The application entry point.
@@ -127,7 +154,7 @@ int main()
     MX_GPIO_Init();
     MX_ADC1_Init();
     MX_CAN1_Init();
-    MX_SPI2_Init();
+//    driver::rtd_1.MX_SPI2_Init();
     MX_SPI3_Init();
     MX_TIM6_Init();
     MX_TIM7_Init();
@@ -137,17 +164,24 @@ int main()
     MX_TIM11_Init();
     MX_TIM13_Init();
     MX_TIM14_Init();
+
+    hal::spi_2.configure_module(reinterpret_cast<spi::SPI_HandleTypeDef *>(&hspi2));
+    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_TxRxCpltCallback);
+    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_ErrorCallback);
     osKernelInitialize();
 
-    initialization_taskHandle         = osThreadNew(start_initialization_task,        NULL, &initialization_task_attributes);
-    preparation_process_taskHandle    = osThreadNew(start_preparation_process_task,   NULL, &preparation_process_task_attributes);
-    extrusion_process_taskHandle      = osThreadNew(start_extrusion_process_task,     NULL, &extrusion_process_task_attributes);
-    spooling_process_taskHandle       = osThreadNew(start_spooling_process_task,      NULL, &spooling_process_task_attributes);
-    comms_updater_taskHandle          = osThreadNew(start_comms_updater_task,         NULL, &comms_updater_task_attributes);
+    initialization_taskHandle         = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
+    preparation_process_taskHandle    = osThreadNew(start_preparation_process_task,   nullptr, &preparation_process_task_attributes);
+    extrusion_process_taskHandle      = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_process_task_attributes);
+    spooling_process_taskHandle       = osThreadNew(start_spooling_process_task,      nullptr, &spooling_process_task_attributes);
+    comms_updater_taskHandle          = osThreadNew(start_comms_updater_task,         nullptr, &comms_updater_task_attributes);
 
     osKernelStart();
 
-    while (1) { }
+    while (1)
+    {
+
+    }
 }
 
 
@@ -228,9 +262,13 @@ void start_comms_updater_task(void *argument)
     /* USER CODE BEGIN start_comms_updater_task */
     /* Infinite loop */
     // uint8_t data_to_send[4] = { 0x01, 0x02, 0x03, 0x04 };
+
+    uint8_t spi_byte = 0xC2;
+    uint8_t rx_data = 0;
+
     float temp_1 = 0;
     timers_initialize();
-    driver::rtd_1.rtd_begin(rtd::MAX31865_3WIRE);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
    // driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
     uint32_t count = 0;
     uint8_t motor_command_data[3] = { 0x05, 0x07, 0x02 };
@@ -240,17 +278,18 @@ void start_comms_updater_task(void *argument)
     for(;;)
     {
         //i2c_motor_set_speed(0, 100);
-        if (ms_timer() - led_timer > 1000)
+        if (ms_timer() - led_timer > 999)
         {
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
             HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-            if (count % 5 == 0)
-                temp_1 = driver::rtd_1.read_rtd_and_calculate_temperature();
+            hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
+            //HAL_SPI_TransmitReceive_IT(&hspi2, &spi_byte, &rx_data, 1);
+//            temp_1 = driver::rtd_1.read_rtd_and_calculate_temperature();
                 //driver::motor_controller_1.nudge_speed_up(dc_motor_controller::M1, 10);
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 255);
 //            else
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);
-            count++;
+            //count++;
             led_timer = ms_timer();
         }
     }

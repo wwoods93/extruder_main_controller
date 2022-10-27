@@ -13,10 +13,13 @@
 #define MAIN_CONTROLLER_DRIVER_RTD_H
 
 #include <cstdint>
+#include "stm32f4xx.h"
 
 class rtd
 {
     public:
+        SPI_HandleTypeDef* spi_peripheral;
+
         /* max31865 configuration bytes */
         static constexpr uint8_t MAX31865_CONFIG_REG        = 0x00;
         static constexpr uint8_t MAX31865_CONFIG_BIAS       = 0x80;
@@ -57,9 +60,10 @@ class rtd
             MAX31865_4WIRE = 0
         } max31865_numwires_t;
 
-        rtd();
+        explicit rtd(SPI_HandleTypeDef* spi_object);
 //        void SPI_RTD_init_8(void);
 //        uint8_t SPI_transfer_8(uint8_t data);
+        void MX_SPI2_Init();
         uint8_t readRegister8(uint8_t addr);
         uint16_t readRegister16(uint8_t addr1, uint8_t addr2);
         void writeRegister8(uint8_t addr, uint8_t data);
@@ -70,6 +74,6 @@ class rtd
     private:
 };
 
-void MX_SPI2_Init();
+
 
 #endif //MAIN_CONTROLLER_DRIVER_RTD_H

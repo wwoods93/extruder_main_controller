@@ -17,8 +17,6 @@
 #include "mcu_clock_timers.h"
 #include "driver_rtd.h"
 
-SPI_HandleTypeDef hspi2;
-
 // spi2 MOSI    PC1
 // spi2 MISO    PC2
 // GPIO OUT     PC8
@@ -26,7 +24,21 @@ SPI_HandleTypeDef hspi2;
 // GPIO OUT     PB15    -   CHIP SELECT
 // GPIO OUT     PB14
 
-void MX_SPI2_Init()
+// div2 = 8MHz
+// div4 = 4MHz
+// div8 = 2MHz
+// div16 = 1MHz
+// div32 = 500KHz
+// div64 = 250KHz
+// div128 = 125KHz
+// div256 = 62.5KHz
+
+rtd::rtd(SPI_HandleTypeDef* spi_object)
+{
+    spi_peripheral = spi_object;
+}
+
+void rtd::MX_SPI2_Init()
 {
     /* USER CODE BEGIN SPI2_Init 0 */
 
@@ -36,19 +48,19 @@ void MX_SPI2_Init()
 
     /* USER CODE END SPI2_Init 1 */
     /* SPI2 parameter configuration*/
-    hspi2.Instance = SPI2;
-    hspi2.Init.Mode = SPI_MODE_MASTER;
-    hspi2.Init.Direction = SPI_DIRECTION_2LINES;
-    hspi2.Init.DataSize = SPI_DATASIZE_8BIT;
-    hspi2.Init.CLKPolarity = SPI_POLARITY_LOW;
-    hspi2.Init.CLKPhase = SPI_PHASE_1EDGE;
-    hspi2.Init.NSS = SPI_NSS_SOFT;
-    hspi2.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
-    hspi2.Init.FirstBit = SPI_FIRSTBIT_MSB;
-    hspi2.Init.TIMode = SPI_TIMODE_DISABLE;
-    hspi2.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
-    hspi2.Init.CRCPolynomial = 10;
-    if (HAL_SPI_Init(&hspi2) != HAL_OK)
+    spi_peripheral->Instance = SPI2;
+    spi_peripheral->Init.Mode = SPI_MODE_MASTER;
+    spi_peripheral->Init.Direction = SPI_DIRECTION_2LINES;
+    spi_peripheral->Init.DataSize = SPI_DATASIZE_8BIT;
+    spi_peripheral->Init.CLKPolarity = SPI_POLARITY_HIGH;
+    spi_peripheral->Init.CLKPhase = SPI_PHASE_2EDGE;
+    spi_peripheral->Init.NSS = SPI_NSS_SOFT;
+    spi_peripheral->Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_2;
+    spi_peripheral->Init.FirstBit = SPI_FIRSTBIT_MSB;
+    spi_peripheral->Init.TIMode = SPI_TIMODE_DISABLE;
+    spi_peripheral->Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+    spi_peripheral->Init.CRCPolynomial = 10;
+    if (HAL_SPI_Init(spi_peripheral) != HAL_OK)
     {
         Error_Handler();
     }
@@ -58,39 +70,11 @@ void MX_SPI2_Init()
 
 }
 
-rtd::rtd() = default;
-
-//void rtd::SPI_RTD_init_8( void )
-//{
-//    uint32_t rdata = 0U;
-//    IEC1CLR = 0x8;
-//    IEC1CLR = 0x10;
-//    IEC1CLR = 0x20;
-//    SPI1CON = 0;
-//    rdata = SPI1BUF;
-//    rdata = rdata;
-//    IFS1CLR = 0x8;
-//    IFS1CLR = 0x10;
-//    IFS1CLR = 0x20;
-//    SPI1BRG = 23;
-//    SPI1STATCLR = _SPI1STAT_SPIROV_MASK;
-//    SPI1CON = 0x8220;
-//}
-
-//uint8_t rtd::SPI_transfer_8( uint8_t data )
-//{
-//    SPI_RTD_init_8();
-//    SPI1BUF = data;
-//    while (SPI1STATbits.SPIRBE);
-//    return (uint8_t)SPI1BUF;
-//}
-
-
 uint8_t rtd::readRegister8(uint8_t addr)
 {
     addr &= 0x7F;
     uint8_t rx_data = 0;
-    HAL_SPI_TransmitReceive_IT(&hspi2, &addr, &rx_data, 1);
+    HAL_SPI_TransmitReceive_IT(spi_peripheral, &addr, &rx_data, 1);
 
 //    GPIO_PinClear(RTD_CS);
 //    SPI_transfer_8(addr);
@@ -108,39 +92,38 @@ uint16_t rtd::readRegister16(uint8_t addr1, uint8_t addr2)
     uint8_t tx_lsb = MAX31865_RTDLSB_REG;
     uint8_t tx_full_byte = 0xFF;
 //    uint8_t tx_data[2] = {tx_msb, tx_full_byte};
-    uint8_t tx_data[4] = {tx_msb, tx_full_byte, tx_lsb, tx_full_byte};
+//    uint8_t tx_data[4] = {tx_msb, tx_full_byte, tx_lsb, tx_full_byte};
     uint8_t rx_1 = 0;
     uint8_t rx_2 = 0;
     uint8_t rx_3 = 0;
     uint8_t rx_4 = 0;
-    //uint8_t rx_data[2] = {rx_1, rx_2};
-    uint8_t rx_data[4] = {rx_1, rx_2, rx_3, rx_4 };
+//    uint8_t rx_data[2] = {rx_1, rx_2};
+//    uint8_t rx_data[4] = {rx_1, rx_2, rx_3, rx_4 };
     // set cs low
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-//    HAL_SPI_TransmitReceive_IT(&hspi2, tx_data, rx_data, 2);
-    HAL_SPI_TransmitReceive_IT(&hspi2, tx_data, rx_data, 4);
-    ret = rx_data[1];
+    HAL_SPI_TransmitReceive_IT(spi_peripheral, &tx_full_byte, &rx_1, 1);
+    HAL_SPI_TransmitReceive_IT(spi_peripheral, &tx_msb, &rx_2, 1);
+//    HAL_SPI_TransmitReceive_IT(spi_periph`eral, tx_data, rx_data, 4);
+    ret = rx_2;
     ret <<= 8;
     // tx_data[1] = tx_lsb;
 //    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-//    HAL_SPI_TransmitReceive_IT(&hspi2, tx_data, rx_data, 2);
+    HAL_SPI_TransmitReceive_IT(spi_peripheral, &tx_full_byte, &rx_3, 1);
+    HAL_SPI_TransmitReceive_IT(spi_peripheral, &tx_lsb, &rx_4, 1);
 
-    ret |= rx_data[3];
+    ret |= rx_4;
     // us_delay(1);
     // set cs high
-
 
     return ret;
 }
 
-
 void rtd::writeRegister8(uint8_t addr, uint8_t data)
 {
-    uint8_t tx_data[2] = {addr, data};
-    uint8_t rx_data[2] = {0, 0};
+    uint8_t rx_1 = 0;
+    uint8_t rx_2 = 0;
     addr |= 0x80;
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-    HAL_SPI_TransmitReceive_IT(&hspi2, tx_data, rx_data, 2);
+    HAL_SPI_Transmit_IT(spi_peripheral, &addr, 1);
+    HAL_SPI_Transmit_IT(spi_peripheral, &data, 1);
 }
 
 bool rtd::rtd_begin(max31865_numwires_t wires)
@@ -149,7 +132,6 @@ bool rtd::rtd_begin(max31865_numwires_t wires)
 //    GPIO_PinSet(RTD_CS);
 //    SPI_RTD_init_8();
 //    CORETIMER_DelayUs(100);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
     //us_delay(100);
     writeRegister8(MAX31865_CONFIG_REG, 0xD3);
     return true;

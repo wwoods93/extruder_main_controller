@@ -57,15 +57,15 @@
 
 /* Private variables ---------------------------------------------------------*/
 
-SPI_HandleTypeDef hspi2;
+spi::spi_handle_t hspi2;
 
-void HAL_SPI_TxRxCpltCallback(spi::SPI_HandleTypeDef *hspi)
+void HAL_SPI_TxRxCpltCallback(spi::spi_handle_t *hspi)
 {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
 }
 
-void HAL_SPI_ErrorCallback(spi::SPI_HandleTypeDef *hspi)
+void HAL_SPI_ErrorCallback(spi::spi_handle_t *hspi)
 {
     if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
         HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
@@ -165,7 +165,7 @@ int main()
     MX_TIM13_Init();
     MX_TIM14_Init();
 
-    hal::spi_2.configure_module(reinterpret_cast<spi::SPI_HandleTypeDef *>(&hspi2));
+    hal::spi_2.configure_module(reinterpret_cast<spi::spi_handle_t *>(&hspi2));
     hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_TxRxCpltCallback);
     hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_ErrorCallback);
     osKernelInitialize();

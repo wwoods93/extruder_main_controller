@@ -266,6 +266,12 @@ void start_comms_updater_task(void *argument)
     uint8_t spi_byte = 0xC2;
     uint8_t rx_data = 0;
 
+    uint8_t chip_select = 3;
+    uint8_t tx_size = 2;
+    std::vector<uint8_t> tx_bytes { 8, 32 };
+
+    uint8_t* tx_bytes_ptr;
+
     float temp_1 = 0;
     timers_initialize();
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
@@ -282,14 +288,20 @@ void start_comms_updater_task(void *argument)
         {
             HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
             HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-            hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
-            //HAL_SPI_TransmitReceive_IT(&hspi2, &spi_byte, &rx_data, 1);
+            tx_bytes_ptr = &tx_bytes[0];
+            hal::spi_2.add_packet_to_buffer(chip_select, tx_size, &tx_bytes);
+
+            if (count % 5 == 0)
+                hal::spi_2.process_spi_buffer();
+
+//            hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
+//            HAL_SPI_TransmitReceive_IT(&hspi2, &spi_byte, &rx_data, 1);
 //            temp_1 = driver::rtd_1.read_rtd_and_calculate_temperature();
                 //driver::motor_controller_1.nudge_speed_up(dc_motor_controller::M1, 10);
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 255);
 //            else
 //                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);
-            //count++;
+            count++;
             led_timer = ms_timer();
         }
     }

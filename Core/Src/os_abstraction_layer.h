@@ -3,36 +3,24 @@
  * os_abstraction_layer.h
  *
  * wilson
- * 6/13/22
- * 9:22 PM
+ * 11/4/22
+ * 12:11 AM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-//
-// Created by wilson on 6/13/22.
-//
-
 #ifndef MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 #define MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
+void run_initialization_task_functions();
 
-void run_initialization_task_functions(void);
+void run_preparation_process_task_functions();
 
-void run_preparation_process_task_functions(void);
+void run_extrusion_process_task_functions();
 
-void run_extrusion_process_task_functions(void);
+void run_spooling_process_task_functions();
 
-void run_spooling_process_task_functions(void);
-
-void run_comms_updater_task_functions(void);
-
-#ifdef __cplusplus
-}
-#endif
+void run_comms_updater_task_functions();
 
 #endif //MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H

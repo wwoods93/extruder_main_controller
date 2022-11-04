@@ -78,7 +78,7 @@ spi::spi_status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, 
     return SPI_STATUS_OK;
 }
 
-spi::spi_status_t spi::add_packet_to_buffer(uint8_t chip_select, uint8_t tx_size, std::vector<uint8_t>* tx_bytes)
+spi::spi_status_t spi::add_packet_to_buffer(uint8_t chip_select, uint8_t tx_size, uint8_t* tx_bytes)
 {
 
     if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
@@ -94,7 +94,8 @@ spi::spi_status_t spi::add_packet_to_buffer(uint8_t chip_select, uint8_t tx_size
         spi_packet.packet_id = packet_id_counter;
         spi_packet.chip_select = chip_select;
         spi_packet.tx_size = tx_size;
-        spi_packet.tx_bytes = *tx_bytes;
+        for (uint8_t index = 0; index < tx_size; ++index) { spi_packet.tx_bytes.push_back(tx_bytes[index]); }
+        spi_packet.rx_bytes.resize(tx_size);
         spi_buffer.push_back(&spi_packet);
         packet_id_counter++;
         tail++;
@@ -125,15 +126,13 @@ void spi::process_spi_buffer()
         uint8_t dest_packet_id = spi_buffer[head]->packet_id;
         uint8_t dest_chip_select = spi_buffer[head]->chip_select;
         uint8_t dest_tx_size = spi_buffer[head]->tx_size;
-        auto* dest_tx_bytes = new uint8_t(dest_tx_size);
-        for (uint8_t index = 0; index < dest_tx_size; ++index)
-            dest_tx_bytes[index] = spi_buffer[head]->tx_bytes[index];
+        uint8_t* dest_tx_bytes = &spi_buffer[head]->tx_bytes[0];
+        uint8_t* dest_rx_bytes = &spi_buffer[head]->rx_bytes[0];
 
+        if (head >= SPI_BUFFER_MAX) { head = 0; }
+        else                        { head++; }
 
-        if(head >= SPI_BUFFER_MAX) { head = 0; }
-        else { head++; }
-
-//        spi_transmit_receive_interrupt(, uint8_t *pRxData, uint16_t Size);
+        spi_transmit_receive_interrupt(dest_tx_bytes, dest_rx_bytes, (uint16_t)dest_tx_size);
     }
     else
     {

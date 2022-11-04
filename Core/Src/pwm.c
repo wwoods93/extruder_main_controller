@@ -18,7 +18,7 @@
 
 TIM_HandleTypeDef htim10;
 
-void MX_TIM10_Init(void)
+void  MX_TIM10_Init(void)
 {
 
     /* USER CODE BEGIN TIM10_Init 0 */

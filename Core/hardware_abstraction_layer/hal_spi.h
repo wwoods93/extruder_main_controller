@@ -29,6 +29,7 @@ class spi
         #define SPI_BYTES_MAX                       255U
         #define SPI_BUFFER_MAX                      255U
 
+
         static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE                    = 0U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR               = 1U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_DATA_ERROR              = 2U;
@@ -283,7 +284,7 @@ class spi
         /******************************************* public member functions ******************************************/
         void configure_module(spi_handle_t* spi_handle);
         spi_status_t spi_transmit_receive_interrupt(uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
-        spi_status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, std::vector<uint8_t>* tx_bytes);
+        spi_status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
         void shift_up_spi_buffer();
         void process_spi_buffer();
         #if (SPI_USE_REGISTER_CALLBACKS == 1U)

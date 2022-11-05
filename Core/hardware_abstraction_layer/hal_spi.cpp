@@ -412,7 +412,7 @@ spi::spi_status_t spi::initialize_module()
     if (spi_module_handle->state == SPI_STATE_RESET)
     {
         spi_module_handle->lock = HAL_MODULE_UNLOCKED;
-        #if (USE_HAL_SPI_REGISTER_CALLBACKS == 1U)
+        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
             spi_module_handle->TxCpltCallback       = reinterpret_cast<void (*)(_spi_handle_t *)>(HAL_SPI_TxCpltCallback);
             spi_module_handle->RxCpltCallback       = reinterpret_cast<void (*)(_spi_handle_t *)>(HAL_SPI_RxCpltCallback);
             spi_module_handle->TxRxCpltCallback     = reinterpret_cast<void (*)(_spi_handle_t *)>(HAL_SPI_TxRxCpltCallback);
@@ -426,7 +426,7 @@ spi::spi_status_t spi::initialize_module()
                 spi_module_handle->MspInitCallback = reinterpret_cast<void (*)(_spi_handle_t *)>(HAL_SPI_MspInit);
             spi_module_handle->MspInitCallback(spi_module_handle);
         #else
-            HAL_SPI_MspInit(spi_handle);
+            HAL_SPI_MspInit(reinterpret_cast<SPI_HandleTypeDef *>(spi_module_handle));
         #endif
     }
     spi_module_handle->state = SPI_STATE_BUSY;
@@ -838,7 +838,7 @@ void SPI_DMAAbortOnError(dma_handle_t *dma_handle)
     auto *spi_handle = (spi::spi_handle_t *)(((dma_handle_t *)dma_handle)->parent);
     spi_handle->rx_transfer_counter = 0U;
     spi_handle->tx_transfer_counter = 0U;
-    #if (USE_HAL_SPI_REGISTER_CALLBACKS == 1U)
+    #if (SPI_USE_REGISTER_CALLBACKS == 1U)
         spi_handle->ErrorCallback(spi_handle);
     #else
         HAL_SPI_ErrorCallback(spi_handle);
@@ -931,10 +931,10 @@ void spi_irq_handler(spi* spi_object)
             }
             else
             {
-                #if (USE_HAL_SPI_REGISTER_CALLBACKS == 1U)
+                #if (SPI_USE_REGISTER_CALLBACKS == 1U)
                     spi_object->spi_module_handle->ErrorCallback(spi_object->spi_module_handle);
                 #else
-                    HAL_SPI_ErrorCallback(spi_handle);
+                    HAL_SPI_ErrorCallback(spi_object->spi_module_handle);
                 #endif
             }
         }

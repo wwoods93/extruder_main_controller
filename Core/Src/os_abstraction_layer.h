@@ -13,6 +13,8 @@
 #ifndef MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 #define MAIN_CONTROLLER_OS_ABSTRACTION_LAYER_H
 
+void SPI2_IRQHandler();
+
 void run_initialization_task_functions();
 
 void run_preparation_process_task_functions();

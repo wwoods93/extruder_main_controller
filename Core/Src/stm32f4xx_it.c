@@ -55,11 +55,11 @@
 /* USER CODE END 0 */
 
 /* External variables --------------------------------------------------------*/
-
 extern I2C_HandleTypeDef hi2c2;
 extern SPI_HandleTypeDef hspi2;
 extern TIM_HandleTypeDef htim13;
 extern TIM_HandleTypeDef htim14;
+extern UART_HandleTypeDef huart4;
 extern TIM_HandleTypeDef htim3;
 
 /* USER CODE BEGIN EV */
@@ -209,16 +209,16 @@ void I2C2_ER_IRQHandler(void)
 /**
   * @brief This function handles SPI2 global interrupt.
   */
-//void SPI2_IRQHandler(void)
-//{
-//  /* USER CODE BEGIN SPI2_IRQn 0 */
+void SPI2_IRQHandler(void)
+{
+  /* USER CODE BEGIN SPI2_IRQn 0 */
 //
-//  /* USER CODE END SPI2_IRQn 0 */
-//  spi_irq_handler(&hal::spi_2);
-//  /* USER CODE BEGIN SPI2_IRQn 1 */
+  /* USER CODE END SPI2_IRQn 0 */
+  HAL_SPI_IRQHandler(&hspi2);
+  /* USER CODE BEGIN SPI2_IRQn 1 */
 //
-//  /* USER CODE END SPI2_IRQn 1 */
-//}
+  /* USER CODE END SPI2_IRQn 1 */
+}
 
 /**
   * @brief This function handles TIM8 update interrupt and TIM13 global interrupt.
@@ -246,6 +246,20 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
   /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 1 */
 
   /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 1 */
+}
+
+/**
+  * @brief This function handles UART4 global interrupt.
+  */
+void UART4_IRQHandler(void)
+{
+  /* USER CODE BEGIN UART4_IRQn 0 */
+
+  /* USER CODE END UART4_IRQn 0 */
+  HAL_UART_IRQHandler(&huart4);
+  /* USER CODE BEGIN UART4_IRQn 1 */
+
+  /* USER CODE END UART4_IRQn 1 */
 }
 
 /* USER CODE BEGIN 1 */

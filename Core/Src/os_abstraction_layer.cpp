@@ -18,6 +18,7 @@
 #include "gpio.h"
 #include "spi.h"
 #include "../driver_layer/driver_dc_motor_controller.h"
+#include "../hardware_abstraction_layer/hal_general.h"
 #include "../hardware_abstraction_layer/hal_spi.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
 #include "../driver_layer/driver_rtd.h"
@@ -105,8 +106,8 @@ void run_spooling_process_task_functions()
 void run_comms_updater_task_functions()
 {
     hal::spi_2.configure_module(reinterpret_cast<spi::spi_handle_t *>(&hspi2));
-    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_TxRxCpltCallback);
-    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )HAL_SPI_TX_RX_COMPLETE_CB_ID, HAL_SPI_ErrorCallback);
+    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCpltCallback);
+    hal::spi_2.spi_register_callback((spi::spi_callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_ErrorCallback);
 
     uint8_t spi_byte = 0xC2;
     uint8_t rx_data = 0;

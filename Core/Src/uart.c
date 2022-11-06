@@ -12,7 +12,7 @@
 
 #include "stm32f4xx.h"
 
-#include "peripheral_initialization.h"
+#include "peripheral_common.h"
 
 #include "uart.h"
 

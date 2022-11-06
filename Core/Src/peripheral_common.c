@@ -11,13 +11,9 @@
  **********************************************************************************************************************/
 
 #include "stm32f4xx.h"
+#include "peripheral_common.h"
 
-#include "peripheral_initialization.h"
 
-/**
-  * @brief  This function is executed in case of error occurrence.
-  * @retval None
-  */
 void Error_Handler(void)
 {
     /* USER CODE BEGIN Error_Handler_Debug */

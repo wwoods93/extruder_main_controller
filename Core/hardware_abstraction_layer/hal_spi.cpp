@@ -12,7 +12,7 @@
 
 #include <cstdlib>
 #include <cstring>
-#include "peripheral_initialization.h"
+#include "peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "hal_general.h"
 #include "hal_spi.h"

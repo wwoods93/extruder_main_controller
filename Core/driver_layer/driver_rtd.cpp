@@ -13,7 +13,7 @@
 #include <cstdlib>
 #include <cmath>
 #include "stm32f4xx.h"
-#include "peripheral_initialization.h"
+#include "peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "driver_rtd.h"
 

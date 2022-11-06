@@ -11,7 +11,7 @@
  **********************************************************************************************************************/
 
 #include "stm32f4xx.h"
-#include "peripheral_initialization.h"
+#include "peripheral_common.h"
 #include "hal_i2c.h"
 
 i2c::i2c(I2C_HandleTypeDef* handle)

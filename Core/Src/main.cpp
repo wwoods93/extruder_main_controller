@@ -30,7 +30,7 @@
 #include "pwm.h"
 #include "icap.h"
 #include "gpio.h"
-#include "os_abstraction_layer.h"
+#include "../rtos_abstraction_layer/rtos_task_driver.h"
 #include "system_clock.h"
 #include "mcu_clock_timers.h"
 
@@ -76,10 +76,35 @@ const osThreadAttr_t comms_updater_task_attributes =
     .priority = (osPriority_t) osPriorityNormal4,
 };
 
+/* Definitions for spi_tx_data_buffer_mutex */
+osMutexId_t spi_tx_data_buffer_mutexHandle;
+const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = {
+        .name = "spi_tx_data_buffer_mutex"
+};
+/* Definitions for spi_rx_data_buffer_mutex */
+osMutexId_t spi_rx_data_buffer_mutexHandle;
+const osMutexAttr_t spi_rx_data_buffer_mutex_attributes = {
+        .name = "spi_rx_data_buffer_mutex"
+};
+/* Definitions for i2c_tx_data_buffer_mutex */
+osMutexId_t i2c_tx_data_buffer_mutexHandle;
+const osMutexAttr_t i2c_tx_data_buffer_mutex_attributes = {
+        .name = "i2c_tx_data_buffer_mutex"
+};
+/* Definitions for i2c_rx_data_buffer_mutex */
+osMutexId_t i2c_rx_data_buffer_mutexHandle;
+const osMutexAttr_t i2c_rx_data_buffer_mutex_attributes = {
+        .name = "i2c_rx_data_buffer_mutex"
+};
+
 osThreadId_t preparationProcessTaskHandle;
 osThreadId_t extrusionProcessTaskHandle;
 osThreadId_t spoolingProcessTaskHandle;
 osThreadId_t commsUpdaterTaskHandle;
+
+
+
+
 
 void start_initialization_task(void *argument);
 void start_preparation_process_task(void *argument);
@@ -103,14 +128,18 @@ int main()
     MX_TIM11_Init();
     MX_TIM13_Init();
     MX_TIM14_Init();
-
     osKernelInitialize();
 
-    initialization_taskHandle         = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
-    preparation_process_taskHandle    = osThreadNew(start_preparation_process_task,   nullptr, &preparation_process_task_attributes);
-    extrusion_process_taskHandle      = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_process_task_attributes);
-    spooling_process_taskHandle       = osThreadNew(start_spooling_process_task,      nullptr, &spooling_process_task_attributes);
-    comms_updater_taskHandle          = osThreadNew(start_comms_updater_task,         nullptr, &comms_updater_task_attributes);
+    initialization_taskHandle       = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
+    preparation_process_taskHandle  = osThreadNew(start_preparation_process_task,   nullptr, &preparation_process_task_attributes);
+    extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_process_task_attributes);
+    spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_process_task_attributes);
+    comms_updater_taskHandle        = osThreadNew(start_comms_updater_task,         nullptr, &comms_updater_task_attributes);
+
+    spi_tx_data_buffer_mutexHandle  = osMutexNew(&spi_tx_data_buffer_mutex_attributes);
+    spi_rx_data_buffer_mutexHandle  = osMutexNew(&spi_rx_data_buffer_mutex_attributes);
+    i2c_tx_data_buffer_mutexHandle  = osMutexNew(&i2c_tx_data_buffer_mutex_attributes);
+    i2c_rx_data_buffer_mutexHandle  = osMutexNew(&i2c_rx_data_buffer_mutex_attributes);
 
     osKernelStart();
 

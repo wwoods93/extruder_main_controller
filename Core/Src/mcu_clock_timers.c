@@ -29,11 +29,6 @@ static TIM_HandleTypeDef us_timer_base_timer_handle;
 static uint32_t ms_count = 0;
 static uint32_t us_count = 0;
 
-/**
-  * @brief TIM6 Initialization Function
-  * @param None
-  * @retval None
-  */
 void MX_TIM6_Init(void)
 {
     TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -55,11 +50,6 @@ void MX_TIM6_Init(void)
     }
 }
 
-/**
-  * @brief TIM7 Initialization Function
-  * @param None
-  * @retval None
-  */
 void MX_TIM7_Init(void)
 {
     TIM_MasterConfigTypeDef sMasterConfig = {0};
@@ -158,6 +148,7 @@ uint32_t ms_timer(void)
         ms_count++;
     }
     return ms_count;
+//    return HAL_GetTick();
 }
 
 uint32_t ms_timer_get_count(void)

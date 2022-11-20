@@ -22,6 +22,8 @@ extern "C" {
 #endif
 
 void Error_Handler(void);
+void initialize_peripherals(void);
+void MX_WWDG_Init(void);
 
 #ifdef __cplusplus
 }

@@ -49,7 +49,7 @@ void SPI2_IRQHandler()
 namespace driver
 {
     dc_motor_controller motor_controller_1;
-    //rtd rtd_1(&spi_2_handle);
+    rtd rtd_1;
 }
 
 namespace hal
@@ -87,12 +87,15 @@ namespace sys_op
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+                driver::rtd_1.initialize_rtd(&hal::spi_2);
+
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             case COMMS_HANDLER_STATE_RUN:
                 HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
+//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
+                driver::rtd_1.read_rtd_and_calculate_temperature();
                 break;
             default:
                 break;

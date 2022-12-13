@@ -26,10 +26,10 @@ void spi::configure_module(handle_t* spi_handle)
     spi_module_handle->init.mode = SPI_MODE_MASTER;
     spi_module_handle->init.direction = SPI_DIRECTION_2_LINE;
     spi_module_handle->init.data_size = SPI_DATA_SIZE_8_BIT;
-    spi_module_handle->init.clock_polarity = SPI_POLARITY_HIGH;
+    spi_module_handle->init.clock_polarity = SPI_POLARITY_LOW;
     spi_module_handle->init.clock_phase = SPI_PHASE_2EDGE;
     spi_module_handle->init.chip_select_setting = SPI_CHIP_SELECT_SOFTWARE;
-    spi_module_handle->init.baud_rate_prescaler = SPI_BAUD_RATE_PRESCALER_256;
+    spi_module_handle->init.baud_rate_prescaler = SPI_BAUD_RATE_PRESCALER_16;
     spi_module_handle->init.first_bit_setting = SPI_DATA_MSB_FIRST;
     spi_module_handle->init.ti_mode = SPI_TI_MODE_DISABLE;
     spi_module_handle->init.crc_calculation = SPI_CRC_CALCULATION_DISABLE;

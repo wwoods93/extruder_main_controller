@@ -105,15 +105,14 @@ void start_spooling_process_task(void *argument)
 void start_comms_handler_task(void *argument)
 {
     uint32_t comms_handler_iteration_tick = 0;
-    uint32_t kernel_tick = 0;
+//    uint32_t kernel_tick = 0;
 
     while (true)
     {
-        kernel_tick = osKernelGetTickCount();
-        if (kernel_tick - comms_handler_iteration_tick > KERNEL_TICKS_PER_1_SECOND)
+        if (osKernelGetTickCount() - comms_handler_iteration_tick > KERNEL_TICKS_PER_1_SECOND)
         {
             sys_op::comms_handler_state_machine();
-            comms_handler_iteration_tick = kernel_tick;
+            comms_handler_iteration_tick = osKernelGetTickCount();
         }
     }
 }

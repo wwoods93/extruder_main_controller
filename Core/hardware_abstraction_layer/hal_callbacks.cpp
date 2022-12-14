@@ -12,6 +12,7 @@
 
 #include "stm32f4xx_hal.h"
 #include "../system_operation_layer/sys_op_comms_handler.h"
+#include "../driver_layer/driver_rtd.h"
 #include "hal_callbacks.h"
 
 static uint8_t spi_rx_data_ready_flag = 0;
@@ -36,15 +37,26 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi)
 {
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+
+    if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
+        HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
+
+//    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
+//        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7) == GPIO_PIN_RESET)
+//        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_RESET)
+//        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+
     spi_rx_data_ready_flag = 1;
 
 }
 
 void HAL_SPI_Error_Callback(spi::handle_t *hspi)
 {
-    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
-        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+    if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
+        HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
+//    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
+//        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
     spi_rx_data_ready_flag = 1;
 }

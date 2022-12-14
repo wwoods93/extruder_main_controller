@@ -67,6 +67,11 @@ spi::handle_t* get_spi_handle()
     return &spi_2_handle;
 }
 
+rtd* get_rtd_object()
+{
+    return &driver::rtd_1;
+}
+
 namespace sys_op
 {
     void comms_handler_intitialize()
@@ -77,6 +82,7 @@ namespace sys_op
     void comms_handler_state_machine()
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
+        static uint8_t counter = 0;
         uint8_t spi_byte = 0xC2;
         uint8_t rx_data = 0;
 
@@ -87,15 +93,34 @@ namespace sys_op
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+
                 driver::rtd_1.initialize_rtd(&hal::spi_2);
 
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             case COMMS_HANDLER_STATE_RUN:
-                HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
+                //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1);
-                driver::rtd_1.read_rtd_and_calculate_temperature();
+//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOB, GPIO_PIN_14);
+//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOC, GPIO_PIN_7);
+//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOC, GPIO_PIN_8);
+                if (counter == 0)
+                {
+                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOB, GPIO_PIN_14);
+                    counter = 1;
+                }
+                else if (counter == 1)
+                {
+                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOC, GPIO_PIN_7);
+                    counter = 2;
+                }
+                else if (counter == 2)
+                {
+                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOC, GPIO_PIN_8);
+                    counter = 0;
+                }
                 break;
             default:
                 break;

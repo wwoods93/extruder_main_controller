@@ -16,9 +16,12 @@
 #include "../hardware_abstraction_layer/hal_spi.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
 
+#include "../driver_layer/driver_rtd.h"
+
 
 spi* get_spi_object();
 spi::handle_t* get_spi_handle();
+rtd* get_rtd_object();
 
 namespace sys_op
 {

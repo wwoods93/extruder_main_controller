@@ -85,11 +85,11 @@ void rtd::initialize_rtd(spi* spi_object)
 //
 //}
 
-uint8_t rtd::readRegister8(uint8_t addr)
+uint8_t rtd::readRegister8(uint8_t addr, GPIO_TypeDef* port, uint16_t pin)
 {
     addr &= 0x7F;
     uint8_t rx_data = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_data, 1);
+    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_data, 1, port, pin);
 
 //    GPIO_PinClear(RTD_CS);
 //    SPI_transfer_8(addr);
@@ -98,129 +98,117 @@ uint8_t rtd::readRegister8(uint8_t addr)
     return rx_data;
 }
 
-uint16_t rtd::readRegister16(uint8_t addr1, uint8_t addr2)
+uint16_t rtd::readRegister16(uint8_t addr1, uint8_t addr2, GPIO_TypeDef* port, uint16_t pin)
 {
     addr1 &= 0x7F;
     addr2 &= 0x7F;
-    uint16_t ret = 0;
-    uint8_t tx_msb = MAX31865_RTDMSB_REG;
-    uint8_t tx_lsb = MAX31865_RTDLSB_REG;
-    uint8_t tx_full_byte = 0xFF;
-    uint8_t tx_data_1[2] = {tx_msb, tx_full_byte};
-    uint8_t rx_data_1[2] = { 0, 0 };
-    uint8_t tx_data_2[2] = {tx_lsb, tx_full_byte};
-    uint8_t rx_data_2[2] = { 0, 0 };
+    uint16_t rtd_reading = 0;
+    uint8_t tx_data_1[2] = {addr1, 0xFF};
+    uint8_t tx_data_2[2] = {addr2, 0xFF};
 
-
-//    uint8_t tx_data[4] = {tx_msb, tx_full_byte, tx_lsb, tx_full_byte};
-    uint8_t rx_1 = 0;
-    uint8_t rx_2 = 0;
-    uint8_t rx_3 = 0;
-    uint8_t rx_4 = 0;
-//    uint8_t rx_data[2] = {rx_1, rx_2};
-//    uint8_t rx_data[4] = {rx_1, rx_2, rx_3, rx_4 };
-    // set cs low
-//    rtd_spi_object->spi_transmit_receive_interrupt(&tx_msb, &rx_2, 1);
-//    rtd_spi_object->spi_transmit_receive_interrupt(&tx_full_byte, &rx_1, 1);
     uint8_t *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2);
-
-//    HAL_SPI_TransmitReceive_IT(spi_periph`eral, tx_data, rx_data, 4);
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, port, pin);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
-    rx_ptr++;
-    ret = *rx_ptr;
-    ret <<= 8;
-//    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_RESET);
-//    rtd_spi_object->spi_transmit_receive_interrupt(&tx_lsb, &rx_4, 1);
-//    rtd_spi_object->spi_transmit_receive_interrupt(&tx_full_byte, &rx_3, 1);
+    rtd_reading = *(++rx_ptr);
+    rtd_reading <<= 8;
     *rx_ptr = 0;
-    rx_ptr--;
-    *rx_ptr = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2);
+    *(--rx_ptr) = 0;
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, port, pin);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
+    rtd_reading |= *(++rx_ptr);
+    free(--rx_ptr);
 
-    rx_ptr++;
-    ret |= *rx_ptr;
-    rx_ptr--;
-    free(rx_ptr);
-    // us_delay(1);
-    // set cs high
-
-    return ret;
+    return rtd_reading;
 }
 
-void rtd::writeRegister8(uint8_t addr, uint8_t data)
+void rtd::writeRegister8(uint8_t addr, uint8_t data, GPIO_TypeDef* port, uint16_t pin)
 {
     uint8_t rx_1 = 0;
     uint8_t rx_2 = 0;
     addr |= 0x80;
-    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_1, 1);
-    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1);
+    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_1, 1, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin);
 }
 
-bool rtd::rtd_begin(max31865_numwires_t wires)
+bool rtd::rtd_begin(max31865_numwires_t wires, GPIO_TypeDef* port, uint16_t pin)
 {
-//    GPIO_PinOutputEnable(RTD_CS);
-//    GPIO_PinSet(RTD_CS);
-//    SPI_RTD_init_8();
-//    CORETIMER_DelayUs(100);
-    //us_delay(100);
-    writeRegister8(MAX31865_CONFIG_REG, 0xD3);
+    writeRegister8(MAX31865_CONFIG_REG, 0xD3, port, pin);
     return true;
 }
 
-uint16_t rtd::read_rtd()
+uint16_t rtd::read_rtd(GPIO_TypeDef* port, uint16_t pin)
 {
-    rtd_begin(MAX31865_3WIRE);
-    uint16_t rtd = readRegister16(MAX31865_RTDMSB_REG, MAX31865_RTDLSB_REG);
+    rtd_begin(MAX31865_3WIRE, port, pin);
+    uint16_t rtd = readRegister16(MAX31865_RTDMSB_REG, MAX31865_RTDLSB_REG, port, pin);
     rtd >>= 1;
     return rtd;
 }
 
-float rtd::read_rtd_and_calculate_temperature()
+float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin)
 {
-    double Z1, Z2, Z3, Z4, Rt, temp;
+    double temp_calculation_term_1 = 0;
+    double temp_calculation_term_2 = 0;
+    double temp_calculation_term_3 = 0;
+    double temp_calculation_term_4 = 0;
+    double resistance_ratio = 0;
+    double calculated_temperature = 0;
 
-    Rt = read_rtd();
-    Rt /= 32768;
-    Rt *= R_REF;
+    resistance_ratio = read_rtd(port, pin);
+    resistance_ratio /= RESISTANCE_RATIO_DIVISOR;
+    resistance_ratio *= RTD_RESISTANCE_REFERENCE;
 
-    Z1 = -RTD_A;
-    Z2 = RTD_A * RTD_A - (4 * RTD_B);
-    Z3 = (4 * RTD_B) / R_NOM;
-    Z4 = 2 * RTD_B;
+    temp_calculation_term_1 = -RTD_FACTOR_1;
+    temp_calculation_term_2 = RTD_FACTOR_1 * RTD_FACTOR_1 - (4 * RTD_FACTOR_2);
+    temp_calculation_term_3 = (4 * RTD_FACTOR_2) / RTD_RESISTANCE_NOMINAL;
+    temp_calculation_term_4 = 2 * RTD_FACTOR_2;
 
-    temp = Z2 + (Z3 * Rt);
-    temp = ((double)sqrt(temp) + Z1) / Z4;
+    calculated_temperature = temp_calculation_term_2 + (temp_calculation_term_3 * resistance_ratio);
+    calculated_temperature = ((double)sqrt(calculated_temperature) + temp_calculation_term_1) / temp_calculation_term_4;
 
-    if (temp >= 0)
-        return (float)temp;
+    if (calculated_temperature >= 0)
+        return (float)calculated_temperature;
 
-    Rt /= R_NOM;
-    Rt *= 100; // normalize to 100 ohm
+    resistance_ratio /= RTD_RESISTANCE_NOMINAL;
+    resistance_ratio *= 1000;
 
-    double rpoly = Rt;
+    double polynomial_input = resistance_ratio;
 
-    temp = -242.02;
-    temp += 2.2228 * rpoly;
-    rpoly *= Rt; // square
-    temp += 2.5859e-3 * rpoly;
-    rpoly *= Rt; // ^3
-    temp -= 4.8260e-6 * rpoly;
-    rpoly *= Rt; // ^4
-    temp -= 2.8183e-8 * rpoly;
-    rpoly *= Rt; // ^5
-    temp += 1.5243e-10 * rpoly;
+    calculated_temperature = INITIAL_CALCULATED_TEMPERATURE;
+    calculated_temperature += DEGREE_1_COEFFICIENT * polynomial_input;
+    polynomial_input *= resistance_ratio;
+    calculated_temperature += DEGREE_2_COEFFICIENT * polynomial_input;
+    polynomial_input *= resistance_ratio;
+    calculated_temperature -= DEGREE_3_COEFFICIENT * polynomial_input;
+    polynomial_input *= resistance_ratio;
+    calculated_temperature -= DEGREE_4_COEFFICIENT * polynomial_input;
+    polynomial_input *= resistance_ratio;
+    calculated_temperature += DEGREE_5_COEFFICIENT * polynomial_input;
 
-    return (float)temp;
+    return (float)calculated_temperature;
+}
+
+GPIO_TypeDef* get_chip_select_port(rtd* rtd_object)
+{
+    return rtd_object->chip_select_port;
+}
+
+uint16_t get_chip_select_pin(rtd* rtd_object)
+{
+    return rtd_object->chip_select_pin;
+}
+
+void reset_chip_select_port_and_pin(rtd* rtd_object)
+{
+    rtd_object->chip_select_port = (GPIO_TypeDef*) nullptr;
+    rtd_object->chip_select_pin = 0;
 }
 
 //float rtd::get_temp()
 //{
 //    float temp = 0;
 //    temp = read_rtd_and_calculate_temperature();
-////    CORETIMER_DelayMs(17);
+//    CORETIMER_DelayMs(17);
 //    return temp;
 //}

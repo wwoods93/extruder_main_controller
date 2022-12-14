@@ -266,6 +266,8 @@ class spi
             hal_lock_t                  lock;
             volatile state_t            state;
             volatile uint32_t           error_code;
+            GPIO_TypeDef* chip_select_port;
+            uint16_t chip_select_pin;
 
             #if (SPI_USE_REGISTER_CALLBACKS == 1U)
                 void (* TxCpltCallback)             (struct _handle_t *spi_handle);
@@ -286,7 +288,7 @@ class spi
         /* public member functions */
         void configure_module(handle_t* spi_handle);
         void initialize_spi_buffer();
-        status_t spi_transmit_receive_interrupt(uint8_t *pTxData, uint8_t *pRxData, uint16_t Size);
+        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin);
         status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
         void shift_buffer_contents_to_front();
         void process_spi_buffer();

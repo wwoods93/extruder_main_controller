@@ -77,6 +77,7 @@ class rtd
         /* max31865 nominal and reference resistances */
         static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0;
         static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0;
+        static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         uint32_t temperature_to_resistance_pt1000_lookup_table[510] =
         {
@@ -140,13 +141,7 @@ class rtd
             MAX31865_4WIRE = 0
         } max31865_numwires_t;
 
-//        explicit rtd(spi* spi_object);
-//        rtd();
-
         void initialize_rtd(spi* spi_object);
-//        void SPI_RTD_init_8(void);
-//        uint8_t SPI_transfer_8(uint8_t data);
-//        void MX_SPI2_Init();
         friend GPIO_TypeDef* get_chip_select_port(rtd* rtd_object);
         friend uint16_t get_chip_select_pin(rtd* rtd_object);
         friend void reset_chip_select_port_and_pin(rtd* rtd_object);
@@ -158,9 +153,9 @@ class rtd
         bool rtd_begin(max31865_numwires_t wires, GPIO_TypeDef* port, uint16_t pin);
         uint16_t read_rtd(GPIO_TypeDef* port, uint16_t pin);
         float read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin);
-        uint32_t search_pt100_list(uint32_t ohmsX100);
-        float ohmsX100_to_celsius (uint32_t ohmsX100);
-//        float get_temp();
+        uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
+        float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
+
     private:
 };
 

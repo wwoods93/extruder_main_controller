@@ -158,35 +158,41 @@ float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin)
     resistance_ratio = read_rtd(port, pin);
     resistance_ratio /= RESISTANCE_RATIO_DIVISOR;
     resistance_ratio *= RTD_RESISTANCE_REFERENCE;
+    double resistance_as_double = floor(resistance_ratio * 100.0) / 100.0;
+    uint32_t resistance_as_uint32_t = floor(resistance_as_double * 100);
+    float temp = ohmsX100_to_celsius(resistance_as_uint32_t);
+    return temp;
 
-    temp_calculation_term_1 = -RTD_FACTOR_1;
-    temp_calculation_term_2 = RTD_FACTOR_1 * RTD_FACTOR_1 - (4 * RTD_FACTOR_2);
-    temp_calculation_term_3 = (4 * RTD_FACTOR_2) / RTD_RESISTANCE_NOMINAL;
-    temp_calculation_term_4 = 2 * RTD_FACTOR_2;
 
-    calculated_temperature = temp_calculation_term_2 + (temp_calculation_term_3 * resistance_ratio);
-    calculated_temperature = ((double)sqrt(calculated_temperature) + temp_calculation_term_1) / temp_calculation_term_4;
 
-    if (calculated_temperature >= 0)
-        return (float)calculated_temperature;
-
-    resistance_ratio /= RTD_RESISTANCE_NOMINAL;
-    resistance_ratio *= 1000;
-
-    double polynomial_input = resistance_ratio;
-
-    calculated_temperature = INITIAL_CALCULATED_TEMPERATURE;
-    calculated_temperature += DEGREE_1_COEFFICIENT * polynomial_input;
-    polynomial_input *= resistance_ratio;
-    calculated_temperature += DEGREE_2_COEFFICIENT * polynomial_input;
-    polynomial_input *= resistance_ratio;
-    calculated_temperature -= DEGREE_3_COEFFICIENT * polynomial_input;
-    polynomial_input *= resistance_ratio;
-    calculated_temperature -= DEGREE_4_COEFFICIENT * polynomial_input;
-    polynomial_input *= resistance_ratio;
-    calculated_temperature += DEGREE_5_COEFFICIENT * polynomial_input;
-
-    return (float)calculated_temperature;
+//    temp_calculation_term_1 = -RTD_FACTOR_1;
+//    temp_calculation_term_2 = RTD_FACTOR_1 * RTD_FACTOR_1 - (4 * RTD_FACTOR_2);
+//    temp_calculation_term_3 = (4 * RTD_FACTOR_2) / RTD_RESISTANCE_NOMINAL;
+//    temp_calculation_term_4 = 2 * RTD_FACTOR_2;
+//
+//    calculated_temperature = temp_calculation_term_2 + (temp_calculation_term_3 * resistance_ratio);
+//    calculated_temperature = ((double)sqrt(calculated_temperature) + temp_calculation_term_1) / temp_calculation_term_4;
+//
+//    if (calculated_temperature >= 0)
+//        return (float)calculated_temperature;
+//
+//    resistance_ratio /= RTD_RESISTANCE_NOMINAL;
+//    resistance_ratio *= 1000;
+//
+//    double polynomial_input = resistance_ratio;
+//
+//    calculated_temperature = INITIAL_CALCULATED_TEMPERATURE;
+//    calculated_temperature += DEGREE_1_COEFFICIENT * polynomial_input;
+//    polynomial_input *= resistance_ratio;
+//    calculated_temperature += DEGREE_2_COEFFICIENT * polynomial_input;
+//    polynomial_input *= resistance_ratio;
+//    calculated_temperature -= DEGREE_3_COEFFICIENT * polynomial_input;
+//    polynomial_input *= resistance_ratio;
+//    calculated_temperature -= DEGREE_4_COEFFICIENT * polynomial_input;
+//    polynomial_input *= resistance_ratio;
+//    calculated_temperature += DEGREE_5_COEFFICIENT * polynomial_input;
+//
+//    return (float)calculated_temperature;
 }
 
 GPIO_TypeDef* get_chip_select_port(rtd* rtd_object)
@@ -212,3 +218,79 @@ void reset_chip_select_port_and_pin(rtd* rtd_object)
 //    CORETIMER_DelayMs(17);
 //    return temp;
 //}
+
+uint32_t rtd::search_pt100_list(uint32_t ohmsX100)
+{
+    int lower = 0 ;
+    int upper = 509 ;
+    int mid = (lower + upper) / 2 ;
+
+    do
+    {
+        uint32_t pt100val = temperature_to_resistance_pt1000_lookup_table[mid] ;
+
+        if (pt100val == ohmsX100)
+        {
+            break;
+        }
+        else if (pt100val < ohmsX100)
+        {
+            lower = mid + 1 ;
+        }
+        else
+        {
+            upper = mid ;
+        }
+
+        mid = (lower + upper) / 2 ;
+
+    } while (lower < upper)	;
+    // falls through on last mismatch
+
+    return(mid);
+}
+
+float rtd::ohmsX100_to_celsius (uint32_t ohmsX100)
+{
+    uint32_t R_upper, R_lower ;
+    uint32_t hundredths = 0 ;
+    uint32_t iTemp = 0 ;
+    float celsius ;
+
+    uint32_t index = search_pt100_list(ohmsX100) ;
+
+    // The minimum integral temperature
+    iTemp = index - 1 + CELSIUS_MIN ;
+
+    // fetch floor() and ceiling() resistances since
+    // key = intermediate value is the most likely case.
+
+    // ACHTUNG!  (index == 0) is forbidden!
+    R_lower = temperature_to_resistance_pt1000_lookup_table[index - 1];
+    R_upper = temperature_to_resistance_pt1000_lookup_table[index];
+
+    if (ohmsX100 == R_upper)
+    {
+        iTemp++ ;
+        hundredths = 0 ;
+    }
+    else if (ohmsX100 < R_upper)
+    {
+        hundredths = ((100 * (ohmsX100 - R_lower)) / (R_upper - R_lower)) ;
+    }
+    else if (ohmsX100 > R_upper)
+    {
+        iTemp++ ;
+        // risks index+1 out of range
+        uint16_t Rnext = temperature_to_resistance_pt1000_lookup_table[index + 1];
+        hundredths = (100 * (ohmsX100 - R_upper)) / (Rnext - R_upper) ;
+    }
+    else
+    {
+        hundredths = ((100 * (ohmsX100 - R_lower)) / (R_upper - R_lower)) ;
+    }
+
+    celsius  = (float)iTemp + (float)hundredths / 100.0 ;
+
+    return(celsius );
+}

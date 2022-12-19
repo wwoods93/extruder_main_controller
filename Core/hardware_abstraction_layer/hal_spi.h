@@ -20,7 +20,7 @@
 class spi
 {
     public:
-        /* type definitions */
+
         #define SPI_USE_REGISTER_CALLBACKS      1U
         #define SPI_USE_CRC                     0U
 
@@ -30,6 +30,7 @@ class spi
         #define SPI_BYTES_MAX                   255U
         #define SPI_BUFFER_MAX                  255U
 
+        /* type definitions */
         typedef enum
         {
             SPI_STATUS_OK                       = 0x00U,
@@ -164,18 +165,18 @@ class spi
         #define SPI_DISABLE_MODULE(__HANDLE__)                      STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SPI_ENABLE)
         #define SPI_ENABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)    STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
         #define SPI_DISABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)   STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
-        #define SPI_GET_FLAG_STATUS(__HANDLE__, __FLAG__)           ((((__HANDLE__)->instance->STATUS_REG) & (__FLAG__)) == (__FLAG__))
-        #define SPI_CHECK_FLAG_STATUS(__SR__, __FLAG__)             ((((__SR__) & ((__FLAG__) & SPI_FLAG_MASK)) == ((__FLAG__) & SPI_FLAG_MASK)) ? FLAG_SET : FLAG_RESET)
-        #define SPI_VERIFY_DIRECTION_2_LINE(__MODE__)               ((__MODE__) == SPI_DIRECTION_2_LINE)
-        #define SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(__MODE__)       ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)
-        #define SPI_VERIFY_DIRECTION_1_LINE(__MODE__)               ((__MODE__) == SPI_DIRECTION_1_LINE)
+        #define SPI_GET_FLAG_STATUS(__HANDLE__, __FLAG__)          ((((__HANDLE__)->instance->STATUS_REG) & (__FLAG__)) == (__FLAG__))
+        #define SPI_CHECK_FLAG_STATUS(__SR__, __FLAG__)            ((((__SR__) & ((__FLAG__) & SPI_FLAG_MASK)) == ((__FLAG__) & SPI_FLAG_MASK)) ? FLAG_SET : FLAG_RESET)
+        #define SPI_VERIFY_DIRECTION_2_LINE(__MODE__)                ((__MODE__) == SPI_DIRECTION_2_LINE)
+        #define SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(__MODE__)        ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)
+        #define SPI_VERIFY_DIRECTION_1_LINE(__MODE__)                ((__MODE__) == SPI_DIRECTION_1_LINE)
         #define SPI_VERIFY_VALID_INSTANCE(INSTANCE)                 (((INSTANCE) == SPI_1) || ((INSTANCE) == SPI_2)   ||    \
                                                                      ((INSTANCE) == SPI_3) || ((INSTANCE) == SPI_4))
         #define SPI_VERIFY_MODE(__MODE__)                           (((__MODE__) == SPI_MODE_PERIPHERAL)              ||    \
                                                                      ((__MODE__) == SPI_MODE_CONTROLLER))
 
-        #define SPI_CHECK_INTERRUPT_SOURCE(__CR2__, __INTERRUPT__)  ((((__CR2__) & (__INTERRUPT__)) ==                      \
-                                                                    (__INTERRUPT__)) ? FLAG_SET : FLAG_RESET)
+        #define SPI_CHECK_INTERRUPT_SOURCE(__CR2__, __INTERRUPT__) ((((__CR2__) & (__INTERRUPT__)) ==                       \
+                                                                      (__INTERRUPT__)) ? FLAG_SET : FLAG_RESET)
         #define SPI_VERIFY_DIRECTION(__MODE__)                      (((__MODE__) == SPI_DIRECTION_2_LINE)             ||    \
                                                                      ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)     ||    \
                                                                      ((__MODE__) == SPI_DIRECTION_1_LINE))
@@ -248,6 +249,15 @@ class spi
             uint32_t crc_calculation;
             uint32_t crc_polynomial;
         } init_t;
+
+        typedef struct
+        {
+            GPIO_TypeDef* chip_select_port;
+            uint16_t chip_select_pin;
+            // clock setting
+            // anything else
+
+        } peripheral_device_t;
 
         typedef struct _handle_t
         {

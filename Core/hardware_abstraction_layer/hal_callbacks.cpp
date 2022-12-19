@@ -40,14 +40,6 @@ void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi)
 
     if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
         HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
-
-//    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
-//        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_7) == GPIO_PIN_RESET)
-//        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-//    if (HAL_GPIO_ReadPin(GPIOC, GPIO_PIN_8) == GPIO_PIN_RESET)
-//        HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
-
     spi_rx_data_ready_flag = 1;
 
 }
@@ -56,7 +48,5 @@ void HAL_SPI_Error_Callback(spi::handle_t *hspi)
 {
     if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
         HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
-//    if (HAL_GPIO_ReadPin(GPIOB, GPIO_PIN_14) == GPIO_PIN_RESET)
-//        HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
     spi_rx_data_ready_flag = 1;
 }

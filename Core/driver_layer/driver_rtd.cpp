@@ -42,23 +42,38 @@ void rtd::initialize_rtd(spi* spi_object)
     spi_peripheral = rtd_spi_object->spi_module_handle;
 }
 
-uint8_t rtd::readRegister8(uint8_t addr, GPIO_TypeDef* port, uint16_t pin)
+bool rtd::rtd_begin(GPIO_TypeDef* port, uint16_t pin) const
 {
-    addr &= 0x7F;
+    write_register_8(CONFIG_REGISTER_ADDRESS, RTD_CONFIG_REG_BYTE, port, pin);
+    return true;
+}
+
+void rtd::write_register_8(uint8_t register_address, uint8_t data, GPIO_TypeDef* port, uint16_t pin) const
+{
+    uint8_t rx_1 = 0;
+    uint8_t rx_2 = 0;
+    register_address |= WRITE_REGISTER_ADDRESS_MASK;
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin);
+}
+
+uint8_t rtd::read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const
+{
+    register_address &= READ_REGISTER_ADDRESS_MASK;
     uint8_t rx_data = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_data, 1, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, port, pin);
+    while (!hal_callbacks_get_spi_rx_data_ready_flag());
+    hal_callbacks_set_spi_rx_data_ready_flag(0);
     return rx_data;
 }
 
-uint16_t rtd::readRegister16(uint8_t addr1, uint8_t addr2, GPIO_TypeDef* port, uint16_t pin)
+uint16_t rtd::read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uint16_t pin) const
 {
-    addr1 &= 0x7F;
-    addr2 &= 0x7F;
     uint16_t rtd_reading = 0;
-    uint8_t tx_data_1[2] = {addr1, 0xFF};
-    uint8_t tx_data_2[2] = {addr2, 0xFF};
+    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
+    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
 
-    uint8_t *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
+    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
     rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, port, pin);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
@@ -75,27 +90,10 @@ uint16_t rtd::readRegister16(uint8_t addr1, uint8_t addr2, GPIO_TypeDef* port, u
     return rtd_reading;
 }
 
-void rtd::writeRegister8(uint8_t addr, uint8_t data, GPIO_TypeDef* port, uint16_t pin)
+uint16_t rtd::read_rtd(GPIO_TypeDef* port, uint16_t pin) const
 {
-    uint8_t rx_1 = 0;
-    uint8_t rx_2 = 0;
-    addr |= 0x80;
-    rtd_spi_object->spi_transmit_receive_interrupt(&addr, &rx_1, 1, port, pin);
-    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin);
-}
-
-bool rtd::rtd_begin(max31865_numwires_t wires, GPIO_TypeDef* port, uint16_t pin)
-{
-    writeRegister8(MAX31865_CONFIG_REG, 0xD3, port, pin);
-    return true;
-}
-
-uint16_t rtd::read_rtd(GPIO_TypeDef* port, uint16_t pin)
-{
-    rtd_begin(MAX31865_3WIRE, port, pin);
-    uint16_t rtd = readRegister16(MAX31865_RTDMSB_REG, MAX31865_RTDLSB_REG, port, pin);
-    rtd >>= 1;
-    return rtd;
+    rtd_begin(port, pin);
+    return read_msb_and_lsb_registers_and_concatenate(port, pin) >> 1;
 }
 
 float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin)
@@ -107,6 +105,54 @@ float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin)
     resistance_as_double = ceil(resistance_as_double * 100.0);
     calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)resistance_as_double);
     return calculated_temperture_celsius;
+}
+
+uint32_t rtd::search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance)
+{
+    uint16_t temperature_range_min = 0;
+    uint16_t temperature_range_max = CELSIUS_MAX;
+    uint16_t temperature_range_midpoint = (temperature_range_min + temperature_range_max) / 2 ;
+
+    while (temperature_range_min < temperature_range_max)
+    {
+        uint32_t temperature_celsius_from_rtd_resistance = temperature_to_resistance_pt1000_lookup_table[temperature_range_midpoint] ;
+        if (temperature_celsius_from_rtd_resistance == rtd_resistance) { break; }
+        else if (temperature_celsius_from_rtd_resistance < rtd_resistance) { temperature_range_min = temperature_range_midpoint + 1 ; }
+        else { temperature_range_max = temperature_range_midpoint; }
+        temperature_range_midpoint = (temperature_range_min + temperature_range_max) / 2;
+    }
+    return temperature_range_midpoint;
+}
+
+float rtd::rtd_resistance_to_temperature_celsius(uint32_t rtd_resistance)
+{
+    uint32_t index = 0;
+    uint32_t resistance_upper_bound = 0;
+    uint32_t resistance_lower_bound = 0;
+    uint32_t temperature_celsius_float_component = 0 ;
+    uint16_t temperature_celsius_integer_component = 0 ;
+    uint16_t next_resistance_in_lookup_table = 0;
+
+    index = search_temperature_to_resistance_pt1000_lookup_table(rtd_resistance) ;
+    temperature_celsius_integer_component = index - 1 + CELSIUS_MIN ;
+    resistance_lower_bound = temperature_to_resistance_pt1000_lookup_table[index - 1];
+    resistance_upper_bound = temperature_to_resistance_pt1000_lookup_table[index];
+
+    if (rtd_resistance < resistance_upper_bound)
+        temperature_celsius_float_component = ((100 * (rtd_resistance - resistance_lower_bound)) / (resistance_upper_bound - resistance_lower_bound));
+    else if (rtd_resistance > resistance_upper_bound)
+    {
+        ++temperature_celsius_integer_component;
+        next_resistance_in_lookup_table = temperature_to_resistance_pt1000_lookup_table[index + 1];
+        temperature_celsius_float_component = (100 * (rtd_resistance - resistance_upper_bound)) / (next_resistance_in_lookup_table - resistance_upper_bound);
+    }
+    else if (rtd_resistance == resistance_upper_bound)
+    {
+        ++temperature_celsius_integer_component;
+        temperature_celsius_float_component = 0;
+    }
+
+    return (float)(temperature_celsius_integer_component + (float)temperature_celsius_float_component / 100.0);
 }
 
 GPIO_TypeDef* get_chip_select_port(rtd* rtd_object)
@@ -123,54 +169,4 @@ void reset_chip_select_port_and_pin(rtd* rtd_object)
 {
     rtd_object->chip_select_port = (GPIO_TypeDef*) nullptr;
     rtd_object->chip_select_pin = 0;
-}
-
-uint32_t rtd::search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance)
-{
-    int temperature_range_min = 0 ;
-    int temperature_range_max = 509 ;
-    int temperature_range_midpoint = (temperature_range_min + temperature_range_max) / 2 ;
-
-    while (temperature_range_min < temperature_range_max)
-    {
-        uint32_t temperature_celsius_from_rtd_resistance = temperature_to_resistance_pt1000_lookup_table[temperature_range_midpoint] ;
-        if (temperature_celsius_from_rtd_resistance == rtd_resistance) { break; }
-        else if (temperature_celsius_from_rtd_resistance < rtd_resistance) { temperature_range_min = temperature_range_midpoint + 1 ; }
-        else { temperature_range_max = temperature_range_midpoint; }
-        temperature_range_midpoint = (temperature_range_min + temperature_range_max) / 2;
-    }
-    return temperature_range_midpoint;
-}
-
-float rtd::rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance)
-{
-    uint32_t index = 0;
-    uint32_t resistance_upper_bound = 0;
-    uint32_t resistance_lower_bound = 0;
-    uint32_t temperature_celsius_float_component = 0 ;
-    uint32_t temperture_celsius_integer_component = 0 ;
-    uint16_t next_resistance_in_lookup_table = 0;
-
-    index = search_temperature_to_resistance_pt1000_lookup_table(rtd_resistance) ;
-    temperture_celsius_integer_component = index - 1 + CELSIUS_MIN ;
-    resistance_lower_bound = temperature_to_resistance_pt1000_lookup_table[index - 1];
-    resistance_upper_bound = temperature_to_resistance_pt1000_lookup_table[index];
-
-    if (rtd_resistance == resistance_upper_bound)
-    {
-        ++temperture_celsius_integer_component;
-        temperature_celsius_float_component = 0;
-    }
-    else if (rtd_resistance < resistance_upper_bound)
-        temperature_celsius_float_component = ((100 * (rtd_resistance - resistance_lower_bound)) / (resistance_upper_bound - resistance_lower_bound));
-    else if (rtd_resistance > resistance_upper_bound)
-    {
-        ++temperture_celsius_integer_component;
-        next_resistance_in_lookup_table = temperature_to_resistance_pt1000_lookup_table[index + 1];
-        temperature_celsius_float_component = (100 * (rtd_resistance - resistance_upper_bound)) / (next_resistance_in_lookup_table - resistance_upper_bound);
-    }
-    else
-        temperature_celsius_float_component = ((100 * (rtd_resistance - resistance_lower_bound)) / (resistance_upper_bound - resistance_lower_bound));
-
-    return (float)temperture_celsius_integer_component + (float)temperature_celsius_float_component / 100.0;
 }

@@ -23,6 +23,19 @@ class rtd
         spi* rtd_spi_object;
         spi::handle_t* spi_peripheral;
 
+        typedef struct
+        {
+            uint8_t bias_setting;
+            uint8_t conversion_mode;
+            uint8_t rtd_type;
+            uint8_t fault_status_clear_mode;
+            uint8_t notch_filter_setting;
+
+
+
+        } rtd_sensor_t;
+
+
         GPIO_TypeDef* chip_select_port;
         uint16_t chip_select_pin;
 
@@ -34,54 +47,56 @@ class rtd
         uint16_t chip_select_2_pin = GPIO_PIN_7;
         uint16_t chip_select_3_pin = GPIO_PIN_8;
 
+        #define CELSIUS_MIN                     0
+        #define CELSIUS_MAX                     509
+        #define RESISTANCE_RATIO_DIVISOR        32768
 
-        #define CELSIUS_MIN     0
+        #define READ_REGISTER_ADDRESS_MASK      0x7F
+        #define WRITE_REGISTER_ADDRESS_MASK     0x80
+        #define DUMMY_BYTE                      0xFF
 
-        #define RESISTANCE_RATIO_DIVISOR            32768
-        #define INITIAL_CALCULATED_TEMPERATURE      -242.02
-        #define DEGREE_1_COEFFICIENT                2.2228
-        #define DEGREE_2_COEFFICIENT                2.5859e-3
-        #define DEGREE_3_COEFFICIENT                4.8260e-6
-        #define DEGREE_4_COEFFICIENT                2.8183e-8
-        #define DEGREE_5_COEFFICIENT                1.5243e-10
+        /* config register bytes */
+        static constexpr uint8_t CONFIG_REGISTER_ADDRESS                        = 0x00;
+        static constexpr uint8_t CONFIG_REGISTER_SET_BIAS                       = 0x80;
+        static constexpr uint8_t CONFIG_REGISTER_SET_CONVERSION_MODE_AUTO       = 0x40;
+        static constexpr uint8_t CONFIG_REGISTER_SET_CONVERSION_MODE_OFF        = 0x00;
+        static constexpr uint8_t CONFIG_REGISTER_SET_CONVERSION_MODE_1_SHOT     = 0x20;
+        static constexpr uint8_t CONFIG_REGISTER_SET_RTD_TYPE_3_WIRE            = 0x10;
+        static constexpr uint8_t CONFIG_REGISTER_SET_RTD_TYPE_2_OR_4_WIRE       = 0x00;
+        static constexpr uint8_t CONFIG_REGISTER_FAULT_STATUS_CLEAR             = 0x02;
+        static constexpr uint8_t CONFIG_REGISTER_SET_NOTCH_FILTER_50_HZ         = 0x01;
+        static constexpr uint8_t CONFIG_REGISTER_SET_NOTCH_FILTER_60_HZ         = 0x00;
 
-        /* max31865 configuration bytes */
-        static constexpr uint8_t MAX31865_CONFIG_REG        = 0x00;
-        static constexpr uint8_t MAX31865_CONFIG_BIAS       = 0x80;
-        static constexpr uint8_t MAX31865_CONFIG_MODEAUTO   = 0x40;
-        static constexpr uint8_t AX31865_CONFIG_MODEOFF     = 0x00;
-        static constexpr uint8_t MAX31865_CONFIG_1SHOT      = 0x20;
-        static constexpr uint8_t MAX31865_CONFIG_3WIRE      = 0x10;
-        static constexpr uint8_t MAX31865_CONFIG_24WIRE     = 0x00;
-        static constexpr uint8_t MAX31865_CONFIG_FAULTSTAT  = 0x02;
-        static constexpr uint8_t MAX31865_CONFIG_FILT50HZ   = 0x01;
-        static constexpr uint8_t MAX31865_CONFIG_FILT60HZ   = 0x00;
-        /* max31865 register access bytes */
-        static constexpr uint8_t MAX31865_RTDMSB_REG        = 0x01;
-        static constexpr uint8_t MAX31865_RTDLSB_REG        = 0x02;
-        static constexpr uint8_t MAX31865_HFAULTMSB_REG     = 0x03;
-        static constexpr uint8_t MAX31865_HFAULTLSB_REG     = 0x04;
-        static constexpr uint8_t MAX31865_LFAULTMSB_REG     = 0x05;
-        static constexpr uint8_t MAX31865_LFAULTLSB_REG     = 0x06;
-        static constexpr uint8_t MAX31865_FAULTSTAT_REG     = 0x07;
-        /* max31865 fault code bytes */
-        static constexpr uint8_t MAX31865_FAULT_HIGHTHRESH  = 0x80;
-        static constexpr uint8_t MAX31865_FAULT_LOWTHRESH   = 0x40;
-        static constexpr uint8_t MAX31865_FAULT_REFINLOW    = 0x20;
-        static constexpr uint8_t MAX31865_FAULT_REFINHIGH   = 0x10;
-        static constexpr uint8_t MAX31865_FAULT_RTDINLOW    = 0x08;
-        static constexpr uint8_t MAX31865_FAULT_OVUV        = 0x04;
-        /* max31865 interpolation polynomial coefficients */
-        static constexpr double RTD_FACTOR_1 = 3.9083e-3;
-        static constexpr double RTD_FACTOR_2 = -5.775e-7;
-        /* max31865 nominal and reference resistances */
+        static constexpr uint8_t RTD_CONFIG_REG_BYTE = CONFIG_REGISTER_SET_BIAS
+                                                     | CONFIG_REGISTER_SET_CONVERSION_MODE_AUTO
+                                                     | CONFIG_REGISTER_SET_RTD_TYPE_3_WIRE
+                                                     | CONFIG_REGISTER_FAULT_STATUS_CLEAR
+                                                     | CONFIG_REGISTER_SET_NOTCH_FILTER_50_HZ;
+        /* register addresses */
+        static constexpr uint8_t MSB_REGISTER_ADDRESS                           = 0x01;
+        static constexpr uint8_t LSB_REGISTER_ADDRESS                           = 0x02;
+        static constexpr uint8_t MSB_REGISTER_ADDRESS_FOR_READ = MSB_REGISTER_ADDRESS & READ_REGISTER_ADDRESS_MASK;
+        static constexpr uint8_t LSB_REGISTER_ADDRESS_FOR_READ = LSB_REGISTER_ADDRESS & READ_REGISTER_ADDRESS_MASK;
+        static constexpr uint8_t HIGH_FAULT_MSB_REGISTER                        = 0x03;
+        static constexpr uint8_t HIGH_FAULT_LSB_REGISTER                        = 0x04;
+        static constexpr uint8_t LOW_FAULT_MSB_REGISTER                         = 0x05;
+        static constexpr uint8_t LOW_FAULT_LSB_REGISTER                         = 0x06;
+        static constexpr uint8_t FAULT_STATUS_REGISTER                          = 0x07;
+        /* fault codes */
+        static constexpr uint8_t FAULT_HIGH_THRESHOLD                           = 0x80;
+        static constexpr uint8_t FAULT_LOW_THRESHOLD                            = 0x40;
+        static constexpr uint8_t FAULT_REFIN_LOW                                = 0x20;
+        static constexpr uint8_t FAULT_REFIN_HIGH                               = 0x10;
+        static constexpr uint8_t FAULT_RTDIN_LOW                                = 0x08;
+        static constexpr uint8_t FAULT_OVER_UNDER_VOLTAGE                       = 0x04;
+        /* nominal and reference resistances */
         static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0;
         static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0;
         static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         uint32_t temperature_to_resistance_pt1000_lookup_table[510] =
         {
-                100000, 100390, 100780, 101170, 101560, 101950, 102340, 102730, 103120, 103510,
+                 100000,  100390,  100780,  101170, 101560, 101950,   102340,  102730,  103120, 103510,
                 103900, 104290, 104680, 105070, 105460, 105850, 106240, 106630, 107020, 107400,
                 107790, 108180, 108570, 108960, 109350, 109730, 110120, 110510, 110900, 111290,
                 111670, 112060, 112450, 112830, 113220, 113610, 114000, 114380, 114770, 115150,
@@ -134,27 +149,19 @@ class rtd
                 280980, 281310, 281640, 281980, 282310, 282640, 282970, 283310, 283640, 283970
         };
 
-        typedef enum max31865_numwires
-        {
-            MAX31865_2WIRE = 0,
-            MAX31865_3WIRE = 1,
-            MAX31865_4WIRE = 0
-        } max31865_numwires_t;
-
         void initialize_rtd(spi* spi_object);
-        friend GPIO_TypeDef* get_chip_select_port(rtd* rtd_object);
-        friend uint16_t get_chip_select_pin(rtd* rtd_object);
-        friend void reset_chip_select_port_and_pin(rtd* rtd_object);
-
-
-        uint8_t readRegister8(uint8_t addr, GPIO_TypeDef* port, uint16_t pin);
-        uint16_t readRegister16(uint8_t addr1, uint8_t addr2, GPIO_TypeDef* port, uint16_t pin);
-        void writeRegister8(uint8_t addr, uint8_t data, GPIO_TypeDef* port, uint16_t pin);
-        bool rtd_begin(max31865_numwires_t wires, GPIO_TypeDef* port, uint16_t pin);
-        uint16_t read_rtd(GPIO_TypeDef* port, uint16_t pin);
+        bool rtd_begin(GPIO_TypeDef* port, uint16_t pin) const;
+        void write_register_8(uint8_t register_address, uint8_t data, GPIO_TypeDef* port, uint16_t pin) const;
+        uint8_t read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const;
+        uint16_t read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uint16_t pin) const;
+        uint16_t read_rtd(GPIO_TypeDef* port, uint16_t pin) const;
         float read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin);
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
+
+        friend GPIO_TypeDef* get_chip_select_port(rtd* rtd_object);
+        friend uint16_t get_chip_select_pin(rtd* rtd_object);
+        friend void reset_chip_select_port_and_pin(rtd* rtd_object);
 
     private:
 };

@@ -20,13 +20,6 @@
 #include "driver_rtd.h"
 #include "../hardware_abstraction_layer/hal_callbacks.h"
 
-// spi2 MOSI    PC1
-// spi2 MISO    PC2
-// GPIO OUT     PC8
-// GPIO OUT     PC7
-// GPIO OUT     PB15    -   CHIP SELECT
-// GPIO OUT     PB14
-
 // div2 = 8MHz
 // div4 = 4MHz
 // div8 = 2MHz
@@ -42,70 +35,75 @@ void rtd::initialize_rtd(spi* spi_object)
     spi_peripheral = rtd_spi_object->spi_module_handle;
 }
 
-bool rtd::rtd_begin(GPIO_TypeDef* port, uint16_t pin) const
+void rtd::rtd_begin() const
 {
-    write_register_8(CONFIG_REGISTER_ADDRESS, RTD_CONFIG_REG_BYTE, port, pin);
-    return true;
+    write_register_8(CONFIG_REGISTER_ADDRESS, RTD_CONFIG_REG_BYTE);
 }
 
-void rtd::write_register_8(uint8_t register_address, uint8_t data, GPIO_TypeDef* port, uint16_t pin) const
+void rtd::write_register_8(uint8_t register_address, uint8_t data) const
 {
     uint8_t rx_1 = 0;
     uint8_t rx_2 = 0;
     register_address |= WRITE_REGISTER_ADDRESS_MASK;
-    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, port, pin, device_id);
-    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, device_id);
 }
 
-uint8_t rtd::read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const
+uint8_t rtd::read_register_8(uint8_t register_address) const
 {
     register_address &= READ_REGISTER_ADDRESS_MASK;
     uint8_t rx_data = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, port, pin, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     return rx_data;
 }
 
-uint16_t rtd::read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uint16_t pin) const
+uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
 {
     uint16_t rtd_reading = 0;
     uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
     uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
 
     auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, port, pin, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading = *(++rx_ptr);
     rtd_reading <<= 8;
     *rx_ptr = 0;
     *(--rx_ptr) = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, port, pin, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading |= *(++rx_ptr);
     free(--rx_ptr);
 
-    return rtd_reading;
+    return rtd_reading >> 1;
 }
 
-uint16_t rtd::read_rtd(GPIO_TypeDef* port, uint16_t pin) const
+uint16_t rtd::read_rtd() const
 {
-    rtd_begin(port, pin);
-    return read_msb_and_lsb_registers_and_concatenate(port, pin) >> 1;
+    rtd_begin();
+    return read_msb_and_lsb_registers_and_concatenate();
 }
 
-float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin, uint8_t _device_id)
+float rtd::read_rtd_and_calculate_temperature(uint8_t _device_id)
 {
     device_id = _device_id;
     double resistance_as_double = 0;
     float calculated_temperture_celsius = 0;
 
-    resistance_as_double = floor(read_rtd(port, pin) * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0) / 1000.0;
-    resistance_as_double = ceil(resistance_as_double * 100.0);
-    calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)resistance_as_double);
+    rtd_resistance_scaled_and_rounded = round(read_rtd() * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0) / 1000.0;
+    rtd_resistance_scaled_and_rounded = round(rtd_resistance_scaled_and_rounded * 100.0);
+    calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)rtd_resistance_scaled_and_rounded);
+    temperature_celsius = calculated_temperture_celsius;
     return calculated_temperture_celsius;
+}
+
+float rtd::get_device_reading_degrees_celsius() const
+{
+    return temperature_celsius;
 }
 
 uint32_t rtd::search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance)

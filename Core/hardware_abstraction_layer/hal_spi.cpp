@@ -19,7 +19,7 @@
 #include "hal_callbacks.h"
 
 /********************************************* public member functions ************************************************/
-void spi::configure_module(handle_t* spi_handle)
+void spi::configure_spi_protocol(handle_t* spi_handle)
 {
     spi_module_handle = spi_handle;
     spi_module_handle->instance = SPI_2;
@@ -34,7 +34,17 @@ void spi::configure_module(handle_t* spi_handle)
     spi_module_handle->init.ti_mode = SPI_TI_MODE_DISABLE;
     spi_module_handle->init.crc_calculation = SPI_CRC_CALCULATION_DISABLE;
     spi_module_handle->init.crc_polynomial = 10;
-    if (initialize_module() != SPI_STATUS_OK) { Error_Handler(); }
+    if (initialize_spi_protocol() != SPI_STATUS_OK) { Error_Handler(); }
+}
+
+void spi::initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr)
+{
+    configure_spi_protocol(spi_handle);
+    spi_register_callback(complete_callback_id, complete_callback_ptr);
+    spi_register_callback(error_callback_id, error_callback_ptr);
+    HAL_GPIO_WritePin(port_0, pin_0, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(port_1, pin_1, GPIO_PIN_SET);
+    HAL_GPIO_WritePin(port_2, pin_2, GPIO_PIN_SET);
 }
 
 void spi::initialize_spi_buffer()
@@ -42,7 +52,7 @@ void spi::initialize_spi_buffer()
     spi_buffer.reserve(SPI_BUFFER_MAX);
 }
 
-spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t device_id)
+spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id)
 {
     uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
     uint32_t spi_module_mode;
@@ -68,24 +78,10 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
     set_rx_and_tx_interrupt_service_routines();
     reset_enabled_crc();
 
-
-//    switch (chip_select_pin)
-//    {
-//        case 128:
-//            device = 0;
-//            break;
-//        case 256:
-//            device = 1;
-//            break;
-//        case 16384:
-//            device = 2;
-//            break;
-//        default:
-//            break;
-//    }
     spi_module_handle->chip_select_port = chip_select[device_id]->port;
     spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
     HAL_GPIO_WritePin(spi_module_handle->chip_select_port, spi_module_handle->chip_select_pin, GPIO_PIN_RESET);
+
     SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
                                               | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
     if ((spi_module_handle->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)
@@ -96,7 +92,7 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
     return SPI_STATUS_OK;
 }
 
-spi::status_t spi::add_packet_to_buffer(uint8_t chip_select, uint8_t tx_size, uint8_t* tx_bytes)
+spi::status_t spi::add_packet_to_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes)
 {
 
     if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
@@ -109,10 +105,10 @@ spi::status_t spi::add_packet_to_buffer(uint8_t chip_select, uint8_t tx_size, ui
     {
         spi::packet_t spi_packet;
         spi_packet.packet_id = packet_id_counter;
-        spi_packet.chip_select = chip_select;
-        spi_packet.tx_size = tx_size;
-        for (uint8_t index = 0; index < tx_size; ++index) { spi_packet.tx_bytes.push_back(tx_bytes[index]); }
-        spi_packet.rx_bytes.resize(tx_size);
+        spi_packet.chip_select = _chip_select;
+        spi_packet.tx_size = _tx_size;
+        for (uint8_t index = 0; index < _tx_size; ++index) { spi_packet.tx_bytes.push_back(_tx_bytes[index]); }
+        spi_packet.rx_bytes.resize(_tx_size);
         spi_buffer.push_back(&spi_packet);
         packet_id_counter++;
         tail++;
@@ -542,7 +538,7 @@ __weak void HAL_SPI_AbortCpltCallback(spi::handle_t *spi_handle)
     STM_HAL_UNUSED(spi_handle);
 }
 /********************************************* private member functions ***********************************************/
-spi::status_t spi::initialize_module()
+spi::status_t spi::initialize_spi_protocol()
 {
     if (spi_module_handle == nullptr)
         return SPI_STATUS_ERROR;

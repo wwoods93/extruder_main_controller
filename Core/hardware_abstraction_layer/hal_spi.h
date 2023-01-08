@@ -23,10 +23,13 @@ class spi
 
         #define SPI_USE_REGISTER_CALLBACKS      1U
         #define SPI_USE_CRC                     0U
+        #define PERIPHERAL_DEVICE_COUNT_MAX     3U
+        #define PERIPHERAL_DEVICE_COUNT         PERIPHERAL_DEVICE_COUNT_MAX
 
-        #define DEVICE_0                   0U
-        #define DEVICE_1                   1U
-        #define DEVICE_2                   2U
+        static constexpr uint8_t DEVICE_0 = 0U;
+        static constexpr uint8_t DEVICE_1 = 1U;
+        static constexpr uint8_t DEVICE_2 = 2U;
+
         #define SPI_BYTES_MAX                   255U
         #define SPI_BUFFER_MAX                  255U
 
@@ -259,16 +262,13 @@ class spi
         GPIO_TypeDef* port_0 = GPIOB;
         GPIO_TypeDef* port_1 = GPIOC;
         GPIO_TypeDef* port_2 = GPIOC;
-
         uint16_t pin_0 = GPIO_PIN_14;
         uint16_t pin_1 = GPIO_PIN_7;
         uint16_t pin_2 = GPIO_PIN_8;
-
         chip_select_t chip_select_0 = { port_0, pin_0 };
         chip_select_t chip_select_1 = { port_1, pin_1 };
         chip_select_t chip_select_2 = { port_2, pin_2 };
-
-        chip_select_t* chip_select[3] = { &chip_select_0, &chip_select_1, &chip_select_2 };
+        chip_select_t* chip_select[PERIPHERAL_DEVICE_COUNT] = { &chip_select_0, &chip_select_1, &chip_select_2 };
 
         typedef struct
         {
@@ -314,19 +314,21 @@ class spi
         } handle_t;
 
         /* public member variables */
+        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
+                typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
+                status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback);
+                status_t spi_unregister_callback(callback_id_t callback_id);
+        #endif
         handle_t* spi_module_handle;
         /* public member functions */
-        void configure_module(handle_t* spi_handle);
+        void configure_spi_protocol(handle_t* spi_handle);
+        void initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
         void initialize_spi_buffer();
-        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t device_id);
-        status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
+        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id);
+        status_t add_packet_to_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes);
         void shift_buffer_contents_to_front();
         void process_spi_buffer();
-        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-            typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
-            status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback);
-            status_t spi_unregister_callback(callback_id_t callback_id);
-        #endif
+
         /* interrupt service routines */
         friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
         friend void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
@@ -354,7 +356,7 @@ class spi
         uint8_t head = 0;
         uint8_t tail = 0;
         /* private member functions */
-        status_t initialize_module();
+        status_t initialize_spi_protocol();
         void set_rx_and_tx_interrupt_service_routines() const;
         status_t lock_module() const;
         void unlock_module() const;

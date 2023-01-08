@@ -20,9 +20,16 @@
 class rtd
 {
     public:
+
+        static constexpr uint8_t DEVICE_0 = spi::DEVICE_0;
+        static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
+        static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
+
         spi* rtd_spi_object;
         spi::handle_t* spi_peripheral;
         uint8_t device_id;
+        double rtd_resistance_scaled_and_rounded;
+        float temperature_celsius;
 
         typedef struct
         {
@@ -151,12 +158,13 @@ class rtd
         };
 
         void initialize_rtd(spi* spi_object);
-        bool rtd_begin(GPIO_TypeDef* port, uint16_t pin) const;
-        void write_register_8(uint8_t register_address, uint8_t data, GPIO_TypeDef* port, uint16_t pin) const;
-        uint8_t read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const;
-        uint16_t read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uint16_t pin) const;
-        uint16_t read_rtd(GPIO_TypeDef* port, uint16_t pin) const;
-        float read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin, uint8_t _device_id);
+        void rtd_begin() const;
+        void write_register_8(uint8_t register_address, uint8_t data) const;
+        [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
+        [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
+        [[nodiscard]] uint16_t read_rtd() const;
+        float read_rtd_and_calculate_temperature(uint8_t _device_id);
+        [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
 

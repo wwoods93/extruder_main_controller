@@ -35,8 +35,8 @@
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
-#define COMMS_HANDLER_STATE_INITIALIZE    0
-#define COMMS_HANDLER_STATE_RUN     1
+#define COMMS_HANDLER_STATE_INITIALIZE      0
+#define COMMS_HANDLER_STATE_RUN             1
 
 spi::handle_t spi_2_handle;
 i2c::handle_t i2c_2_handle;
@@ -85,41 +85,44 @@ namespace sys_op
         static uint8_t counter = 0;
         uint8_t spi_byte = 0xC2;
         uint8_t rx_data = 0;
+        float temp = 0;
 
         switch (comms_handler_state)
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
-                hal::spi_2.configure_module(reinterpret_cast<spi::handle_t *>(get_spi_handle()));
-                hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
-                hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
-                HAL_GPIO_WritePin(hal::spi_2.port_0, hal::spi_2.pin_0, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(hal::spi_2.port_1, hal::spi_2.pin_1, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(hal::spi_2.port_2, hal::spi_2.pin_2, GPIO_PIN_SET);
+                hal::spi_2.initialize_spi_object(&spi_2_handle,
+             spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
+                spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
+
 
                 driver::rtd_1.initialize_rtd(&hal::spi_2);
 
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             case COMMS_HANDLER_STATE_RUN:
-                //HAL_GPIO_TogglePin(GPIOC, GPIO_PIN_8);
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOB, GPIO_PIN_14);
-//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOC, GPIO_PIN_7);
-//                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOC, GPIO_PIN_8);
+
                 if (counter == 0)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_0, hal::spi_2.pin_0, 0);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_0);
+                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
                     counter = 1;
                 }
                 else if (counter == 1)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_1, hal::spi_2.pin_1, 1);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_1);
+                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
                     counter = 2;
                 }
                 else if (counter == 2)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_2, hal::spi_2.pin_2, 2);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_2);
+                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
                     counter = 0;
+                }
+                if (temp > 100)
+                {
+                    temp = 100;
                 }
                 break;
             default:

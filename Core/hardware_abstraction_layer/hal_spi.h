@@ -24,9 +24,9 @@ class spi
         #define SPI_USE_REGISTER_CALLBACKS      1U
         #define SPI_USE_CRC                     0U
 
-        #define CHIP_SELECT_1                   0U
-        #define CHIP_SELECT_2                   1U
-        #define CHIP_SELECT_3                   2U
+        #define DEVICE_0                   0U
+        #define DEVICE_1                   1U
+        #define DEVICE_2                   2U
         #define SPI_BYTES_MAX                   255U
         #define SPI_BUFFER_MAX                  255U
 
@@ -252,6 +252,26 @@ class spi
 
         typedef struct
         {
+            GPIO_TypeDef* port;
+            uint16_t pin;
+        } chip_select_t;
+
+        GPIO_TypeDef* port_0 = GPIOB;
+        GPIO_TypeDef* port_1 = GPIOC;
+        GPIO_TypeDef* port_2 = GPIOC;
+
+        uint16_t pin_0 = GPIO_PIN_14;
+        uint16_t pin_1 = GPIO_PIN_7;
+        uint16_t pin_2 = GPIO_PIN_8;
+
+        chip_select_t chip_select_0 = { port_0, pin_0 };
+        chip_select_t chip_select_1 = { port_1, pin_1 };
+        chip_select_t chip_select_2 = { port_2, pin_2 };
+
+        chip_select_t* chip_select[3] = { &chip_select_0, &chip_select_1, &chip_select_2 };
+
+        typedef struct
+        {
             GPIO_TypeDef* chip_select_port;
             uint16_t chip_select_pin;
             // clock setting
@@ -298,7 +318,7 @@ class spi
         /* public member functions */
         void configure_module(handle_t* spi_handle);
         void initialize_spi_buffer();
-        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin);
+        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t device_id);
         status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
         void shift_buffer_contents_to_front();
         void process_spi_buffer();

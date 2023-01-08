@@ -42,7 +42,7 @@ void spi::initialize_spi_buffer()
     spi_buffer.reserve(SPI_BUFFER_MAX);
 }
 
-spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin)
+spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t device_id)
 {
     uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
     uint32_t spi_module_mode;
@@ -68,9 +68,24 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
     set_rx_and_tx_interrupt_service_routines();
     reset_enabled_crc();
 
-    spi_module_handle->chip_select_port = chip_select_port;
-    spi_module_handle->chip_select_pin = chip_select_pin;
-    HAL_GPIO_WritePin(chip_select_port, chip_select_pin, GPIO_PIN_RESET);
+
+//    switch (chip_select_pin)
+//    {
+//        case 128:
+//            device = 0;
+//            break;
+//        case 256:
+//            device = 1;
+//            break;
+//        case 16384:
+//            device = 2;
+//            break;
+//        default:
+//            break;
+//    }
+    spi_module_handle->chip_select_port = chip_select[device_id]->port;
+    spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
+    HAL_GPIO_WritePin(spi_module_handle->chip_select_port, spi_module_handle->chip_select_pin, GPIO_PIN_RESET);
     SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
                                               | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
     if ((spi_module_handle->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)

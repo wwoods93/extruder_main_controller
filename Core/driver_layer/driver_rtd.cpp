@@ -53,15 +53,15 @@ void rtd::write_register_8(uint8_t register_address, uint8_t data, GPIO_TypeDef*
     uint8_t rx_1 = 0;
     uint8_t rx_2 = 0;
     register_address |= WRITE_REGISTER_ADDRESS_MASK;
-    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, port, pin);
-    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, port, pin, device_id);
+    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, port, pin, device_id);
 }
 
 uint8_t rtd::read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const
 {
     register_address &= READ_REGISTER_ADDRESS_MASK;
     uint8_t rx_data = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, port, pin, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     return rx_data;
@@ -74,14 +74,14 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uin
     uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
 
     auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, port, pin, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading = *(++rx_ptr);
     rtd_reading <<= 8;
     *rx_ptr = 0;
     *(--rx_ptr) = 0;
-    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, port, pin);
+    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, port, pin, device_id);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading |= *(++rx_ptr);
@@ -96,8 +96,9 @@ uint16_t rtd::read_rtd(GPIO_TypeDef* port, uint16_t pin) const
     return read_msb_and_lsb_registers_and_concatenate(port, pin) >> 1;
 }
 
-float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin)
+float rtd::read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin, uint8_t _device_id)
 {
+    device_id = _device_id;
     double resistance_as_double = 0;
     float calculated_temperture_celsius = 0;
 

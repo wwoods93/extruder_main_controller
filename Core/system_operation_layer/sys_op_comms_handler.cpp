@@ -92,9 +92,9 @@ namespace sys_op
                 hal::spi_2.configure_module(reinterpret_cast<spi::handle_t *>(get_spi_handle()));
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
                 hal::spi_2.spi_register_callback((spi::callback_id_t )spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
-                HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
-                HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(hal::spi_2.port_0, hal::spi_2.pin_0, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(hal::spi_2.port_1, hal::spi_2.pin_1, GPIO_PIN_SET);
+                HAL_GPIO_WritePin(hal::spi_2.port_2, hal::spi_2.pin_2, GPIO_PIN_SET);
 
                 driver::rtd_1.initialize_rtd(&hal::spi_2);
 
@@ -108,17 +108,17 @@ namespace sys_op
 //                hal::spi_2.spi_transmit_receive_interrupt(&spi_byte, &rx_data, 1, GPIOC, GPIO_PIN_8);
                 if (counter == 0)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOB, GPIO_PIN_14);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_0, hal::spi_2.pin_0, 0);
                     counter = 1;
                 }
                 else if (counter == 1)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOC, GPIO_PIN_7);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_1, hal::spi_2.pin_1, 1);
                     counter = 2;
                 }
                 else if (counter == 2)
                 {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(GPIOC, GPIO_PIN_8);
+                    driver::rtd_1.read_rtd_and_calculate_temperature(hal::spi_2.port_2, hal::spi_2.pin_2, 2);
                     counter = 0;
                 }
                 break;

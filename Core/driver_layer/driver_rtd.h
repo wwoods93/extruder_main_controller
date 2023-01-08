@@ -22,6 +22,7 @@ class rtd
     public:
         spi* rtd_spi_object;
         spi::handle_t* spi_peripheral;
+        uint8_t device_id;
 
         typedef struct
         {
@@ -155,7 +156,7 @@ class rtd
         uint8_t read_register_8(uint8_t register_address, GPIO_TypeDef* port, uint16_t pin) const;
         uint16_t read_msb_and_lsb_registers_and_concatenate(GPIO_TypeDef* port, uint16_t pin) const;
         uint16_t read_rtd(GPIO_TypeDef* port, uint16_t pin) const;
-        float read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin);
+        float read_rtd_and_calculate_temperature(GPIO_TypeDef* port, uint16_t pin, uint8_t _device_id);
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
 

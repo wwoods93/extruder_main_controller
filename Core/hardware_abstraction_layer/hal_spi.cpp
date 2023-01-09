@@ -42,14 +42,27 @@ void spi::initialize_spi_object(handle_t* spi_handle, callback_id_t complete_cal
     configure_spi_protocol(spi_handle);
     spi_register_callback(complete_callback_id, complete_callback_ptr);
     spi_register_callback(error_callback_id, error_callback_ptr);
-    HAL_GPIO_WritePin(port_0, pin_0, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(port_1, pin_1, GPIO_PIN_SET);
-    HAL_GPIO_WritePin(port_2, pin_2, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(port_0, pin_0, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(port_1, pin_1, GPIO_PIN_SET);
+//    HAL_GPIO_WritePin(port_2, pin_2, GPIO_PIN_SET);
+    deassert_chip_select(DEVICE_0);
+    deassert_chip_select(DEVICE_1);
+    deassert_chip_select(DEVICE_2);
+
 }
 
 void spi::initialize_spi_buffer()
 {
     spi_buffer.reserve(SPI_BUFFER_MAX);
+}
+
+void spi::assert_chip_select(uint8_t device_id)
+{
+    HAL_GPIO_WritePin(chip_select[device_id]->port, chip_select[device_id]->pin, (GPIO_PinState) CHIP_SELECT_SET);
+}
+void spi::deassert_chip_select(uint8_t device_id)
+{
+    HAL_GPIO_WritePin(chip_select[device_id]->port, chip_select[device_id]->pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
 spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id)
@@ -80,7 +93,8 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
 
     spi_module_handle->chip_select_port = chip_select[device_id]->port;
     spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
-    HAL_GPIO_WritePin(spi_module_handle->chip_select_port, spi_module_handle->chip_select_pin, GPIO_PIN_RESET);
+    assert_chip_select(device_id);
+//    HAL_GPIO_WritePin(spi_module_handle->chip_select_port, spi_module_handle->chip_select_pin, GPIO_PIN_RESET);
 
     SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
                                               | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
@@ -98,8 +112,12 @@ spi::status_t spi::add_packet_to_buffer(uint8_t _chip_select, uint8_t _tx_size, 
     if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
     if (tail == SPI_BUFFER_MAX)
     {
-        if (head == 0) { return SPI_STATUS_ERROR; }
-        shift_buffer_contents_to_front();
+        if (head == 0)
+        {
+            shift_buffer_contents_to_front();
+            return SPI_STATUS_ERROR;
+        }
+
     }
     if (tail < SPI_BUFFER_MAX)
     {
@@ -144,15 +162,13 @@ void spi::process_spi_buffer()
 
         if (head >= SPI_BUFFER_MAX) { head = 0; }
         else { head++; }
-
-//        spi_transmit_receive_interrupt(dest_tx_bytes, dest_rx_bytes, (uint16_t)dest_tx_size);
+        spi_transmit_receive_interrupt(dest_tx_bytes, dest_rx_bytes, (uint16_t)dest_tx_size, dest_chip_select);
     }
     else
     {
         head = 0;
         tail = 0;
     }
-
 }
 
 #if (SPI_USE_REGISTER_CALLBACKS == 1U)

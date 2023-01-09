@@ -26,9 +26,25 @@ class spi
         #define PERIPHERAL_DEVICE_COUNT_MAX     3U
         #define PERIPHERAL_DEVICE_COUNT         PERIPHERAL_DEVICE_COUNT_MAX
 
+        #define ACTIVE_LOW                      0U
+        #define ACTIVE_HIGH                     1U
+        #define CHIP_SELECT_LOGIC_LEVEL         ACTIVE_LOW
+        #define CHIP_SELECT_SET                 CHIP_SELECT_LOGIC_LEVEL
+        #define CHIP_SELECT_RESET               !CHIP_SELECT_SET
+
+
+
+        // active low   &    set     = 0
+        // active high  &    set     = 1
+
+        // active low   |    reset   = 0
+        // active high  |    reset   = 1
+
         static constexpr uint8_t DEVICE_0 = 0U;
         static constexpr uint8_t DEVICE_1 = 1U;
         static constexpr uint8_t DEVICE_2 = 2U;
+
+
 
         #define SPI_BYTES_MAX                   255U
         #define SPI_BUFFER_MAX                  255U
@@ -324,6 +340,8 @@ class spi
         void configure_spi_protocol(handle_t* spi_handle);
         void initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
         void initialize_spi_buffer();
+        void assert_chip_select(uint8_t device_id);
+        void deassert_chip_select(uint8_t device_id);
         status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id);
         status_t add_packet_to_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes);
         void shift_buffer_contents_to_front();

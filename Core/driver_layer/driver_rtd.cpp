@@ -47,6 +47,8 @@ void rtd::write_register_8(uint8_t register_address, uint8_t data) const
     register_address |= WRITE_REGISTER_ADDRESS_MASK;
     rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, device_id);
     rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, device_id);
+//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
+//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &data);
 }
 
 uint8_t rtd::read_register_8(uint8_t register_address) const
@@ -54,6 +56,7 @@ uint8_t rtd::read_register_8(uint8_t register_address) const
     register_address &= READ_REGISTER_ADDRESS_MASK;
     uint8_t rx_data = 0;
     rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, device_id);
+//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     return rx_data;
@@ -67,6 +70,7 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
 
     auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
     rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
+//    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading = *(++rx_ptr);
@@ -74,6 +78,7 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
     *rx_ptr = 0;
     *(--rx_ptr) = 0;
     rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
+//    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_2);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     rtd_reading |= *(++rx_ptr);

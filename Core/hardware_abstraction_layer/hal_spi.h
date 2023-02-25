@@ -339,13 +339,15 @@ class spi
         /* public member functions */
         void configure_spi_protocol(handle_t* spi_handle);
         void initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
-        void initialize_spi_buffer();
+        void initialize_send_buffer();
+        void initialize_return_buffer();
         void assert_chip_select(uint8_t device_id);
         void deassert_chip_select(uint8_t device_id);
-        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id);
-        status_t add_packet_to_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes);
+        status_t spi_transmit_receive_interrupt(uint8_t* tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id);
+        status_t add_packet_to_send_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes);
+        status_t add_packet_to_return_buffer(spi::packet_t* _spi_packet);
         void shift_buffer_contents_to_front();
-        void process_spi_buffer();
+        void process_send_buffer();
 
         /* interrupt service routines */
         friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
@@ -370,7 +372,8 @@ class spi
     private:
         /* private objects */
         uint8_t packet_id_counter = 0;
-        std::vector<packet_t*> spi_buffer;
+        std::vector<packet_t*> send_buffer;
+        std::vector<packet_t*> return_buffer;
         uint8_t head = 0;
         uint8_t tail = 0;
         /* private member functions */

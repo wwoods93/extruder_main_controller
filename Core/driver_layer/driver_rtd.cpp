@@ -103,7 +103,7 @@ float rtd::read_rtd_and_calculate_temperature(uint8_t _device_id)
     rtd_resistance_scaled_and_rounded = round(rtd_resistance_scaled_and_rounded * 100.0);
     calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)rtd_resistance_scaled_and_rounded);
     temperature_celsius = calculated_temperture_celsius;
-    return calculated_temperture_celsius;
+     return calculated_temperture_celsius;
 }
 
 float rtd::get_device_reading_degrees_celsius() const

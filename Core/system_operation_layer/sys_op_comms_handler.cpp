@@ -102,6 +102,7 @@ namespace sys_op
             case COMMS_HANDLER_STATE_RUN:
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
+
                 if (counter == 0)
                 {
                     driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_0);

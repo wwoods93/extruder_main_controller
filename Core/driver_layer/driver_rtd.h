@@ -98,8 +98,8 @@ class rtd
         static constexpr uint8_t FAULT_RTDIN_LOW                                = 0x08;
         static constexpr uint8_t FAULT_OVER_UNDER_VOLTAGE                       = 0x04;
         /* nominal and reference resistances */
-        static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0;
-        static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0;
+        static constexpr float  RTD_RESISTANCE_NOMINAL = 100.0;
+        static constexpr float  RTD_RESISTANCE_REFERENCE = 430.0;
         static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         uint32_t temperature_to_resistance_pt1000_lookup_table[510] =

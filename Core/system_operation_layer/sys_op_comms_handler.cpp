@@ -35,6 +35,8 @@
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
+#include "../meta_structure/meta_structure_system_manager.h"
+
 #define COMMS_HANDLER_STATE_INITIALIZE      0
 #define COMMS_HANDLER_STATE_RUN             1
 
@@ -86,45 +88,54 @@ namespace sys_op
         uint8_t spi_byte = 0xC2;
         uint8_t rx_data = 0;
         float temp = 0;
+        uint8_t tx_d[2] = { 127, 214 };
 
         switch (comms_handler_state)
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
+                initialize_system_manifests();
+                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
+
                 hal::spi_2.initialize_spi_object(&spi_2_handle,
              spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
                 spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
 
+                hal::spi_2.open_new_spi_channel(0 , 0, PORT_B, GPIO_PIN_14);
 
-                driver::rtd_1.initialize_rtd(&hal::spi_2);
+
+//                driver::rtd_1.initialize_rtd(&hal::spi_2);
 
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             case COMMS_HANDLER_STATE_RUN:
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-
-                if (counter == 0)
-                {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_0);
-                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
-                    counter = 1;
-                }
-                else if (counter == 1)
-                {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_1);
-                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
-                    counter = 2;
-                }
-                else if (counter == 2)
-                {
-                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_2);
-                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
-                    counter = 0;
-                }
-                if (temp > 100)
-                {
-                    temp = 100;
-                }
+                hal::spi_2.transmit(0, tx_d, 2);
+                hal::spi_2.process_send_buffer();
+//                {
+//                counter = 1;
+//                if (counter == 0)
+//                {
+//                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_0);
+//                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
+//                    counter = 1;
+//                }
+//                else if (counter == 1)
+//                {
+//                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_1);
+//                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
+//                    counter = 2;
+//                }
+//                else if (counter == 2)
+//                {
+//                    driver::rtd_1.read_rtd_and_calculate_temperature(rtd::DEVICE_2);
+//                    temp = driver::rtd_1.get_device_reading_degrees_celsius();
+//                    counter = 0;
+//                }
+//                if (temp > 100)
+//                {
+//                    temp = 100;
+//                }
                 break;
             default:
                 break;

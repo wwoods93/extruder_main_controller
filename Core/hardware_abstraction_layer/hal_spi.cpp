@@ -17,8 +17,22 @@
 #include "hal_general.h"
 #include "hal_spi.h"
 #include "hal_callbacks.h"
+#include "../meta_structure/meta_structure_system_manager.h"
+#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+
 
 /********************************************* public member functions ************************************************/
+
+spi::spi()
+{
+
+}
+
+id_number_t spi::get_local_id() const
+{
+    return local_id;
+}
+
 void spi::configure_spi_protocol(handle_t* spi_handle)
 {
     spi_module_handle = spi_handle;
@@ -39,22 +53,25 @@ void spi::configure_spi_protocol(handle_t* spi_handle)
 
 void spi::initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr)
 {
+    const std::string spi_name = "SPI 2";
+    register_new_resource_to_resource_manifest(RESOURCE_TYPE_SPI, spi_name);
     configure_spi_protocol(spi_handle);
     spi_register_callback(complete_callback_id, complete_callback_ptr);
     spi_register_callback(error_callback_id, error_callback_ptr);
-    deassert_chip_select(DEVICE_0);
-    deassert_chip_select(DEVICE_1);
-    deassert_chip_select(DEVICE_2);
+//    deassert_chip_select(DEVICE_0);
+//    deassert_chip_select(DEVICE_1);
+//    deassert_chip_select(DEVICE_2);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
-void spi::initialize_send_buffer()
-{
-    send_buffer.reserve(SPI_BUFFER_MAX);
-}
+//void spi::initialize_send_buffer()
+//{
+//    send_buffer.reserve(SPI_BUFFER_MAX);
+//}
 
 void spi::initialize_return_buffer()
 {
-    return_buffer.reserve(SPI_BUFFER_MAX);
+//    return_buffer.reserve(SPI_BUFFER_MAX);
 }
 
 void spi::assert_chip_select(uint8_t device_id)
@@ -66,7 +83,47 @@ void spi::deassert_chip_select(uint8_t device_id)
     HAL_GPIO_WritePin(chip_select[device_id]->port, chip_select[device_id]->pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
-spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id)
+//spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id)
+//{
+//    uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
+//    uint32_t spi_module_mode;
+//    state_t spi_module_state;
+//    spi_module_state = (state_t) get_module_communication_state();
+//    spi_module_mode = get_module_operating_mode();
+//
+//    if ((tx_data_pointer == nullptr) || (rx_data_pointer == nullptr) || (packet_size == 0U))
+//        spi_procedure_error = SPI_PROCEDURE_STATE_DATA_ERROR;
+//
+//    assert_param(SPI_VERIFY_DIRECTION_2_LINE(spi_module_handle->init.direction));
+//    verify_communication_direction(SPI_DIRECTION_2_LINE);
+//    lock_module();
+//    if (!((spi_module_state == SPI_STATE_READY)
+//          || ((spi_module_mode == SPI_MODE_CONTROLLER)
+//              && (spi_module_handle->init.direction == SPI_DIRECTION_2_LINE)
+//              && (spi_module_state == SPI_STATE_BUSY_RX))))
+//        spi_procedure_error = SPI_PROCEDURE_STATE_BUS_ERROR;
+//    else if (spi_module_handle->state != SPI_STATE_BUSY_RX)
+//        spi_module_handle->state = SPI_STATE_BUSY_TX_RX;
+//
+//    set_transaction_parameters(tx_data_pointer, rx_data_pointer, packet_size);
+//    set_rx_and_tx_interrupt_service_routines();
+//    reset_enabled_crc();
+//
+//    spi_module_handle->chip_select_port = chip_select[device_id]->port;
+//    spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
+//    assert_chip_select(device_id);
+//
+//    SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
+//                                              | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+//    if ((spi_module_handle->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)
+//        SPI_ENABLE_MODULE(spi_module_handle);
+//    unlock_module();
+//    if (spi_procedure_error == SPI_PROCEDURE_STATE_BUS_ERROR)  { return SPI_STATUS_BUSY;  }
+//    if (spi_procedure_error == SPI_PROCEDURE_STATE_DATA_ERROR) { return SPI_STATUS_ERROR; }
+//    return SPI_STATUS_OK;
+//}
+
+spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, chip_select_t _chip_select)
 {
     uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
     uint32_t spi_module_mode;
@@ -92,9 +149,14 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
     set_rx_and_tx_interrupt_service_routines();
     reset_enabled_crc();
 
-    spi_module_handle->chip_select_port = chip_select[device_id]->port;
-    spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
-    assert_chip_select(device_id);
+//    spi_module_handle->chip_select_port = chip_select[device_id]->port;
+//    spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
+//    assert_chip_select(device_id);
+
+    spi_module_handle->chip_select_port = _chip_select.port;
+    spi_module_handle->chip_select_pin = _chip_select.pin;
+    HAL_GPIO_WritePin(_chip_select.port, _chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+
 
     SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
                                               | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
@@ -106,32 +168,157 @@ spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint
     return SPI_STATUS_OK;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+spi::status_t spi::initialize_send_buffer()
+{
+    while (!send_buffer.empty())
+    {
+        send_buffer.pop();
+    }
+//    send_buffer_semaphore_id = osSemaphoreNew(SPI_SEMAPHORE_AVAILABLE_TOKENS_MAX, SPI_SEMPAHORE_AVAILABLE_TOKENS_INITIAL, nullptr);
+    return SPI_STATUS_OK;
+}
+
+id_number_t spi::assign_next_available_channel_id()
+{
+    id_number_t user_channel_id = ID_INVALID;
+
+    if (next_available_user_channel_id <= SPI_USER_CHANNELS_MAX)
+    {
+        user_channel_id = next_available_user_channel_id;
+        next_available_user_channel_id++;
+    }
+    return user_channel_id;
+}
+
+id_number_t spi::open_new_spi_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin)
+{
+    id_number_t new_channel_id = assign_next_available_channel_id();
+    if (new_channel_id != ID_INVALID)
+    {
+        user_channel_t new_user_channel;
+        new_user_channel.global_user_id = _global_user_id;
+        new_user_channel.global_device_id = _global_device_id;
+        new_user_channel.channel_id = new_channel_id;
+        GPIO_TypeDef* chip_select_port;
+        switch (_chip_select_port)
+        {
+            case PORT_A:
+                chip_select_port = GPIOA;
+                break;
+            case PORT_B:
+                chip_select_port = GPIOB;
+                break;
+            case PORT_C:
+                chip_select_port = GPIOC;
+                break;
+            case PORT_D:
+                chip_select_port = GPIOD;
+                break;
+            case PORT_E:
+                chip_select_port = GPIOE;
+                break;
+            case PORT_F:
+                chip_select_port = GPIOF;
+                break;
+            case PORT_G:
+                chip_select_port = GPIOG;
+                break;
+            case PORT_H:
+                chip_select_port = GPIOH;
+                break;
+            default:
+                break;
+        }
+        new_user_channel.chip_select.port = chip_select_port;
+        new_user_channel.chip_select.pin = _chip_select_pin;
+        user_channel_list.push_back(&new_user_channel);
+    }
+    else
+    {
+        // log error
+    }
+    return new_channel_id;
+}
+
+spi::status_t spi::transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t _tx_size)
+{
+    uint8_t* rx_bytes = 0;
+    packet_t spi_packet = {0, _channel_id, _tx_size, _tx_bytes, rx_bytes};
+//    spi_packet.channel_id = _channel_id;
+//    spi_packet.packet_id = 0;
+//    spi_packet.tx_size = _tx_size;
+//    spi_packet.tx_bytes = _tx_bytes;
+
+//    osStatus_t semaphore_status = osSemaphoreAcquire(send_buffer_semaphore_id, SPI_SEMAPHORE_TIMEOUT_MS);
+//    if (semaphore_status == osOK)
+//    {
+        send_buffer.push(spi_packet);
+//        osSemaphoreRelease(send_buffer_semaphore_id);
+        return SPI_STATUS_OK;
+//    }
+    // log failure
+
+//    return SPI_STATUS_ERROR;
+}
+
+uint8_t spi::process_send_buffer()
+{
+    if (!send_buffer.empty())
+    {
+        uint8_t result = 0;
+        packet_t p;
+        p.packet_id = send_buffer.front().packet_id;
+        p.channel_id = send_buffer.front().channel_id;
+        p.tx_bytes = send_buffer.front().tx_bytes;
+        p.tx_size = send_buffer.front().tx_size;
+        send_buffer.pop();
+        chip_select_t cs;
+
+//        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
+        cs.port = GPIOB;
+        cs.pin = GPIO_PIN_14;
+//        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
+        spi_transmit_receive_interrupt(p.tx_bytes, p.rx_bytes, p.tx_size, cs);
+        while (!hal_callbacks_get_spi_rx_data_ready_flag());
+        hal_callbacks_set_spi_rx_data_ready_flag(0);
+        result = *p.rx_bytes;
+        return result;
+    }
+    return 255U;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 // add_packet_to_send_buffer()
 spi::status_t spi::add_packet_to_send_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes)
 {
-
-    if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
-    if (tail == SPI_BUFFER_MAX)
-    {
-        if (head == 0)
-        {
-            shift_buffer_contents_to_front();
-            return SPI_STATUS_ERROR;
-        }
-    }
-    if (tail < SPI_BUFFER_MAX)
-    {
-        spi::packet_t spi_packet;
-        spi_packet.packet_id = packet_id_counter;
-        spi_packet.chip_select = _chip_select;
-        spi_packet.tx_size = _tx_size;
-        for (uint8_t index = 0; index < _tx_size; ++index) { spi_packet.tx_bytes.push_back(_tx_bytes[index]); }
-        spi_packet.rx_bytes.resize(_tx_size);
-        send_buffer.push_back(&spi_packet);
-        packet_id_counter++;
-        tail++;
-    }
-    else { return SPI_STATUS_ERROR; }
+//
+//    if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
+//    if (tail == SPI_BUFFER_MAX)
+//    {
+//        if (head == 0)
+//        {
+//            shift_buffer_contents_to_front();
+//            return SPI_STATUS_ERROR;
+//        }
+//    }
+//    if (tail < SPI_BUFFER_MAX)
+//    {
+//        spi::packet_t spi_packet;
+//        spi_packet.packet_id = packet_id_counter;
+//        spi_packet.chip_select = _chip_select;
+//        spi_packet.tx_size = _tx_size;
+//        for (uint8_t index = 0; index < _tx_size; ++index) { spi_packet.tx_bytes.push_back(_tx_bytes[index]); }
+//        spi_packet.rx_bytes.resize(_tx_size);
+//        send_buffer.push_back(&spi_packet);
+//        packet_id_counter++;
+//        tail++;
+//    }
+//    else { return SPI_STATUS_ERROR; }
     return SPI_STATUS_OK;
 }
 spi::status_t spi::add_packet_to_return_buffer(spi::packet_t* _spi_packet)
@@ -140,58 +327,62 @@ spi::status_t spi::add_packet_to_return_buffer(spi::packet_t* _spi_packet)
     return SPI_STATUS_OK;
 }
 
-void spi::shift_buffer_contents_to_front() 
+void spi::shift_buffer_contents_to_front()
 {
-    uint8_t new_index = 0;
-    for (uint8_t old_index = head; old_index <= tail; ++old_index)
-    {
-        send_buffer[new_index]->packet_id = send_buffer[old_index]->packet_id;
-        send_buffer[new_index]->chip_select = send_buffer[old_index]->chip_select;
-        send_buffer[new_index]->tx_size = send_buffer[old_index]->tx_size;
-        send_buffer[new_index]->tx_bytes = send_buffer[old_index]->tx_bytes;
-        ++new_index;
-    }
-    head = 0;
-    tail = new_index;
+//    uint8_t new_index = 0;
+//    for (uint8_t old_index = head; old_index <= tail; ++old_index)
+//    {
+//        send_buffer[new_index]->packet_id = send_buffer[old_index]->packet_id;
+//        send_buffer[new_index]->chip_select = send_buffer[old_index]->chip_select;
+//        send_buffer[new_index]->tx_size = send_buffer[old_index]->tx_size;
+//        send_buffer[new_index]->tx_bytes = send_buffer[old_index]->tx_bytes;
+//        ++new_index;
+//    }
+//    head = 0;
+//    tail = new_index;
 }
 
 // static unsigned long spi_timeout_counter = 0;
 // rename to: process_spi_send_buffer()
-void spi::process_send_buffer()
-{
-    static uint8_t ready_to_send = false;
-    static uint32_t spi_timeout_counter = HAL_GetTick();
-    uint32_t SPI_TIMEOUT = 100U;
+//void spi::process_send_buffer()
+//{
+//    static uint8_t ready_to_send = false;
+//    static uint32_t spi_timeout_counter = HAL_GetTick();
+//    uint32_t SPI_TIMEOUT = 100U;
+//
+//    if (ready_to_send == true)
+//    {
+//        if(head != tail && head <= SPI_BUFFER_MAX)
+//        {
+////            uint8_t dest_packet_id = send_buffer[head]->packet_id;
+////            uint8_t dest_chip_select = send_buffer[head]->chip_select;
+////            uint8_t dest_tx_size = send_buffer[head]->tx_size;
+////            uint8_t* dest_tx_bytes = &send_buffer[head]->tx_bytes[0];
+////            uint8_t* dest_rx_bytes = &send_buffer[head]->rx_bytes[0];
+//            if (head >= SPI_BUFFER_MAX) { head = 0; }
+//            else { head++; }
+//            spi_transmit_receive_interrupt(&send_buffer[head]->tx_bytes[0], &send_buffer[head]->rx_bytes[0], (uint16_t)send_buffer[head]->tx_size, send_buffer[head]->chip_select);
+//            spi_timeout_counter = HAL_GetTick();
+//            ready_to_send = false;
+//        }
+//        else
+//        {
+//            head = 0;
+//            tail = 0;
+//        }
+//    }
+//    if (ready_to_send == false && hal_callbacks_get_spi_rx_data_ready_flag() == true)
+//    {
+//        add_packet_to_return_buffer(send_buffer[head]);
+//        hal_callbacks_set_spi_rx_data_ready_flag(false);
+//        ready_to_send = true;
+//    }
 
-    if (ready_to_send == true)
-    {
-        if(head != tail && head <= SPI_BUFFER_MAX)
-        {
-//            uint8_t dest_packet_id = send_buffer[head]->packet_id;
-//            uint8_t dest_chip_select = send_buffer[head]->chip_select;
-//            uint8_t dest_tx_size = send_buffer[head]->tx_size;
-//            uint8_t* dest_tx_bytes = &send_buffer[head]->tx_bytes[0];
-//            uint8_t* dest_rx_bytes = &send_buffer[head]->rx_bytes[0];
-            if (head >= SPI_BUFFER_MAX) { head = 0; }
-            else { head++; }
-            spi_transmit_receive_interrupt(&send_buffer[head]->tx_bytes[0], &send_buffer[head]->rx_bytes[0], (uint16_t)send_buffer[head]->tx_size, send_buffer[head]->chip_select);
-            spi_timeout_counter = HAL_GetTick();
-            ready_to_send = false;
-        }
-        else
-        {
-            head = 0;
-            tail = 0;
-        }
-    }
-    if (ready_to_send == false && hal_callbacks_get_spi_rx_data_ready_flag() == true)
-    {
-        add_packet_to_return_buffer(send_buffer[head]);
-        hal_callbacks_set_spi_rx_data_ready_flag(false);
-        ready_to_send = true;
-    }
+//}
 
-}
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 #if (SPI_USE_REGISTER_CALLBACKS == 1U)
 

@@ -15,9 +15,10 @@
 #include <cstdint>
 #include "stm32f4xx.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
+#include "../meta_structure/meta_structure_driver_level_user.h"
 #include "driver_dc_motor.h"
 
-class dc_motor_controller
+class dc_motor_controller : public driver_level_user
 {
     public:
         /****************************************** compile time constants ********************************************/

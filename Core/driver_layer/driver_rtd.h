@@ -14,10 +14,12 @@
 
 #include <cstdint>
 #include "stm32f4xx.h"
-
+#include "../meta_structure/meta_structure_system_manager.h"
+#include "../meta_structure/meta_structure_driver_level_user.h"
 #include "../hardware_abstraction_layer/hal_spi.h"
+#include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
 
-class rtd
+class rtd : public driver_level_user
 {
     public:
 
@@ -25,11 +27,11 @@ class rtd
         static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
         static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
 
-        spi* rtd_spi_object;
-        spi::handle_t* spi_peripheral;
-        uint8_t device_id;
-        double rtd_resistance_scaled_and_rounded;
-        float temperature_celsius;
+        spi* rtd_spi_object{};
+        spi::handle_t* spi_peripheral{};
+        uint8_t device_id{};
+        double rtd_resistance_scaled_and_rounded{};
+        float temperature_celsius{};
 
         typedef struct
         {
@@ -44,8 +46,8 @@ class rtd
         } rtd_sensor_t;
 
 
-        GPIO_TypeDef* chip_select_port;
-        uint16_t chip_select_pin;
+        GPIO_TypeDef* chip_select_port{};
+        uint16_t chip_select_pin{};
 
         GPIO_TypeDef* chip_select_1_port = GPIOB;
         GPIO_TypeDef* chip_select_2_port = GPIOC;
@@ -98,8 +100,8 @@ class rtd
         static constexpr uint8_t FAULT_RTDIN_LOW                                = 0x08;
         static constexpr uint8_t FAULT_OVER_UNDER_VOLTAGE                       = 0x04;
         /* nominal and reference resistances */
-        static constexpr float  RTD_RESISTANCE_NOMINAL = 100.0;
-        static constexpr float  RTD_RESISTANCE_REFERENCE = 430.0;
+        static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0;
+        static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0;
         static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         uint32_t temperature_to_resistance_pt1000_lookup_table[510] =
@@ -156,6 +158,17 @@ class rtd
                 277640, 277980, 278310, 278640, 278980, 279310, 279640, 279980, 280310, 280640,
                 280980, 281310, 281640, 281980, 282310, 282640, 282970, 283310, 283640, 283970
         };
+
+        rtd();
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+//        void read_rtd();
+
+
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         void initialize_rtd(spi* spi_object);
         void rtd_begin() const;

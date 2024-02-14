@@ -16,8 +16,9 @@
 #include "cmsis_os2.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
-#include "../hardware_abstraction_layer/hal_spi.h"
 #include "../system_operation_layer/sys_op_comms_handler.h"
+#include "../hardware_abstraction_layer/hal_spi.h"
+
 #include "../hardware_abstraction_layer/hal_callbacks.h"
 
 #define KERNEL_TICKS_PER_1_SECOND       1019

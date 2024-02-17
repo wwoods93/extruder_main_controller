@@ -34,11 +34,11 @@ osMutexId_t spi_rx_data_buffer_mutexHandle;
 osMutexId_t i2c_tx_data_buffer_mutexHandle;
 osMutexId_t i2c_rx_data_buffer_mutexHandle;
 
-const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 384 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 384 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 384 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 384 * 4, .priority = (osPriority_t) osPriorityNormal4, };
+const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 512 * 4, .priority = (osPriority_t) osPriorityNormal4, };
 
 const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = { .name = "spi_tx_data_buffer_mutex" };
 const osMutexAttr_t spi_rx_data_buffer_mutex_attributes = { .name = "spi_rx_data_buffer_mutex" };
@@ -107,10 +107,10 @@ void start_comms_handler_task(void *argument)
 {
     uint32_t comms_handler_iteration_tick = 0;
 //    uint32_t kernel_tick = 0;
-
+const uint32_t RTOS_KERNEL_TICK_FREQUENCY_HZ = osKernelGetTickFreq();
     while (true)
     {
-        if (osKernelGetTickCount() - comms_handler_iteration_tick > KERNEL_TICKS_PER_1_SECOND)
+        if (osKernelGetTickCount() - comms_handler_iteration_tick > RTOS_KERNEL_TICK_FREQUENCY_HZ)
         {
             sys_op::comms_handler_state_machine();
             comms_handler_iteration_tick = osKernelGetTickCount();

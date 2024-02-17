@@ -284,6 +284,19 @@ class spi : public hal_level_resource
 
         } user_channel_t;
 
+        struct
+        {
+            user_channel_t channel_0;
+            user_channel_t channel_1;
+            user_channel_t channel_2;
+            user_channel_t channel_3;
+            user_channel_t channel_4;
+            user_channel_t channel_5;
+            user_channel_t channel_6;
+            user_channel_t channel_7;
+        } user_list;
+
+
         #define SPI_USER_CHANNELS_MAX   8U
 
         std::queue<packet_t> return_buffer_0;
@@ -318,11 +331,14 @@ class spi : public hal_level_resource
 
         void process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_MAX_TOTAL_BYTE_COUNT]);
 
+        void send_buffer_push(packet_t* packet);
+        void send_buffer_pop();
+        void send_buffer_get_front(packet_t (&packet));
 
 
         id_number_t next_available_user_channel_id = 0;
 
-        std::vector<user_channel_t*> user_channel_list;
+//        std::vector<user_channel_t*> user_channel_list;
         std::queue<packet_t*> send_buffer;
 
         static constexpr uint8_t SPI_SEMAPHORE_TIMEOUT_MS                   = 5U;

@@ -59,6 +59,7 @@ void spi::initialize(handle_t* spi_handle, callback_id_t complete_callback_id, s
     configure_protocol(spi_handle);
     spi_register_callback(complete_callback_id, complete_callback_ptr);
     spi_register_callback(error_callback_id, error_callback_ptr);
+//    user_channel_list.reserve(SPI_USER_CHANNELS_MAX);
 
 
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
@@ -186,6 +187,7 @@ id_number_t spi::assign_next_available_channel_id()
 id_number_t spi::create_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin)
 {
     id_number_t new_channel_id = assign_next_available_channel_id();
+
     if (new_channel_id != ID_INVALID)
     {
         user_channel_t new_user_channel;
@@ -224,7 +226,45 @@ id_number_t spi::create_channel(id_number_t _global_user_id, id_number_t _global
         }
         new_user_channel.chip_select.port = chip_select_port;
         new_user_channel.chip_select.pin = _chip_select_pin;
-        user_channel_list.push_back(&new_user_channel);
+
+        switch (new_channel_id)
+        {
+            case CHANNEL_0:
+                memset(&user_list.channel_0, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_0, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_1:
+                memset(&user_list.channel_1, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_1, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_2:
+                memset(&user_list.channel_2, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_2, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_3:
+                memset(&user_list.channel_3, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_3, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_4:
+                memset(&user_list.channel_4, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_4, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_5:
+                memset(&user_list.channel_5, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_5, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_6:
+                memset(&user_list.channel_6, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_6, &new_user_channel, sizeof(user_channel_t));
+                break;
+            case CHANNEL_7:
+                memset(&user_list.channel_7, '\0', sizeof(user_channel_t));
+                memcpy(&user_list.channel_7, &new_user_channel, sizeof(user_channel_t));
+                break;
+            default:
+                break;
+        }
+
     }
     else
     {
@@ -232,6 +272,44 @@ id_number_t spi::create_channel(id_number_t _global_user_id, id_number_t _global
     }
     return new_channel_id;
 }
+
+void spi::send_buffer_push(packet_t* packet)
+{
+    if (!send_buffer.empty())
+    {
+        send_buffer.push(packet);
+    }
+}
+
+void spi::send_buffer_pop()
+{
+    if (!send_buffer.empty())
+    {
+        send_buffer.pop();
+    }
+}
+
+void spi::send_buffer_get_front(spi::packet_t (&packet))
+{
+    if (!send_buffer.empty())
+    {
+//        packet.packet_id = send_buffer.front()->packet_id;
+//        packet.channel_id = send_buffer.front()->channel_id;
+//        packet.total_byte_count = send_buffer.front()->total_byte_count;
+//        packet.transaction_size = send_buffer.front()->transaction_size;
+//        packet.timeout_occurred = send_buffer.front()->timeout_occurred;
+//        packet.error_occurred = send_buffer.front()->error_occurred;
+//        for (uint8_t index = 0; index < packet.total_byte_count; ++index)
+//        {
+//            packet.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
+//            packet.rx_bytes[index] = send_buffer.front()->rx_bytes[index];
+//        }
+
+        memcpy(&packet, send_buffer.front(), sizeof(packet_t));
+    }
+}
+
+
 
 spi::status_t spi::transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _transaction_size, const uint8_t* _tx_bytes)
 {
@@ -349,22 +427,60 @@ void spi::process_send_buffer()
     {
         uint8_t result = 0;
         packet_t p;
-        p.packet_id = send_buffer.front()->packet_id;
-        p.channel_id = send_buffer.front()->channel_id;
-        p.total_byte_count = send_buffer.front()->total_byte_count;
-        p.transaction_size = send_buffer.front()->transaction_size;
-        for (uint8_t index = 0; index < p.total_byte_count; ++index)
-        {
-            p.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
-        }
-        p.timeout_occurred = send_buffer.front()->timeout_occurred;
-        p.error_occurred = send_buffer.front()->error_occurred;
+        send_buffer_get_front(p);
+//        p.packet_id = send_buffer.front()->packet_id;
+//        p.channel_id = send_buffer.front()->channel_id;
+//        p.total_byte_count = send_buffer.front()->total_byte_count;
+//        p.transaction_size = send_buffer.front()->transaction_size;
+//        for (uint8_t index = 0; index < p.total_byte_count; ++index)
+//        {
+//            p.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
+//        }
+//        p.timeout_occurred = send_buffer.front()->timeout_occurred;
+//        p.error_occurred = send_buffer.front()->error_occurred;
 
-        send_buffer.pop();
+
+
+
         chip_select_t cs;
+        user_channel_t channel;
+        memset(&channel, '\0', sizeof(user_channel_t));
 
-        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
-        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
+        switch (p.channel_id)
+        {
+            case CHANNEL_0:
+                memcpy(&channel, &user_list.channel_0, sizeof(user_channel_t));
+                break;
+            case CHANNEL_1:
+                memcpy(&channel, &user_list.channel_1, sizeof(user_channel_t));
+                break;
+            case CHANNEL_2:
+                memcpy(&channel, &user_list.channel_2, sizeof(user_channel_t));
+                break;
+            case CHANNEL_3:
+                memcpy(&channel, &user_list.channel_3, sizeof(user_channel_t));
+                break;
+            case CHANNEL_4:
+                memcpy(&channel, &user_list.channel_4, sizeof(user_channel_t));
+                break;
+            case CHANNEL_5:
+                memcpy(&channel, &user_list.channel_5, sizeof(user_channel_t));
+                break;
+            case CHANNEL_6:
+                memcpy(&channel, &user_list.channel_6, sizeof(user_channel_t));
+                break;
+            case CHANNEL_7:
+                memcpy(&channel, &user_list.channel_7, sizeof(user_channel_t));
+                break;
+            default:
+                break;
+        }
+
+        cs.port = channel.chip_select.port;
+        cs.pin = channel.chip_select.pin;
+//        memcpy(&channel, user_channel_list[(uint8_t)p.channel_id], sizeof(user_channel_t));
+//        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
+//        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
 //        cs.port = GPIOB;
 //        cs.pin = GPIO_PIN_14;
 
@@ -397,12 +513,15 @@ void spi::process_send_buffer()
         if (p.total_byte_count % p.transaction_size != 0)
             ++num_transmissions;
 
-         for (uint8_t _tx_count = 0; _tx_count < num_transmissions; ++_tx_count)
+        uint8_t tx_msg[2];
+        for (uint8_t _tx_count = 0; _tx_count < num_transmissions; ++_tx_count)
         {
-            spi_transmit_receive_interrupt(p.tx_bytes, rx_ptr, p.transaction_size, cs);
+             uint8_t tx_index = _tx_count * p.transaction_size;
+            spi_transmit_receive_interrupt(&p.tx_bytes[tx_index], rx_ptr, p.transaction_size, channel.chip_select);
 //            spi_transmit_receive_interrupt(tx_data_1, rx_data, p.tx_size, cs);
             while (!hal_callbacks_get_spi_rx_data_ready_flag());
             hal_callbacks_set_spi_rx_data_ready_flag(0);
+
             p.rx_bytes[vec_index] = rx_ptr[vec_index++];
             p.rx_bytes[vec_index] = rx_ptr[vec_index++];
 
@@ -412,7 +531,7 @@ void spi::process_send_buffer()
 //            }
 //            received_byte_1 = rx_data[1];
         }
-
+        send_buffer_pop();
 //            received_byte_2 = rx_data[1];
 
 //        rx_transmission |= *(++rx_ptr);

@@ -30,23 +30,10 @@
 /* meta_structure_system_manager header */
 #include "meta_structure_system_manager.h"
 
-user_manifest_entry_t temp_user = {USER_TYPE_NULL, "", 0 };
-resource_manifest_entry_t temp_resource = {RESOURCE_TYPE_NULL, "", 0 };
-
-//static std::vector<user_manifest_entry_t *> user_manifest;
-//static std::vector<device_manifest_entry_t *> device_manifest;
-//static std::vector<resource_manifest_entry_t *> resource_manifest;
 
 static uint8_t next_available_global_user_id;
 static uint8_t next_available_global_device_id;
 static uint8_t next_available_global_resource_id;
-
-//void add_user(user_manifest_entry_t entry)
-//{
-//    user_manifest.push_back(&entry);
-//}
-//
-//void add_device(user_manifest_entry)
 
 void initialize_system_manifests()
 {

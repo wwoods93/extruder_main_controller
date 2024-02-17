@@ -13,6 +13,8 @@
 #ifndef MAIN_CONTROLLER_HAL_CALLBACKS_H
 #define MAIN_CONTROLLER_HAL_CALLBACKS_H
 
+#include "hal_spi.h"
+
 uint8_t hal_callbacks_get_spi_rx_data_ready_flag();
 void hal_callbacks_set_spi_rx_data_ready_flag(uint8_t status);
 

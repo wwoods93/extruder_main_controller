@@ -12,6 +12,7 @@
 
 #include <cstdlib>
 #include <cstring>
+#include <memory>
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "hal_general.h"
@@ -33,7 +34,7 @@ id_number_t spi::get_local_id() const
     return local_id;
 }
 
-void spi::configure_spi_protocol(handle_t* spi_handle)
+void spi::configure_protocol(handle_t* spi_handle)
 {
     spi_module_handle = spi_handle;
     spi_module_handle->instance = SPI_2;
@@ -51,23 +52,18 @@ void spi::configure_spi_protocol(handle_t* spi_handle)
     if (initialize_spi_protocol() != SPI_STATUS_OK) { Error_Handler(); }
 }
 
-void spi::initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr)
+void spi::initialize(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr)
 {
     const std::string spi_name = "SPI 2";
     register_new_resource_to_resource_manifest(RESOURCE_TYPE_SPI, spi_name);
-    configure_spi_protocol(spi_handle);
+    configure_protocol(spi_handle);
     spi_register_callback(complete_callback_id, complete_callback_ptr);
     spi_register_callback(error_callback_id, error_callback_ptr);
-//    deassert_chip_select(DEVICE_0);
-//    deassert_chip_select(DEVICE_1);
-//    deassert_chip_select(DEVICE_2);
+
+
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
-//void spi::initialize_send_buffer()
-//{
-//    send_buffer.reserve(SPI_BUFFER_MAX);
-//}
 
 void spi::initialize_return_buffer()
 {
@@ -83,45 +79,6 @@ void spi::deassert_chip_select(uint8_t device_id)
     HAL_GPIO_WritePin(chip_select[device_id]->port, chip_select[device_id]->pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
-//spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id)
-//{
-//    uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
-//    uint32_t spi_module_mode;
-//    state_t spi_module_state;
-//    spi_module_state = (state_t) get_module_communication_state();
-//    spi_module_mode = get_module_operating_mode();
-//
-//    if ((tx_data_pointer == nullptr) || (rx_data_pointer == nullptr) || (packet_size == 0U))
-//        spi_procedure_error = SPI_PROCEDURE_STATE_DATA_ERROR;
-//
-//    assert_param(SPI_VERIFY_DIRECTION_2_LINE(spi_module_handle->init.direction));
-//    verify_communication_direction(SPI_DIRECTION_2_LINE);
-//    lock_module();
-//    if (!((spi_module_state == SPI_STATE_READY)
-//          || ((spi_module_mode == SPI_MODE_CONTROLLER)
-//              && (spi_module_handle->init.direction == SPI_DIRECTION_2_LINE)
-//              && (spi_module_state == SPI_STATE_BUSY_RX))))
-//        spi_procedure_error = SPI_PROCEDURE_STATE_BUS_ERROR;
-//    else if (spi_module_handle->state != SPI_STATE_BUSY_RX)
-//        spi_module_handle->state = SPI_STATE_BUSY_TX_RX;
-//
-//    set_transaction_parameters(tx_data_pointer, rx_data_pointer, packet_size);
-//    set_rx_and_tx_interrupt_service_routines();
-//    reset_enabled_crc();
-//
-//    spi_module_handle->chip_select_port = chip_select[device_id]->port;
-//    spi_module_handle->chip_select_pin = chip_select[device_id]->pin;
-//    assert_chip_select(device_id);
-//
-//    SPI_ENABLE_INTERRUPTS(spi_module_handle, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
-//                                              | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-//    if ((spi_module_handle->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)
-//        SPI_ENABLE_MODULE(spi_module_handle);
-//    unlock_module();
-//    if (spi_procedure_error == SPI_PROCEDURE_STATE_BUS_ERROR)  { return SPI_STATUS_BUSY;  }
-//    if (spi_procedure_error == SPI_PROCEDURE_STATE_DATA_ERROR) { return SPI_STATUS_ERROR; }
-//    return SPI_STATUS_OK;
-//}
 
 spi::status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, chip_select_t _chip_select)
 {
@@ -181,6 +138,39 @@ spi::status_t spi::initialize_send_buffer()
     return SPI_STATUS_OK;
 }
 
+//std::queue<spi::packet_t>& spi::get_return_buffer(id_number_t channel)
+//{
+//    switch (channel)
+//    {
+//        case CHANNEL_0:
+//            return return_buffer_0;
+//            break;
+//        case CHANNEL_1:
+//            return return_buffer_1;
+//            break;
+//        case CHANNEL_2:
+//            return return_buffer_2;
+//            break;
+//        case CHANNEL_3:
+//            return return_buffer_3;
+//            break;
+//        case CHANNEL_4:
+//            return return_buffer_4;
+//            break;
+//        case CHANNEL_5:
+//            return return_buffer_5;
+//            break;
+//        case CHANNEL_6:
+//            return return_buffer_6;
+//            break;
+//        case CHANNEL_7:
+//            return return_buffer_7;
+//            break;
+//        default:
+//
+//            break;
+//    }
+
 id_number_t spi::assign_next_available_channel_id()
 {
     id_number_t user_channel_id = ID_INVALID;
@@ -193,7 +183,7 @@ id_number_t spi::assign_next_available_channel_id()
     return user_channel_id;
 }
 
-id_number_t spi::open_new_spi_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin)
+id_number_t spi::create_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin)
 {
     id_number_t new_channel_id = assign_next_available_channel_id();
     if (new_channel_id != ID_INVALID)
@@ -243,10 +233,22 @@ id_number_t spi::open_new_spi_channel(id_number_t _global_user_id, id_number_t _
     return new_channel_id;
 }
 
-spi::status_t spi::transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t _tx_size)
+spi::status_t spi::transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _transaction_size, const uint8_t* _tx_bytes)
 {
-    uint8_t* rx_bytes = 0;
-    packet_t spi_packet = {0, _channel_id, _tx_size, _tx_bytes, rx_bytes};
+    packet_t spi_packet;
+    spi_packet.packet_id = 0;
+    spi_packet.channel_id = _channel_id;
+    spi_packet.total_byte_count = _total_byte_count;
+    spi_packet.transaction_size = _transaction_size;
+    for (uint8_t index = 0; index < spi_packet.total_byte_count; ++index)
+    {
+        spi_packet.tx_bytes[index] = _tx_bytes[index];
+        spi_packet.rx_bytes[index] = 0;
+    }
+    spi_packet.error_occurred = 0;
+    spi_packet.timeout_occurred = 0;
+
+
 //    spi_packet.channel_id = _channel_id;
 //    spi_packet.packet_id = 0;
 //    spi_packet.tx_size = _tx_size;
@@ -255,7 +257,7 @@ spi::status_t spi::transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t
 //    osStatus_t semaphore_status = osSemaphoreAcquire(send_buffer_semaphore_id, SPI_SEMAPHORE_TIMEOUT_MS);
 //    if (semaphore_status == osOK)
 //    {
-        send_buffer.push(spi_packet);
+        send_buffer.push(&spi_packet);
 //        osSemaphoreRelease(send_buffer_semaphore_id);
         return SPI_STATUS_OK;
 //    }
@@ -264,121 +266,192 @@ spi::status_t spi::transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t
 //    return SPI_STATUS_ERROR;
 }
 
-uint8_t spi::process_send_buffer()
+    void spi::process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_MAX_TOTAL_BYTE_COUNT] )
+    {
+
+        packet_t p;
+
+        switch(_channel)
+        {
+            case CHANNEL_0:
+                if (!return_buffer_0.empty())
+                {
+                    p = return_buffer_0.front();
+                    return_buffer_0.pop();
+                }
+                break;
+            case CHANNEL_1:
+                if (!return_buffer_1.empty())
+                {
+                    p = return_buffer_1.front();
+                    return_buffer_1.pop();
+                }
+                break;
+            case CHANNEL_2:
+                if (!return_buffer_2.empty())
+                {
+                    p = return_buffer_2.front();
+                    return_buffer_2.pop();
+                }
+                break;
+            case CHANNEL_3:
+                if (!return_buffer_3.empty())
+                {
+                    p = return_buffer_3.front();
+                    return_buffer_3.pop();
+                }
+                break;
+            case CHANNEL_4:
+                if (!return_buffer_4.empty())
+                {
+                    p = return_buffer_4.front();
+                    return_buffer_4.pop();
+                }
+                break;
+            case CHANNEL_5:
+                if (!return_buffer_5.empty())
+                {
+                    p = return_buffer_5.front();
+                    return_buffer_5.pop();
+                }
+                break;
+            case CHANNEL_6:
+                if (!return_buffer_6.empty())
+                {
+                    p = return_buffer_6.front();
+                    return_buffer_6.pop();
+                }
+                break;
+            case CHANNEL_7:
+                if (!return_buffer_7.empty())
+                {
+                    p = return_buffer_7.front();
+                    return_buffer_7.pop();
+                }
+                break;
+            default:
+                break;
+        }
+
+        if (!p.timeout_occurred && !p.error_occurred)
+        {
+            for (uint8_t index = 0; index < p.total_byte_count; ++index)
+            {
+                p.rx_bytes[index] = _rx_array[index];
+            }
+        }
+
+    }
+
+void spi::process_send_buffer()
 {
     if (!send_buffer.empty())
     {
         uint8_t result = 0;
         packet_t p;
-        p.packet_id = send_buffer.front().packet_id;
-        p.channel_id = send_buffer.front().channel_id;
-        p.tx_bytes = send_buffer.front().tx_bytes;
-        p.tx_size = send_buffer.front().tx_size;
+        p.packet_id = send_buffer.front()->packet_id;
+        p.channel_id = send_buffer.front()->channel_id;
+        p.total_byte_count = send_buffer.front()->total_byte_count;
+        p.transaction_size = send_buffer.front()->transaction_size;
+        for (uint8_t index = 0; index < p.total_byte_count; ++index)
+        {
+            p.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
+        }
+        p.timeout_occurred = send_buffer.front()->timeout_occurred;
+        p.error_occurred = send_buffer.front()->error_occurred;
+
         send_buffer.pop();
         chip_select_t cs;
 
-//        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
-        cs.port = GPIOB;
-        cs.pin = GPIO_PIN_14;
-//        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
-        spi_transmit_receive_interrupt(p.tx_bytes, p.rx_bytes, p.tx_size, cs);
-        while (!hal_callbacks_get_spi_rx_data_ready_flag());
-        hal_callbacks_set_spi_rx_data_ready_flag(0);
-        result = *p.rx_bytes;
-        return result;
+        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
+        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
+//        cs.port = GPIOB;
+//        cs.pin = GPIO_PIN_14;
+
+        uint16_t rx_transmission = 0;
+        uint8_t tx_data_1[2] = {0x01, 0xFF};
+        uint8_t tx_data_2[2] = {0x02, 0xFF};
+        uint8_t received_byte_1 = 0;
+        uint8_t received_byte_2 = 0;
+
+//        auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
+//        uint8_t* rx_ptr = nullptr;
+            uint8_t rx_ptr[8] = { 0, 0, 0, 0, 0, 0, 0, 0};
+//        spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
+//        spi_transmit_receive_interrupt(tx_data_1, rx_data, 2, cs);
+//        while (!hal_callbacks_get_spi_rx_data_ready_flag());
+//        hal_callbacks_set_spi_rx_data_ready_flag(0);
+//        received_byte_1 = rx_data[1];
+//
+//
+//        spi_transmit_receive_interrupt(tx_data_2, rx_data, 2, cs);
+//        while (!hal_callbacks_get_spi_rx_data_ready_flag());
+//        hal_callbacks_set_spi_rx_data_ready_flag(0);
+
+        complete_rx.reserve(p.total_byte_count);
+
+        rx_vec.reserve(8);
+        uint8_t vec_index = 0;
+
+        uint8_t num_transmissions = p.total_byte_count / p.transaction_size;
+        if (p.total_byte_count % p.transaction_size != 0)
+            ++num_transmissions;
+
+         for (uint8_t _tx_count = 0; _tx_count < num_transmissions; ++_tx_count)
+        {
+            spi_transmit_receive_interrupt(p.tx_bytes, rx_ptr, p.transaction_size, cs);
+//            spi_transmit_receive_interrupt(tx_data_1, rx_data, p.tx_size, cs);
+            while (!hal_callbacks_get_spi_rx_data_ready_flag());
+            hal_callbacks_set_spi_rx_data_ready_flag(0);
+            p.rx_bytes[vec_index] = rx_ptr[vec_index++];
+            p.rx_bytes[vec_index] = rx_ptr[vec_index++];
+
+//            for (uint8_t byte_count = 0; byte_count < p.tx_count; ++byte_count)
+//            {
+//                complete_rx.push_back(rx_data[byte_count]);
+//            }
+//            received_byte_1 = rx_data[1];
+        }
+
+//            received_byte_2 = rx_data[1];
+
+//        rx_transmission |= *(++rx_ptr);
+//        --rx_ptr;
+//        rx_transmission = received_byte_1 << 8;
+//        rx_transmission |= received_byte_2;
+
+//        return rx_transmission;
+        switch(p.channel_id)
+        {
+            case CHANNEL_0:
+                return_buffer_0.push(p);
+                break;
+            case CHANNEL_1:
+                return_buffer_1.push(p);
+                break;
+            case CHANNEL_2:
+                return_buffer_2.push(p);
+                break;
+            case CHANNEL_3:
+                return_buffer_3.push(p);
+                break;
+            case CHANNEL_4:
+                return_buffer_4.push(p);
+                break;
+            case CHANNEL_5:
+                return_buffer_5.push(p);
+                break;
+            case CHANNEL_6:
+                return_buffer_6.push(p);
+                break;
+            case CHANNEL_7:
+                return_buffer_7.push(p);
+                break;
+            default:
+                break;
+        }
     }
-    return 255U;
 }
-
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-// add_packet_to_send_buffer()
-spi::status_t spi::add_packet_to_send_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes)
-{
-//
-//    if (packet_id_counter >= SPI_BUFFER_MAX) { packet_id_counter = 0; }
-//    if (tail == SPI_BUFFER_MAX)
-//    {
-//        if (head == 0)
-//        {
-//            shift_buffer_contents_to_front();
-//            return SPI_STATUS_ERROR;
-//        }
-//    }
-//    if (tail < SPI_BUFFER_MAX)
-//    {
-//        spi::packet_t spi_packet;
-//        spi_packet.packet_id = packet_id_counter;
-//        spi_packet.chip_select = _chip_select;
-//        spi_packet.tx_size = _tx_size;
-//        for (uint8_t index = 0; index < _tx_size; ++index) { spi_packet.tx_bytes.push_back(_tx_bytes[index]); }
-//        spi_packet.rx_bytes.resize(_tx_size);
-//        send_buffer.push_back(&spi_packet);
-//        packet_id_counter++;
-//        tail++;
-//    }
-//    else { return SPI_STATUS_ERROR; }
-    return SPI_STATUS_OK;
-}
-spi::status_t spi::add_packet_to_return_buffer(spi::packet_t* _spi_packet)
-{
-    return_buffer.push_back(_spi_packet);
-    return SPI_STATUS_OK;
-}
-
-void spi::shift_buffer_contents_to_front()
-{
-//    uint8_t new_index = 0;
-//    for (uint8_t old_index = head; old_index <= tail; ++old_index)
-//    {
-//        send_buffer[new_index]->packet_id = send_buffer[old_index]->packet_id;
-//        send_buffer[new_index]->chip_select = send_buffer[old_index]->chip_select;
-//        send_buffer[new_index]->tx_size = send_buffer[old_index]->tx_size;
-//        send_buffer[new_index]->tx_bytes = send_buffer[old_index]->tx_bytes;
-//        ++new_index;
-//    }
-//    head = 0;
-//    tail = new_index;
-}
-
-// static unsigned long spi_timeout_counter = 0;
-// rename to: process_spi_send_buffer()
-//void spi::process_send_buffer()
-//{
-//    static uint8_t ready_to_send = false;
-//    static uint32_t spi_timeout_counter = HAL_GetTick();
-//    uint32_t SPI_TIMEOUT = 100U;
-//
-//    if (ready_to_send == true)
-//    {
-//        if(head != tail && head <= SPI_BUFFER_MAX)
-//        {
-////            uint8_t dest_packet_id = send_buffer[head]->packet_id;
-////            uint8_t dest_chip_select = send_buffer[head]->chip_select;
-////            uint8_t dest_tx_size = send_buffer[head]->tx_size;
-////            uint8_t* dest_tx_bytes = &send_buffer[head]->tx_bytes[0];
-////            uint8_t* dest_rx_bytes = &send_buffer[head]->rx_bytes[0];
-//            if (head >= SPI_BUFFER_MAX) { head = 0; }
-//            else { head++; }
-//            spi_transmit_receive_interrupt(&send_buffer[head]->tx_bytes[0], &send_buffer[head]->rx_bytes[0], (uint16_t)send_buffer[head]->tx_size, send_buffer[head]->chip_select);
-//            spi_timeout_counter = HAL_GetTick();
-//            ready_to_send = false;
-//        }
-//        else
-//        {
-//            head = 0;
-//            tail = 0;
-//        }
-//    }
-//    if (ready_to_send == false && hal_callbacks_get_spi_rx_data_ready_flag() == true)
-//    {
-//        add_packet_to_return_buffer(send_buffer[head]);
-//        hal_callbacks_set_spi_rx_data_ready_flag(false);
-//        ready_to_send = true;
-//    }
-
-//}
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

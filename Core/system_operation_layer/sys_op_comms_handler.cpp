@@ -19,9 +19,9 @@
 #include "cmsis_os2.h"
 /* hal includes */
 #include "../hardware_abstraction_layer/hal_general.h"
+#include "../hardware_abstraction_layer/hal_callbacks.h"
 #include "../hardware_abstraction_layer/hal_spi.h"
 #include "../hardware_abstraction_layer/hal_i2c.h"
-#include "../hardware_abstraction_layer/hal_callbacks.h"
 #include "mcu_clock_timers.h"
 #include "system_clock.h"
 #include "gpio.h"
@@ -88,7 +88,8 @@ namespace sys_op
         uint8_t spi_byte = 0xC2;
         uint8_t rx_data = 0;
         float temp = 0;
-        uint8_t tx_d[2] = { 127, 214 };
+        uint8_t tx_d[8] = { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F };
+        uint8_t rx_d[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
         switch (comms_handler_state)
         {
@@ -96,11 +97,11 @@ namespace sys_op
                 initialize_system_manifests();
                 register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
 
-                hal::spi_2.initialize_spi_object(&spi_2_handle,
+                hal::spi_2.initialize(&spi_2_handle,
              spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
                 spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
 
-                hal::spi_2.open_new_spi_channel(0 , 0, PORT_B, GPIO_PIN_14);
+                hal::spi_2.create_channel(0 , 0, PORT_B, GPIO_PIN_14);
 
 
 //                driver::rtd_1.initialize_rtd(&hal::spi_2);
@@ -110,8 +111,9 @@ namespace sys_op
             case COMMS_HANDLER_STATE_RUN:
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-                hal::spi_2.transmit(0, tx_d, 2);
+                hal::spi_2.transmit(0, 8, 2, tx_d);
                 hal::spi_2.process_send_buffer();
+                hal::spi_2.process_return_buffer(0, rx_d);
 //                {
 //                counter = 1;
 //                if (counter == 0)

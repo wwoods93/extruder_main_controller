@@ -266,12 +266,12 @@ class spi : public hal_level_resource
         {
             id_number_t packet_id;
             id_number_t channel_id;
-//            chip_select_t chip_select;
-            uint8_t tx_size;
-            uint8_t* tx_bytes;
-            uint8_t* rx_bytes;
-//            std::vector<uint8_t> tx_bytes;
-//            std::vector<uint8_t> rx_bytes;
+            uint8_t total_byte_count;
+            uint8_t transaction_size;
+            uint8_t tx_bytes[8];
+            uint8_t rx_bytes[8];
+            uint8_t timeout_occurred;
+            uint8_t error_occurred;
 
         } packet_t;
 
@@ -281,35 +281,60 @@ class spi : public hal_level_resource
             id_number_t global_device_id;
             id_number_t channel_id;
             chip_select_t chip_select;
-            std::queue<packet_t> return_buffer;
 
         } user_channel_t;
 
-        #define SPI_USER_CHANNELS_MAX   32U
+        #define SPI_USER_CHANNELS_MAX   8U
+
+        std::queue<packet_t> return_buffer_0;
+        std::queue<packet_t> return_buffer_1;
+        std::queue<packet_t> return_buffer_2;
+        std::queue<packet_t> return_buffer_3;
+        std::queue<packet_t> return_buffer_4;
+        std::queue<packet_t> return_buffer_5;
+        std::queue<packet_t> return_buffer_6;
+        std::queue<packet_t> return_buffer_7;
+
+        std::vector<uint8_t> tx_vec;
+
+        std::vector<uint8_t> rx_vec;
+
+#define SPI_MAX_TOTAL_BYTE_COUNT        8U
+
+        #define CHANNEL_0   0U
+        #define CHANNEL_1   1U
+        #define CHANNEL_2   2U
+        #define CHANNEL_3   3U
+        #define CHANNEL_4   4U
+        #define CHANNEL_5   5U
+        #define CHANNEL_6   6U
+        #define CHANNEL_7   7U
+
+        id_number_t current_channel = ID_INVALID;
+
+//        std::queue<packet_t>& get_return_buffer(id_number_t channel);
+
+        std::vector<uint8_t> complete_rx;
+
+        void process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_MAX_TOTAL_BYTE_COUNT]);
+
+
 
         id_number_t next_available_user_channel_id = 0;
 
-        uint8_t packet_id_counter = 0;
-
         std::vector<user_channel_t*> user_channel_list;
-
-        std::queue<packet_t> send_buffer;
+        std::queue<packet_t*> send_buffer;
 
         static constexpr uint8_t SPI_SEMAPHORE_TIMEOUT_MS                   = 5U;
         static constexpr uint8_t SPI_SEMAPHORE_AVAILABLE_TOKENS_MAX         = 1U;
         static constexpr uint8_t SPI_SEMPAHORE_AVAILABLE_TOKENS_INITIAL     = 1U;
-
-
-
-
-
 //        osSemaphoreId_t send_buffer_semaphore_id;
 
         id_number_t assign_next_available_channel_id();
-        id_number_t open_new_spi_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin);
+        id_number_t create_channel(id_number_t _global_user_id, id_number_t _global_device_id, port_name_t _chip_select_port, uint16_t _chip_select_pin);
 
         status_t initialize_send_buffer();
-        status_t transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t _tx_size);
+        status_t transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _transaction_size, const uint8_t* _tx_bytes);
 
 ///////////////////////////////////////////////////////////////////
 
@@ -328,19 +353,14 @@ class spi : public hal_level_resource
             uint32_t crc_polynomial;
         } init_t;
 
-
-
         GPIO_TypeDef* port_0 = GPIOB;
         GPIO_TypeDef* port_1 = GPIOC;
         GPIO_TypeDef* port_2 = GPIOC;
         uint16_t pin_0 = GPIO_PIN_14;
         uint16_t pin_1 = GPIO_PIN_7;
         uint16_t pin_2 = GPIO_PIN_8;
-//        chip_select_t chip_select_0 = { port_0, pin_0 };
-//        chip_select_t chip_select_1 = { port_1, pin_1 };
-//        chip_select_t chip_select_2 = { port_2, pin_2 };
+
         std::vector<chip_select_t*> chip_select;
-//        chip_select_t* chip_select[PERIPHERAL_DEVICE_COUNT] = { &chip_select_0, &chip_select_1, &chip_select_2 };
 
         typedef struct
         {
@@ -395,18 +415,13 @@ class spi : public hal_level_resource
         /* public member functions */
         spi();
         id_number_t get_local_id() const;
-        void configure_spi_protocol(handle_t* spi_handle);
-        void initialize_spi_object(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
-//        void initialize_send_buffer();
+        void configure_protocol(handle_t* spi_handle);
+        void initialize(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
         void initialize_return_buffer();
         void assert_chip_select(uint8_t device_id);
         void deassert_chip_select(uint8_t device_id);
-//        status_t spi_transmit_receive_interrupt(uint8_t* tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, uint8_t device_id);
         status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, chip_select_t _chip_select);
-        status_t add_packet_to_send_buffer(uint8_t _chip_select, uint8_t _tx_size, uint8_t* _tx_bytes);
-        status_t add_packet_to_return_buffer(spi::packet_t* _spi_packet);
-        void shift_buffer_contents_to_front();
-        uint8_t process_send_buffer();
+        void process_send_buffer();
 
         /* interrupt service routines */
         friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
@@ -433,10 +448,7 @@ class spi : public hal_level_resource
 
 
         int8_t local_id = 0;
-//        std::vector<packet_t*> send_buffer;
-        std::vector<packet_t*> return_buffer;
-        uint8_t head = 0;
-        uint8_t tail = 0;
+
         /* private member functions */
         status_t initialize_spi_protocol();
         void set_rx_and_tx_interrupt_service_routines() const;

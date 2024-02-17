@@ -120,7 +120,7 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
 //    hal_callbacks_set_spi_rx_data_ready_flag(0);
 //    rtd_reading |= *(++rx_ptr);
 //    free(--rx_ptr);
-//rtd_reading = 10 + spi_byte;
+
     return rtd_reading >> 1;
 }
 

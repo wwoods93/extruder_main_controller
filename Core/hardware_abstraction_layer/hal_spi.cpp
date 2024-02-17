@@ -139,39 +139,6 @@ spi::status_t spi::initialize_send_buffer()
     return SPI_STATUS_OK;
 }
 
-//std::queue<spi::packet_t>& spi::get_return_buffer(id_number_t channel)
-//{
-//    switch (channel)
-//    {
-//        case CHANNEL_0:
-//            return return_buffer_0;
-//            break;
-//        case CHANNEL_1:
-//            return return_buffer_1;
-//            break;
-//        case CHANNEL_2:
-//            return return_buffer_2;
-//            break;
-//        case CHANNEL_3:
-//            return return_buffer_3;
-//            break;
-//        case CHANNEL_4:
-//            return return_buffer_4;
-//            break;
-//        case CHANNEL_5:
-//            return return_buffer_5;
-//            break;
-//        case CHANNEL_6:
-//            return return_buffer_6;
-//            break;
-//        case CHANNEL_7:
-//            return return_buffer_7;
-//            break;
-//        default:
-//
-//            break;
-//    }
-
 id_number_t spi::assign_next_available_channel_id()
 {
     id_number_t user_channel_id = ID_INVALID;
@@ -293,18 +260,6 @@ void spi::send_buffer_get_front(spi::packet_t (&packet))
 {
     if (!send_buffer.empty())
     {
-//        packet.packet_id = send_buffer.front()->packet_id;
-//        packet.channel_id = send_buffer.front()->channel_id;
-//        packet.total_byte_count = send_buffer.front()->total_byte_count;
-//        packet.transaction_size = send_buffer.front()->transaction_size;
-//        packet.timeout_occurred = send_buffer.front()->timeout_occurred;
-//        packet.error_occurred = send_buffer.front()->error_occurred;
-//        for (uint8_t index = 0; index < packet.total_byte_count; ++index)
-//        {
-//            packet.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
-//            packet.rx_bytes[index] = send_buffer.front()->rx_bytes[index];
-//        }
-
         memcpy(&packet, send_buffer.front(), sizeof(packet_t));
     }
 }
@@ -326,11 +281,7 @@ spi::status_t spi::transmit(id_number_t _channel_id, uint8_t _total_byte_count, 
     spi_packet.error_occurred = 0;
     spi_packet.timeout_occurred = 0;
 
-
-//    spi_packet.channel_id = _channel_id;
-//    spi_packet.packet_id = 0;
-//    spi_packet.tx_size = _tx_size;
-//    spi_packet.tx_bytes = _tx_bytes;
+    \
 
 //    osStatus_t semaphore_status = osSemaphoreAcquire(send_buffer_semaphore_id, SPI_SEMAPHORE_TIMEOUT_MS);
 //    if (semaphore_status == osOK)
@@ -425,22 +376,8 @@ void spi::process_send_buffer()
 {
     if (!send_buffer.empty())
     {
-        uint8_t result = 0;
         packet_t p;
         send_buffer_get_front(p);
-//        p.packet_id = send_buffer.front()->packet_id;
-//        p.channel_id = send_buffer.front()->channel_id;
-//        p.total_byte_count = send_buffer.front()->total_byte_count;
-//        p.transaction_size = send_buffer.front()->transaction_size;
-//        for (uint8_t index = 0; index < p.total_byte_count; ++index)
-//        {
-//            p.tx_bytes[index] = send_buffer.front()->tx_bytes[index];
-//        }
-//        p.timeout_occurred = send_buffer.front()->timeout_occurred;
-//        p.error_occurred = send_buffer.front()->error_occurred;
-
-
-
 
         chip_select_t cs;
         user_channel_t channel;
@@ -478,31 +415,8 @@ void spi::process_send_buffer()
 
         cs.port = channel.chip_select.port;
         cs.pin = channel.chip_select.pin;
-//        memcpy(&channel, user_channel_list[(uint8_t)p.channel_id], sizeof(user_channel_t));
-//        cs.port = user_channel_list[(uint8_t)p.channel_id]->chip_select.port;
-//        cs.pin = user_channel_list[(uint8_t)p.channel_id]->chip_select.pin;
-//        cs.port = GPIOB;
-//        cs.pin = GPIO_PIN_14;
 
-        uint16_t rx_transmission = 0;
-        uint8_t tx_data_1[2] = {0x01, 0xFF};
-        uint8_t tx_data_2[2] = {0x02, 0xFF};
-        uint8_t received_byte_1 = 0;
-        uint8_t received_byte_2 = 0;
-
-//        auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
-//        uint8_t* rx_ptr = nullptr;
-            uint8_t rx_ptr[8] = { 0, 0, 0, 0, 0, 0, 0, 0};
-//        spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
-//        spi_transmit_receive_interrupt(tx_data_1, rx_data, 2, cs);
-//        while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//        hal_callbacks_set_spi_rx_data_ready_flag(0);
-//        received_byte_1 = rx_data[1];
-//
-//
-//        spi_transmit_receive_interrupt(tx_data_2, rx_data, 2, cs);
-//        while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//        hal_callbacks_set_spi_rx_data_ready_flag(0);
+        uint8_t rx_ptr[8] = { 0, 0, 0, 0, 0, 0, 0, 0};
 
         complete_rx.reserve(p.total_byte_count);
 
@@ -518,28 +432,14 @@ void spi::process_send_buffer()
         {
              uint8_t tx_index = _tx_count * p.transaction_size;
             spi_transmit_receive_interrupt(&p.tx_bytes[tx_index], rx_ptr, p.transaction_size, channel.chip_select);
-//            spi_transmit_receive_interrupt(tx_data_1, rx_data, p.tx_size, cs);
             while (!hal_callbacks_get_spi_rx_data_ready_flag());
             hal_callbacks_set_spi_rx_data_ready_flag(0);
 
             p.rx_bytes[vec_index] = rx_ptr[vec_index++];
             p.rx_bytes[vec_index] = rx_ptr[vec_index++];
-
-//            for (uint8_t byte_count = 0; byte_count < p.tx_count; ++byte_count)
-//            {
-//                complete_rx.push_back(rx_data[byte_count]);
-//            }
-//            received_byte_1 = rx_data[1];
         }
         send_buffer_pop();
-//            received_byte_2 = rx_data[1];
 
-//        rx_transmission |= *(++rx_ptr);
-//        --rx_ptr;
-//        rx_transmission = received_byte_1 << 8;
-//        rx_transmission |= received_byte_2;
-
-//        return rx_transmission;
         switch(p.channel_id)
         {
             case CHANNEL_0:

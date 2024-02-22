@@ -76,6 +76,9 @@ rtd* get_rtd_object()
 
 namespace sys_op
 {
+    static uint32_t comms_handler_iteration_tick;
+    uint32_t rtos_kernel_tick_frequency_hz;
+
     void comms_handler_intitialize()
     {
 
@@ -94,26 +97,36 @@ namespace sys_op
         switch (comms_handler_state)
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
+            {
                 initialize_system_manifests();
+                comms_handler_iteration_tick = 0;
+                rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
 
                 hal::spi_2.initialize(&spi_2_handle,
-             spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
-                spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
+                                      spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
+                                      spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
 
-                hal::spi_2.create_channel(0 , 0, PORT_B, GPIO_PIN_14);
+                hal::spi_2.create_channel(0, 0, PORT_B, GPIO_PIN_14);
 
 
 //                driver::rtd_1.initialize_rtd(&hal::spi_2);
 
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
+            }
             case COMMS_HANDLER_STATE_RUN:
-                HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+            {
+                if (osKernelGetTickCount() - comms_handler_iteration_tick > rtos_kernel_tick_frequency_hz)
+                {
+                    hal::spi_2.transmit(0, 8, 2, tx_d);
+                    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+                    comms_handler_iteration_tick = osKernelGetTickCount();
+                }
 
-                hal::spi_2.transmit(0, 8, 2, tx_d);
                 hal::spi_2.process_send_buffer();
                 hal::spi_2.process_return_buffer(0, rx_d);
+
 //                {
 //                counter = 1;
 //                if (counter == 0)
@@ -139,6 +152,7 @@ namespace sys_op
 //                    temp = 100;
 //                }
                 break;
+            }
             default:
                 break;
         }

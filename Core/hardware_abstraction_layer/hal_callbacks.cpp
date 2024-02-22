@@ -37,16 +37,32 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 
 void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi)
 {
-
-    if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
-        HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
+    hal_callbacks_deassert_spi_chip_select(hspi);
+    hal_callbacks_add_spi_rx_bytes_to_module_rx_array(hspi);
     spi_rx_data_ready_flag = 1;
-
 }
 
 void HAL_SPI_Error_Callback(spi::handle_t *hspi)
 {
-    if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)
-        HAL_GPIO_WritePin(hspi->chip_select_port, hspi->chip_select_pin, GPIO_PIN_SET);
+    hal_callbacks_deassert_spi_chip_select(hspi);
     spi_rx_data_ready_flag = 1;
+}
+
+void hal_callbacks_assert_spi_chip_select(spi::handle_t* _module)
+{
+    if (HAL_GPIO_ReadPin(_module->active_packet.chip_select.port, _module->active_packet.chip_select.pin) == CHIP_SELECT_RESET)
+        HAL_GPIO_WritePin(_module->active_packet.chip_select.port, _module->active_packet.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+}
+void hal_callbacks_deassert_spi_chip_select(spi::handle_t* _module)
+{
+    if (HAL_GPIO_ReadPin(_module->active_packet.chip_select.port, _module->active_packet.chip_select.pin) == CHIP_SELECT_SET)
+        HAL_GPIO_WritePin(_module->active_packet.chip_select.port, _module->active_packet.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
+}
+
+void hal_callbacks_add_spi_rx_bytes_to_module_rx_array(spi::handle_t* _module)
+{
+    for (uint8_t increment = 0; increment < _module->active_packet.tx_size; ++increment)
+    {
+        _module->active_packet.rx_bytes[_module->current_rx_array_index + increment] = _module->rx_array[increment];
+    }
 }

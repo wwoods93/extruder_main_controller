@@ -23,9 +23,9 @@ class rtd : public driver_level_user
 {
     public:
 
-        static constexpr uint8_t DEVICE_0 = spi::DEVICE_0;
-        static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
-        static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
+//        static constexpr uint8_t DEVICE_0 = spi::DEVICE_0;
+//        static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
+//        static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
 
         spi* rtd_spi_object{};
         spi::handle_t* spi_peripheral{};

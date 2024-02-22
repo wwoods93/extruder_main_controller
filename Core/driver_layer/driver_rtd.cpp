@@ -43,7 +43,7 @@ void rtd::initialize_rtd(spi* spi_object)
     std::string rtd_name = "RTD ZONE 1";
     global_driver_level_user_id = register_new_user_to_user_manifest(USER_TYPE_RTD_INTERFACE, rtd_name);
     rtd_spi_object = spi_object;
-    spi_peripheral = rtd_spi_object->spi_module_handle;
+    spi_peripheral = rtd_spi_object->module;
 }
 
 void rtd::rtd_begin() const

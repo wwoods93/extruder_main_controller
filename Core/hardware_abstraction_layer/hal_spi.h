@@ -13,54 +13,63 @@
 #ifndef MAIN_CONTROLLER_HAL_SPI_H
 #define MAIN_CONTROLLER_HAL_SPI_H
 
+/* c/c++ includes */
 #include <vector>
 #include <queue>
+/* stm32 includes */
 #include "stm32f4xx.h"
+/* third-party includes */
+#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+/* hal includes */
+#include "hal_general.h"
+/* driver includes */
+
+/* rtos abstraction includes */
+#include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
+/* sys op includes */
+
+/* meta structure includes */
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_hal_level_resource.h"
-#include "hal_general.h"
-#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
-#include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
 
 
 class spi : public hal_level_resource
 {
     public:
 
-        #define SPI_TRANSACTION_NOT_IN_PROGRESS             0U
-        #define SPI_TRANSACTION_IN_PROGRESS                 1U
-        #define SPI_TRANSACTION_COMPLETE                    2U
+        #define SPI_TRANSACTION_NOT_IN_PROGRESS     0U
+        #define SPI_TRANSACTION_IN_PROGRESS         1U
+        #define SPI_TRANSACTION_COMPLETE            2U
 
-        #define SPI_USE_REGISTER_CALLBACKS      1U
-        #define SPI_USE_CRC                     0U
+        #define SPI_USE_REGISTER_CALLBACKS          1U
+        #define SPI_USE_CRC                         0U
 
-        #define SPI_USER_CHANNELS_MAX           8U
-        #define SPI_BYTE_COUNT_MAX              8U
-        #define SPI_BYTES_MAX                   255U
-        #define SPI_BUFFER_MAX                  255U
-        #define PERIPHERAL_DEVICE_COUNT_MAX     3U
-        #define PERIPHERAL_DEVICE_COUNT         PERIPHERAL_DEVICE_COUNT_MAX
+        #define SPI_USER_CHANNELS_MAX               8U
+        #define SPI_BYTE_COUNT_MAX                  8U
+        #define SPI_BYTES_MAX                       255U
+        #define SPI_BUFFER_MAX                      255U
+        #define PERIPHERAL_DEVICE_COUNT_MAX         3U
+        #define PERIPHERAL_DEVICE_COUNT             PERIPHERAL_DEVICE_COUNT_MAX
 
-        #define ACTIVE_LOW                      0U
-        #define ACTIVE_HIGH                     1U
-        #define CHIP_SELECT_LOGIC_LEVEL         ACTIVE_LOW
-        #define CHIP_SELECT_SET                 CHIP_SELECT_LOGIC_LEVEL
-        #define CHIP_SELECT_RESET               !CHIP_SELECT_SET
+        #define ACTIVE_LOW                          0U
+        #define ACTIVE_HIGH                         1U
+        #define CHIP_SELECT_LOGIC_LEVEL             ACTIVE_LOW
+        #define CHIP_SELECT_SET                     CHIP_SELECT_LOGIC_LEVEL
+        #define CHIP_SELECT_RESET                   !CHIP_SELECT_SET
 
-        #define CHANNEL_0                       0U
-        #define CHANNEL_1                       1U
-        #define CHANNEL_2                       2U
-        #define CHANNEL_3                       3U
-        #define CHANNEL_4                       4U
-        #define CHANNEL_5                       5U
-        #define CHANNEL_6                       6U
-        #define CHANNEL_7                       7U
+        #define CHANNEL_0                           0U
+        #define CHANNEL_1                           1U
+        #define CHANNEL_2                           2U
+        #define CHANNEL_3                           3U
+        #define CHANNEL_4                           4U
+        #define CHANNEL_5                           5U
+        #define CHANNEL_6                           6U
+        #define CHANNEL_7                           7U
 
-        static constexpr uint8_t SPI_SEMAPHORE_TIMEOUT_MS                   = 5U;
-        static constexpr uint8_t SPI_SEMAPHORE_AVAILABLE_TOKENS_MAX         = 1U;
-        static constexpr uint8_t SPI_SEMPAHORE_AVAILABLE_TOKENS_INITIAL     = 1U;
+        static constexpr uint8_t    SPI_SEMAPHORE_TIMEOUT_MS                    = 5U;
+        static constexpr uint8_t    SPI_SEMAPHORE_AVAILABLE_TOKENS_MAX          = 1U;
+        static constexpr uint8_t    SPI_SEMPAHORE_AVAILABLE_TOKENS_INITIAL      = 1U;
 
-        /* constants */
         static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE                    = 0U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR               = 1U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_DATA_ERROR              = 2U;
@@ -303,24 +312,24 @@ class spi : public hal_level_resource
 
         typedef struct _handle_t
         {
-            hal_spi_t                   *instance;
-            init_t                      init;
-            uint8_t                     *tx_buffer_ptr;
-            uint16_t                    tx_transfer_size;
-            volatile uint16_t           tx_transfer_counter;
-            uint8_t                     *rx_buffer_ptr;
-            uint8_t                     rx_array[SPI_BYTE_COUNT_MAX];
-            uint8_t                     current_rx_array_index;
-            uint16_t                    rx_transfer_size;
-            volatile uint16_t           rx_transfer_counter;
-            void                        (*rx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
-            void                        (*tx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
-            dma_handle_t                *tx_dma_handle;
-            dma_handle_t                *rx_dma_handle;
-            hal_lock_t                  lock;
-            volatile state_t            state;
-            volatile uint32_t           error_code;
-            packet_t                    active_packet;
+            hal_spi_t           *instance;
+            init_t              init;
+            uint8_t             *tx_buffer_ptr;
+            uint16_t            tx_transfer_size;
+            volatile uint16_t   tx_transfer_counter;
+            uint8_t             *rx_buffer_ptr;
+            uint8_t             rx_array[SPI_BYTE_COUNT_MAX];
+            uint8_t             current_rx_array_index;
+        uint16_t                rx_transfer_size;
+            volatile uint16_t   rx_transfer_counter;
+            void                (*rx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
+            void                (*tx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
+            dma_handle_t        *tx_dma_handle;
+            dma_handle_t        *rx_dma_handle;
+            hal_lock_t          lock;
+            volatile state_t    state;
+            volatile uint32_t   error_code;
+            packet_t            active_packet;
 
             #if (SPI_USE_REGISTER_CALLBACKS == 1U)
                 void (* TxCpltCallback)             (struct _handle_t *spi_handle);
@@ -354,18 +363,6 @@ class spi : public hal_level_resource
             user_channel_t channel_7;
         } user_list;
 
-        struct
-        {
-            uint8_t tx_count;
-            uint8_t tx_index;
-            uint8_t last_tx_index;
-            uint8_t num_transmissions;
-            uint8_t in_progress;
-            uint8_t complete;
-            uint8_t initialization_complete;
-            uint8_t send_state;
-        } transaction_state;
-
         //        osSemaphoreId_t send_buffer_semaphore_id;
         std::queue<packet_t*> send_buffer;
         std::queue<packet_t> return_buffer_0;
@@ -387,6 +384,7 @@ class spi : public hal_level_resource
 
         friend void hal_callbacks_assert_spi_chip_select(spi::handle_t *_module);
         friend void hal_callbacks_deassert_spi_chip_select(spi::handle_t *_module);
+        friend void hal_callbacks_add_spi_rx_bytes_to_module_rx_array(spi::handle_t* _module);
         friend spi::handle_t* get_spi_handle(spi* spi_object);
         friend spi::status_t dma_abort_interrupt(dma_handle_t *dma_handle);
         friend void dma_abort_on_error(dma_handle_t *dma_handle);
@@ -404,42 +402,28 @@ class spi : public hal_level_resource
 
         #if (SPI_USE_REGISTER_CALLBACKS == 1U)
                 status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback);
-                status_t spi_unregister_callback(callback_id_t callback_id);
+                status_t spi_unregister_callback(callback_id_t callback_id) const;
         #endif
-
-        friend void HAL_SPI_TxCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_RxCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_TxRxCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_TxHalfCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_RxHalfCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_TxRxHalfCpltCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_ErrorCallback(spi::handle_t *spi_handle);
-        friend void HAL_SPI_AbortCpltCallback(spi::handle_t *spi_handle);
-        friend void hal_callbacks_add_spi_rx_bytes_to_module_rx_array(spi::handle_t* _module);
 
     private:
 
-        status_t spi_transmit_receive_interrupt(uint8_t *rx_data_pointer, uint8_t _tx_index);
-
         void configure_protocol(handle_t* spi_handle);
-        status_t initialize_spi_protocol();
-        id_number_t assign_next_available_channel_id();
+        void initialize_active_packet();
         status_t initialize_send_buffer();
         void initialize_return_buffer();
-        void initialize_active_packet();
-        void reset_active_packet() const;
-        void initialize_transaction_state();
-        void reset_transaction_state();
-
-        void send_buffer_push(packet_t* packet);
-        void send_buffer_get_front(packet_t (&packet));
-        void send_buffer_pop();
-        void push_active_packet_to_return_buffer();
-        uint8_t calculate_number_of_transmissions_for_active_packet() const;
-        void get_channel_by_channel_id(user_channel_t& channel, id_number_t channel_id);
-
+        status_t initialize_protocol() const;
+        status_t spi_transmit_receive_interrupt(uint8_t *rx_data_pointer, uint8_t _tx_index);
         void assert_chip_select() const;
         void deassert_chip_select() const;
+        id_number_t assign_next_available_channel_id();
+        void get_channel_by_channel_id(user_channel_t& channel, id_number_t channel_id);
+        void send_buffer_push(packet_t* packet);
+        void send_buffer_pop();
+        void send_buffer_get_front(packet_t (&packet));
+        void set_active_packet_from_send_buffer();
+        void push_active_packet_to_return_buffer();
+        void reset_active_packet() const;
+        uint8_t calculate_number_of_transmissions_for_active_packet() const;
         status_t lock_module() const;
         void unlock_module() const;
         void set_transaction_parameters(uint8_t *tx_data_ptr, uint8_t *rx_data_ptr, uint16_t packet_size) const;

@@ -78,6 +78,7 @@ namespace sys_op
 {
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
+    static uint8_t buffer_accessed;
 
     void comms_handler_intitialize()
     {
@@ -100,13 +101,11 @@ namespace sys_op
             {
                 initialize_system_manifests();
                 comms_handler_iteration_tick = 0;
+                buffer_accessed = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
+
                 register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
-
-                hal::spi_2.initialize(&spi_2_handle,
-                                      spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback,
-                                      spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
-
+                hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 hal::spi_2.create_channel(0, 0, PORT_B, GPIO_PIN_14);
 
 
@@ -125,7 +124,12 @@ namespace sys_op
                 }
 
                 hal::spi_2.process_send_buffer();
-                hal::spi_2.process_return_buffer(0, rx_d);
+                buffer_accessed = hal::spi_2.process_return_buffer(0, rx_d);
+                if (buffer_accessed)
+                {
+                    counter++;
+                    buffer_accessed = 0;
+                }
 
 //                {
 //                counter = 1;

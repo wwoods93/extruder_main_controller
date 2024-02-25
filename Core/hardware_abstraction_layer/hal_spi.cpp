@@ -51,6 +51,7 @@ void spi::reset_transaction_state()
     transaction_state.in_progress = false;
     transaction_state.complete = false;
     transaction_state.initialization_complete = true;
+    transaction_state.send_state = 0;
 }
 
 spi::status_t spi::initialize_send_buffer()
@@ -168,7 +169,7 @@ spi::status_t spi::transmit(id_number_t _channel_id, uint8_t _total_byte_count, 
     packet_t spi_packet;
     user_channel_t channel;
 
-    get_channel(channel, _channel_id);
+    get_channel_by_channel_id(channel, _channel_id);
 
     spi_packet.packet_id = 0;
     spi_packet.channel_id = _channel_id;
@@ -226,6 +227,7 @@ void spi::reset_active_packet() const
     module->active_packet.chip_select.pin = 0;
     module->active_packet.transaction_size = 0;
     module->active_packet.tx_size = 0;
+    module->active_packet.bytes_sent = 0;
     memset(&module->active_packet.tx_bytes, '\0', sizeof(module->active_packet.tx_bytes));
     memset(&module->active_packet.rx_bytes, '\0', sizeof(module->active_packet.rx_bytes));
     module->active_packet.timeout_occurred = 0;
@@ -331,7 +333,7 @@ uint8_t spi::calculate_number_of_transmissions_for_active_packet() const
     return num_transmissions;
 }
 
-void spi::get_channel(user_channel_t& channel, id_number_t channel_id)
+void spi::get_channel_by_channel_id(user_channel_t& channel, id_number_t channel_id)
 {
     switch (channel_id)
     {
@@ -397,126 +399,150 @@ void spi::push_active_packet_to_return_buffer()
     }
 }
 
-
-
 void spi::process_send_buffer()
 {
+    static uint8_t sent = 0;
     if (!send_buffer.empty())
     {
-        if (transaction_state.in_progress == false)
+        switch (transaction_state.send_state)
         {
-            send_buffer_get_front(module->active_packet);
-            transaction_state.num_transmissions = calculate_number_of_transmissions_for_active_packet();
-            transaction_state.tx_index = transaction_state.tx_count * module->active_packet.tx_size;
-            transaction_state.last_tx_index = module->active_packet.transaction_size - module->active_packet.tx_size + 1;
-            transaction_state.in_progress = true;
-        }
-
-        if (transaction_state.in_progress == true)
-        {
-            if (transaction_state.tx_index < transaction_state.last_tx_index)
+            case SPI_TRANSACTION_NOT_IN_PROGRESS:
             {
-                spi_transmit_receive_interrupt(module->rx_array, transaction_state.tx_index);
-                transaction_state.tx_index += module->active_packet.tx_size;
+                send_buffer_get_front(module->active_packet);
+                transaction_state.num_transmissions = calculate_number_of_transmissions_for_active_packet();
+                transaction_state.tx_index = transaction_state.tx_count * module->active_packet.tx_size;
+                transaction_state.last_tx_index = module->active_packet.transaction_size - module->active_packet.tx_size + 1;
+                transaction_state.send_state = SPI_TRANSACTION_IN_PROGRESS;
+                break;
             }
-            else
+            case SPI_TRANSACTION_IN_PROGRESS:
             {
-                transaction_state.in_progress = false;
-                transaction_state.complete = true;
-            }
-        }
+                if (transaction_state.tx_index < transaction_state.last_tx_index)
+                {
+                    if (sent == 0)
+                    {
+                        spi_transmit_receive_interrupt(module->rx_array, transaction_state.tx_index);
+                        sent = 1;
+                    }
 
-        if (transaction_state.complete)
-        {
-            send_buffer_pop();
-            push_active_packet_to_return_buffer();
-            reset_transaction_state();
-            reset_active_packet();
+
+                    if ( sent == 1 && hal_callbacks_get_spi_rx_data_ready_flag())
+                    {
+                        for (uint8_t i = 0; i < module->active_packet.tx_size; ++i)
+                        {
+                            module->active_packet.rx_bytes[transaction_state.tx_index++] = module->rx_array[i];
+                        }
+//                        transaction_state.tx_index += module->active_packet.tx_size;
+                        sent = 0;
+                        hal_callbacks_set_spi_rx_data_ready_flag(0);
+                    }
+                    if (transaction_state.tx_index >= module->active_packet.transaction_size)
+                    {
+                        transaction_state.send_state = SPI_TRANSACTION_COMPLETE;
+                    }
+                }
+                break;
+            }
+            case SPI_TRANSACTION_COMPLETE:
+            {
+                module->active_packet.error_occurred = 0;
+                module->active_packet.timeout_occurred = 0;
+
+//                if (hal_callbacks_get_spi_rx_data_ready_flag())
+//                {
+                    send_buffer_pop();
+                    push_active_packet_to_return_buffer();
+                    reset_transaction_state();
+                    reset_active_packet();
+//                }
+                break;
+            }
+            default:
+                break;
         }
-//        uint8_t rx_ptr[8] = { 0, 0, 0, 0, 0, 0, 0, 0};
-//        for (uint8_t tx_count = 0; tx_count < num_transmissions; ++tx_count)
-//        {
-//            while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//            hal_callbacks_set_spi_rx_data_ready_flag(0);
-//            for (uint8_t increment = 0; increment < module->active_packet.tx_size; ++increment)
-//            {
-//                module->active_packet.rx_bytes[tx_index + increment] = rx_ptr[increment];
-//            }
-//        }
     }
 }
 
-void spi::process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_BYTE_COUNT_MAX] )
+uint8_t spi::process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_BYTE_COUNT_MAX] )
 {
+    uint8_t buffer_accessed = 0;
     packet_t p;
-
+    memset(&p, '\0', sizeof(packet_t));
     switch(_channel)
     {
         case CHANNEL_0:
             if (!return_buffer_0.empty())
             {
-                p = return_buffer_0.front();
+                memcpy(&p, &return_buffer_0.front(), sizeof(packet_t));
                 return_buffer_0.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_1:
             if (!return_buffer_1.empty())
             {
-                p = return_buffer_1.front();
+                memcpy(&p, &return_buffer_1.front(), sizeof(packet_t));
                 return_buffer_1.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_2:
             if (!return_buffer_2.empty())
             {
-                p = return_buffer_2.front();
+                memcpy(&p, &return_buffer_2.front(), sizeof(packet_t));
                 return_buffer_2.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_3:
             if (!return_buffer_3.empty())
             {
-                p = return_buffer_3.front();
+                memcpy(&p, &return_buffer_3.front(), sizeof(packet_t));
                 return_buffer_3.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_4:
             if (!return_buffer_4.empty())
             {
-                p = return_buffer_4.front();
+                memcpy(&p, &return_buffer_4.front(), sizeof(packet_t));
                 return_buffer_4.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_5:
             if (!return_buffer_5.empty())
             {
-                p = return_buffer_5.front();
+                memcpy(&p, &return_buffer_5.front(), sizeof(packet_t));
                 return_buffer_5.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_6:
             if (!return_buffer_6.empty())
             {
-                p = return_buffer_6.front();
+                memcpy(&p, &return_buffer_6.front(), sizeof(packet_t));
                 return_buffer_6.pop();
+                buffer_accessed = 1;
             }
             break;
         case CHANNEL_7:
             if (!return_buffer_7.empty())
             {
-                p = return_buffer_7.front();
+                memcpy(&p, &return_buffer_7.front(), sizeof(packet_t));
                 return_buffer_7.pop();
+                buffer_accessed = 1;
+                break;
             }
-            break;
         default:
             break;
     }
 
-    if (!p.timeout_occurred && !p.error_occurred)
+    if (buffer_accessed && !p.timeout_occurred && !p.error_occurred)
     {
         memcpy(&_rx_array, &p.rx_bytes, sizeof(_rx_array));
     }
-
+    return buffer_accessed;
 }
 
 #if (SPI_USE_REGISTER_CALLBACKS == 1U)

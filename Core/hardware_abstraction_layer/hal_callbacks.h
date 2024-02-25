@@ -19,9 +19,7 @@ uint8_t hal_callbacks_get_spi_rx_data_ready_flag();
 void hal_callbacks_set_spi_rx_data_ready_flag(uint8_t status);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
-
 void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi);
-
 void HAL_SPI_Error_Callback(spi::handle_t *hspi);
 
 

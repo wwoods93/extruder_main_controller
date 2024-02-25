@@ -38,7 +38,13 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
 void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi)
 {
     hal_callbacks_deassert_spi_chip_select(hspi);
-    hal_callbacks_add_spi_rx_bytes_to_module_rx_array(hspi);
+//    for (uint8_t increment = 0; increment < hspi->active_packet.tx_size; ++increment)
+//    {
+//        hspi->active_packet.rx_bytes[hspi->current_rx_array_index + increment] = hspi->rx_array[increment];
+//
+//    }
+//    hspi->current_rx_array_index += hspi->active_packet.tx_size;
+//    hal_callbacks_add_spi_rx_bytes_to_module_rx_array(hspi);
     spi_rx_data_ready_flag = 1;
 }
 
@@ -64,5 +70,12 @@ void hal_callbacks_add_spi_rx_bytes_to_module_rx_array(spi::handle_t* _module)
     for (uint8_t increment = 0; increment < _module->active_packet.tx_size; ++increment)
     {
         _module->active_packet.rx_bytes[_module->current_rx_array_index + increment] = _module->rx_array[increment];
+
     }
+    _module->current_rx_array_index += _module->active_packet.tx_size;
+}
+
+void hal_callbacks_set_spi_rx_data_ready(spi::handle_t* _module)
+{
+    _module->active_packet.bytes_sent = true;
 }

@@ -106,10 +106,7 @@ namespace sys_op
 
                 register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
                 hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
-                hal::spi_2.create_channel(0, 0, PORT_B, GPIO_PIN_14);
-
-
-//                driver::rtd_1.initialize_rtd(&hal::spi_2);
+                hal::spi_2.create_channel(8, 2, PORT_B, GPIO_PIN_14);
 
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;

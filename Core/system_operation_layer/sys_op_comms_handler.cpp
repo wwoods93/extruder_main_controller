@@ -113,6 +113,7 @@ namespace sys_op
             }
             case COMMS_HANDLER_STATE_RUN:
             {
+
                 if (osKernelGetTickCount() - comms_handler_iteration_tick > rtos_kernel_tick_frequency_hz)
                 {
                     hal::spi_2.transmit(0, 8, 2, tx_d);

@@ -14,6 +14,7 @@
 #include "main.h"
 #include "cmsis_os.h"
 #include "cmsis_os2.h"
+#include "task.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "../system_operation_layer/sys_op_initialization.h"
@@ -40,7 +41,7 @@ osMutexId_t i2c_tx_data_buffer_mutexHandle;
 osMutexId_t i2c_rx_data_buffer_mutexHandle;
 
 const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 700 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 512 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
@@ -90,9 +91,25 @@ void start_initialization_task(void *argument)
 
 void start_comms_handler_task(void *argument)
 {
+    static unsigned long last_ten_high_water_marks[10];
+    static unsigned long highest = 0;
+    static uint8_t count = 0;
     while (true)
     {
         sys_op::comms_handler_state_machine();
+        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
+        last_ten_high_water_marks[count] = high_water_mark;
+        count++;
+        if (count >= 10)
+        {
+            highest = last_ten_high_water_marks[0];
+            for (uint8_t i = 1; i < 10; ++i)
+            {
+                if (last_ten_high_water_marks[i] > highest)
+                    highest = last_ten_high_water_marks[i];
+            }
+            count = 0;
+        }
     }
 }
 

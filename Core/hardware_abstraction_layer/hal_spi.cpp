@@ -758,7 +758,7 @@ void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
                 return;
             }
 #endif
-        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -778,7 +778,7 @@ void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
                 return;
             }
 #endif
-        SPI_DISABLE_INTERRUPTS(spi_handle, (spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | spi::SPI_ERROR_INTERRUPT_ENABLE));
+        SPI_DISABLE_INTERRUPTS(spi_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
         if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -799,7 +799,7 @@ void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
                 return;
             }
 #endif
-        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -819,7 +819,7 @@ void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
                 return;
             }
         #endif
-        SPI_DISABLE_INTERRUPTS(spi_handle, spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(spi_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
         if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
     }
 }
@@ -860,29 +860,29 @@ void spi_irq_handler(spi* spi_object)
 {
     uint32_t interrupt_source = spi_object->module->instance->CONTROL_REG_2;
     uint32_t interrupt_flag   = spi_object->module->instance->STATUS_REG;
-    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_OVERRUN) == FLAG_RESET)
-        && (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_RX_BUFFER_NOT_EMPTY) != FLAG_RESET)
-        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
+    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) == FLAG_RESET)
+        && (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_RX_BUFFER_NOT_EMPTY) != FLAG_RESET)
+        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
     {
         spi_object->module->rx_isr_ptr(*spi_object, spi_object->module);
         return;
     }
-    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_TX_BUFFER_EMPTY) != FLAG_RESET)
-        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
+    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TX_BUFFER_EMPTY) != FLAG_RESET)
+        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
     {
         spi_object->module->tx_isr_ptr(*spi_object, spi_object->module);
         return;
     }
-    if (((SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_MODE_FAULT) != FLAG_RESET)
-         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_OVERRUN) != FLAG_RESET)
-         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET))
-        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, spi::SPI_ERROR_INTERRUPT_ENABLE) != FLAG_RESET))
+    if (((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_MODE_FAULT) != FLAG_RESET)
+         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) != FLAG_RESET)
+         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET))
+        && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, SPI_ERROR_INTERRUPT_ENABLE) != FLAG_RESET))
     {
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_OVERRUN) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) != FLAG_RESET)
         {
             if (spi_object->module->state != spi::SPI_STATE_BUSY_TX)
             {
-                STM_HAL_SET_BIT(spi_object->module->error_code, spi::SPI_ERROR_OVERRUN);
+                STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_OVERRUN);
                 SPI_CLEAR_OVERRUN_FLAG(spi_object->module);
             }
             else
@@ -891,38 +891,38 @@ void spi_irq_handler(spi* spi_object)
                 return;
             }
         }
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_MODE_FAULT) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_MODE_FAULT) != FLAG_RESET)
         {
-            STM_HAL_SET_BIT(spi_object->module->error_code, spi::SPI_ERROR_MODE_FAULT);
+            STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_MODE_FAULT);
             SPI_CLEAR_MODE_FAULT_FLAG(spi_object->module);
         }
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, spi::SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET)
         {
-            STM_HAL_SET_BIT(spi_object->module->error_code, spi::SPI_ERROR_TI_MODE_FRAME_FORMAT);
+            STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_TI_MODE_FRAME_FORMAT);
             HAL_SPI_CLEAR_FORMAT_ERROR_FLAG(spi_object->module);
         }
 
-        if (spi_object->module->error_code != spi::SPI_ERROR_NONE)
+        if (spi_object->module->error_code != SPI_ERROR_NONE)
         {
-            SPI_DISABLE_INTERRUPTS(spi_object->module, spi::SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE
-                                                       | spi::SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | spi::SPI_ERROR_INTERRUPT_ENABLE);
+            SPI_DISABLE_INTERRUPTS(spi_object->module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE
+                                                       | SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE);
             spi_object->module->state = spi::SPI_STATE_READY;
-            if ((STM_HAL_CHECK_FOR_BIT_STATE_SET(interrupt_source, spi::SPI_CR2_TX_BUFFER_DMA_ENABLE))
-                || (HAL_IS_BIT_SET(interrupt_source, spi::SPI_CR2_RX_BUFFER_DMA_ENABLE)))
+            if ((STM_HAL_CHECK_FOR_BIT_STATE_SET(interrupt_source, SPI_CR2_TX_BUFFER_DMA_ENABLE))
+                || (HAL_IS_BIT_SET(interrupt_source, SPI_CR2_RX_BUFFER_DMA_ENABLE)))
             {
                 STM_HAL_CLEAR_BIT(spi_object->module->instance->CONTROL_REG_2,
-                                  (spi::SPI_CR2_TX_BUFFER_DMA_ENABLE | spi::SPI_CR2_RX_BUFFER_DMA_ENABLE));
+                                  (SPI_CR2_TX_BUFFER_DMA_ENABLE | SPI_CR2_RX_BUFFER_DMA_ENABLE));
                 if (spi_object->module->rx_dma_handle != nullptr)
                 {
                     spi_object->module->rx_dma_handle->transfer_abort_callback = dma_abort_on_error;
                     if (spi::SPI_STATUS_OK != dma_abort_interrupt(spi_object->module->rx_dma_handle))
-                        STM_HAL_SET_BIT(spi_object->module->error_code, spi::SPI_ERROR_DURING_ABORT);
+                        STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_DURING_ABORT);
                 }
                 if (spi_object->module->tx_dma_handle != nullptr)
                 {
                     spi_object->module->tx_dma_handle->transfer_abort_callback = dma_abort_on_error;
                     if (spi::SPI_STATUS_OK != dma_abort_interrupt(spi_object->module->tx_dma_handle))
-                        STM_HAL_SET_BIT(spi_object->module->error_code, spi::SPI_ERROR_DURING_ABORT);
+                        STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_DURING_ABORT);
                 }
             }
             else

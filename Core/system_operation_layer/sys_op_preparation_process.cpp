@@ -11,3 +11,17 @@
  **********************************************************************************************************************/
 
 #include "sys_op_preparation_process.h"
+
+namespace sys_op
+{
+    void preparation_process_intitialize()
+    {
+
+    }
+
+    void preparation_process_state_machine()
+    {
+
+
+    }
+}

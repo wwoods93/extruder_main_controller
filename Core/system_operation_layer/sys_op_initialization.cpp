@@ -11,3 +11,13 @@
  **********************************************************************************************************************/
 
 #include "sys_op_initialization.h"
+
+
+namespace sys_op
+{
+    void initialization_state_machine()
+    {
+
+
+    }
+}

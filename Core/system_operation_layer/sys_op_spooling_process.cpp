@@ -11,3 +11,17 @@
  **********************************************************************************************************************/
 
 #include "sys_op_spooling_process.h"
+
+namespace sys_op
+{
+    void spooling_process_intitialize()
+    {
+
+    }
+
+    void spooling_process_state_machine()
+    {
+
+
+    }
+}

@@ -17,6 +17,7 @@
 #include "task.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
+#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
 #include "../system_operation_layer/sys_op_initialization.h"
 #include "../system_operation_layer/sys_op_comms_handler.h"
 #include "../system_operation_layer/sys_op_preparation_process.h"
@@ -26,6 +27,7 @@
 #include "../hardware_abstraction_layer/hal_spi.h"
 
 #include "../hardware_abstraction_layer/hal_callbacks.h"
+
 
 
 osThreadId_t initialization_taskHandle;
@@ -76,6 +78,10 @@ int main()
     extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_task_attributes);
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
 
+//    rtos_al::create_semaphores();
+    rtos_al::initializae_spi_common_packet_array();
+//    rtos_al::release_spi_resource_semaphore();
+
 
     osKernelStart();
     while (true);
@@ -91,6 +97,7 @@ void start_initialization_task(void *argument)
 
 void start_comms_handler_task(void *argument)
 {
+
     static unsigned long last_ten_high_water_marks[10];
     static unsigned long highest = 0;
     static uint8_t count = 0;
@@ -135,6 +142,11 @@ void start_spooling_process_task(void *argument)
     {
         sys_op::spooling_process_state_machine();
     }
+}
+
+osMutexId_t get_spi_tx_buffer_mutex()
+{
+    return spi_tx_data_buffer_mutexHandle;
 }
 
 #ifdef  USE_FULL_ASSERT

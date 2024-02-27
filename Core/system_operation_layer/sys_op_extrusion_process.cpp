@@ -12,6 +12,7 @@
 
 #include <cstdint>
 #include "cmsis_os2.h"
+#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE      0
@@ -21,7 +22,12 @@ namespace sys_op
 {
     static uint32_t extrusion_process_iteration_tick;
     uint32_t kernel_tick_frequency_hz;
+    static uint8_t packet_added;
+    static uint16_t success_counter = 0;
 
+    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
+
+    uint8_t tx[8] = {0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02 };
     void extrusion_process_intitialize()
     {
 
@@ -36,8 +42,9 @@ namespace sys_op
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
             {
                 extrusion_process_iteration_tick = 0;
-                kernel_tick_frequency_hz = osKernelGetTickFreq() * 4;
+                kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
 
+                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }
@@ -45,6 +52,22 @@ namespace sys_op
             {
                 if (osKernelGetTickCount() - extrusion_process_iteration_tick > kernel_tick_frequency_hz)
                 {
+                    common_packet_t packet;
+                    rtos_al::build_common_packet(packet, 0, tx);
+                    if (osMutexAcquire(extrusion_process_spi_tx_data_buffer_mutex, 10U) == osOK)
+                    {
+                        packet_added = rtos_al::add_packet_to_common_packet_array(packet);
+                        osMutexRelease(extrusion_process_spi_tx_data_buffer_mutex);
+                    }
+
+                    rtos_al::increment_packet_add_index();
+
+
+                    if (packet_added)
+                    {
+                        ++success_counter;
+
+                    }
 
                     extrusion_process_iteration_tick = osKernelGetTickCount();
                 }

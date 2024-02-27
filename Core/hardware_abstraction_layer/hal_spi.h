@@ -366,7 +366,7 @@ class spi : public hal_level_resource
         status_t transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _tx_size, const uint8_t* _tx_bytes);
         void process_send_buffer();
         uint8_t process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_BYTE_COUNT_MAX]);
-
+        void get_channel_by_channel_id(channel_t& channel, id_number_t channel_id);
         friend void hal_callbacks_assert_spi_chip_select(spi::handle_t *_module);
         friend void hal_callbacks_deassert_spi_chip_select(spi::handle_t *_module);
         friend spi::handle_t* get_spi_handle(spi* spi_object);
@@ -400,7 +400,7 @@ class spi : public hal_level_resource
         void assert_chip_select() const;
         void deassert_chip_select() const;
         id_number_t assign_next_available_channel_id();
-        void get_channel_by_channel_id(channel_t& channel, id_number_t channel_id);
+
         void send_buffer_push(packet_t& packet);
         void send_buffer_pop();
         void send_buffer_get_front(packet_t& packet);

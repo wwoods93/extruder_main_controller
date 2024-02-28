@@ -56,8 +56,9 @@ void spi::initialize(handle_t* spi_handle, callback_id_t complete_callback_id, s
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
-id_number_t spi::create_channel(uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin)
+spi::status_t spi::create_channel(id_number_t& _channel_id, uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin)
 {
+    _channel_id = ID_INVALID;
     id_number_t new_channel_id = assign_next_available_channel_id();
 
     if (new_channel_id != ID_INVALID)
@@ -140,9 +141,10 @@ id_number_t spi::create_channel(uint8_t _packet_size, uint8_t _tx_size, port_nam
     }
     else
     {
-        // log error
+        return SPI_STATUS_ERROR;
     }
-    return new_channel_id;
+    _channel_id = new_channel_id;
+    return SPI_STATUS_OK;
 }
 
 spi::status_t spi::transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _tx_size, const uint8_t* _tx_bytes)

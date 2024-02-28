@@ -11,6 +11,7 @@
  **********************************************************************************************************************/
 
 #include <cstdlib>
+#include <cstring>
 #include <cmath>
 #include "stm32f4xx.h"
 #include "cmsis_os2.h"
@@ -18,9 +19,10 @@
 #include "mcu_clock_timers.h"
 #include "../hardware_abstraction_layer/hal_spi.h"
 #include "driver_rtd.h"
+#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
 #include "../hardware_abstraction_layer/hal_callbacks.h"
 #include "../meta_structure/meta_structure_system_manager.h"
-#include "../meta_structure/meta_structure_driver_level_user.h"
+#include "../meta_structure/meta_structure_user.h"
 #include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
 
 // div2 = 8MHz
@@ -38,12 +40,95 @@
 //
 //}
 
-void rtd::initialize_rtd(spi* spi_object)
+void rtd::initialize(read_rate_t _read_rate_hz)
 {
+    os_kernel_frequency = osKernelGetTickFreq();
+
+    switch (_read_rate_hz)
+    {
+        case READ_RATE_10_HZ:
+        {
+            read_rate_os_ticks = 10U;
+            break;
+        }
+        case READ_RATE_5_HZ:
+        {
+            read_rate_os_ticks = 20U;
+            break;
+        }
+        case READ_RATE_2_HZ:
+        {
+            read_rate_os_ticks = 50U;
+            break;
+        }
+        case READ_RATE_1_HZ:
+        {
+            read_rate_os_ticks = 100U;
+            break;
+        }
+        default:
+            break;
+    }
+
     std::string rtd_name = "RTD ZONE 1";
-    global_driver_level_user_id = register_new_user_to_user_manifest(USER_TYPE_RTD_INTERFACE, rtd_name);
-    rtd_spi_object = spi_object;
-    spi_peripheral = rtd_spi_object->module;
+    user_id = register_new_user_to_user_manifest(USER_TYPE_RTD_INTERFACE, rtd_name);
+}
+
+void rtd::pass_available_sensor_command_to_buffer(common_packet_t& _packet)
+{
+    if (setup_command_requested)
+    {
+        memset(&_packet, '\0', sizeof(common_packet_t));
+
+    }
+    else if (read_command_requested)
+    {
+
+    }
+}
+
+void rtd::handle_sensor_state()
+{
+    switch (sensor_state)
+    {
+        case SENSOR_INITIALIZE:
+        {
+            if (user_id != ID_INVALID)
+            {
+                sensor_state = SENSOR_IDLE;
+            }
+            else
+            {
+                // error
+            }
+            break;
+        }
+        case SENSOR_IDLE:
+        {
+            if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
+            {
+                setup_command_requested = true;
+            }
+            break;
+        }
+        case SENSOR_SETUP_COMMAND_SENT:
+        {
+
+            break;
+        }
+        case SENSOR_READ_REGISTER_COMMAND_SENT:
+        {
+
+            break;
+        }
+        case SENSOR_DATA_RECEIVED:
+        {
+
+            break;
+        }
+        default:
+            break;
+    }
 }
 
 void rtd::rtd_begin() const
@@ -101,9 +186,13 @@ uint8_t rtd::read_register_8(uint8_t register_address) const
 uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
 {
     uint16_t rtd_reading = 0;
-    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
-    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
-    uint8_t spi_byte = 0;
+//    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
+//    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
+    uint8_t tx_data[4] = { MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE };
+
+
+
+
 //    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
 //    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
 //    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
@@ -131,9 +220,8 @@ uint16_t rtd::read_rtd() const
     return read_msb_and_lsb_registers_and_concatenate();
 }
 
-float rtd::read_rtd_and_calculate_temperature(uint8_t _device_id)
+float rtd::read_rtd_and_calculate_temperature()
 {
-    device_id = _device_id;
     double resistance_as_double = 0;
     float calculated_temperture_celsius = 0;
 
@@ -198,23 +286,7 @@ float rtd::rtd_resistance_to_temperature_celsius(uint32_t rtd_resistance)
     return (float)(temperature_celsius_integer_component + (float)temperature_celsius_float_component / 100.0);
 }
 
-GPIO_TypeDef* get_chip_select_port(rtd* rtd_object)
-{
-    return rtd_object->chip_select_port;
-}
-
-uint16_t get_chip_select_pin(rtd* rtd_object)
-{
-    return rtd_object->chip_select_pin;
-}
-
-void reset_chip_select_port_and_pin(rtd* rtd_object)
-{
-    rtd_object->chip_select_port = (GPIO_TypeDef*) nullptr;
-    rtd_object->chip_select_pin = 0;
-}
-
-rtd::rtd() : driver_level_user()
+rtd::rtd() : user()
 {
 
 }

@@ -13,7 +13,7 @@
 #include "stm32f4xx.h"
 #include "peripheral_common.h"
 #include "hal_i2c.h"
-#include "../meta_structure/meta_structure_hal_level_resource.h"
+#include "../meta_structure/meta_structure_resource.h"
 
 i2c::i2c(handle_t* handle)
 {

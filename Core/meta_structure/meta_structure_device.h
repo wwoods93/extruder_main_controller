@@ -1,14 +1,17 @@
 /***********************************************************************************************************************
  * Main_Controller
- * meta_structure_hal_level_resource.cpp
+ * meta_structure_device.h
  *
  * wilson
- * 2/11/24
- * 7:13 PM
+ * 2/27/24
+ * 7:31 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
+
+#ifndef MAIN_CONTROLLER_META_STRUCTURE_DEVICE_H
+#define MAIN_CONTROLLER_META_STRUCTURE_DEVICE_H
 
 /* c/c++ includes */
 
@@ -22,18 +25,19 @@
 
 /* rtos abstraction includes */
 
-/* system includes */
-#include "meta_structure_system_manager.h"
+/* sys op includes */
 
-/* meta_structure_hal_level_resource header */
-#include "meta_structure_hal_level_resource.h"
+/* meta structure includes */
 
-hal_level_resource::hal_level_resource()
+
+
+
+class device
 {
+    public:
 
-}
+    private:
+};
 
-id_number_t hal_level_resource::get_global_hal_level_resource_id()
-{
-    return global_hal_level_resource_id;
-}
+
+#endif //MAIN_CONTROLLER_META_STRUCTURE_DEVICE_H

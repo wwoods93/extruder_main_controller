@@ -15,11 +15,12 @@
 #include <cstdint>
 #include "stm32f4xx.h"
 #include "../meta_structure/meta_structure_system_manager.h"
-#include "../meta_structure/meta_structure_driver_level_user.h"
+#include "../meta_structure/meta_structure_user.h"
 #include "../hardware_abstraction_layer/hal_spi.h"
 #include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
+#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
 
-class rtd : public driver_level_user
+class rtd : public user
 {
     public:
 
@@ -27,11 +28,22 @@ class rtd : public driver_level_user
 //        static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
 //        static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
 
-        spi* rtd_spi_object{};
-        spi::handle_t* spi_peripheral{};
-        uint8_t device_id{};
-        double rtd_resistance_scaled_and_rounded{};
-        float temperature_celsius{};
+        typedef enum
+        {
+            READ_RATE_10_HZ = 0x00U,
+            READ_RATE_5_HZ = 0x01U,
+            READ_RATE_2_HZ = 0x02U,
+            READ_RATE_1_HZ = 0x03U
+        } read_rate_t;
+
+        typedef enum
+        {
+            SENSOR_INITIALIZE = 0x00U,
+            SENSOR_IDLE = 0x01U,
+            SENSOR_SETUP_COMMAND_SENT = 0x02U,
+            SENSOR_READ_REGISTER_COMMAND_SENT = 0x03U,
+            SENSOR_DATA_RECEIVED = 0x04U,
+        } sensor_state_t;
 
         typedef struct
         {
@@ -40,14 +52,8 @@ class rtd : public driver_level_user
             uint8_t rtd_type;
             uint8_t fault_status_clear_mode;
             uint8_t notch_filter_setting;
-
-
-
         } rtd_sensor_t;
 
-
-        GPIO_TypeDef* chip_select_port{};
-        uint16_t chip_select_pin{};
 
         GPIO_TypeDef* chip_select_1_port = GPIOB;
         GPIO_TypeDef* chip_select_2_port = GPIOC;
@@ -159,6 +165,19 @@ class rtd : public driver_level_user
                 280980, 281310, 281640, 281980, 282310, 282640, 282970, 283310, 283640, 283970
         };
 
+
+        id_number_t channel_id;
+        double rtd_resistance_scaled_and_rounded{};
+        float temperature_celsius{};
+        sensor_state_t sensor_state = SENSOR_INITIALIZE;
+        uint32_t read_rate_os_ticks = 0;
+        uint32_t tick_count_at_last_sensor_read = 0;
+        uint8_t setup_command_requested = false;
+        uint8_t read_command_requested = false;
+        uint32_t os_kernel_frequency = 0;
+
+
+
         rtd();
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,20 +189,18 @@ class rtd : public driver_level_user
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void initialize_rtd(spi* spi_object);
+        void initialize(read_rate_t _read_rate_hz);
+        void pass_available_sensor_command_to_buffer(common_packet_t& _packet);
+        void handle_sensor_state();
         void rtd_begin() const;
         void write_register_8(uint8_t register_address, uint8_t data) const;
         [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
         [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
         [[nodiscard]] uint16_t read_rtd() const;
-        float read_rtd_and_calculate_temperature(uint8_t _device_id);
+        float read_rtd_and_calculate_temperature();
         [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
-
-        friend GPIO_TypeDef* get_chip_select_port(rtd* rtd_object);
-        friend uint16_t get_chip_select_pin(rtd* rtd_object);
-        friend void reset_chip_select_port_and_pin(rtd* rtd_object);
 
     private:
 };

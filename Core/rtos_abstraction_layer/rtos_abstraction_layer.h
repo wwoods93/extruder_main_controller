@@ -28,19 +28,11 @@ typedef struct
     uint8_t bytes[TRANSACTION_BYTE_COUNT_MAX];
 } common_packet_t;
 
-osMutexId_t get_spi_tx_buffer_mutex();
+
 
 namespace rtos_al
 {
-
-//    osMutexId_t spi_tx_data_buffer_mutexHandle;
-
-    void set_spi_tx_buffer_mutex_initialized_flag(uint8_t _flag);
-    uint8_t get_spi_tx_buffer_mutex_initialized_flag();
     void initializae_spi_common_packet_array();
-    void create_semaphores();
-    void get_spi_tx_buffer_mutex_handle(osMutexId_t& mutex_id);
-    osStatus_t release_spi_resource_semaphore();
     void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes);
     uint8_t add_packet_to_common_packet_array(common_packet_t& _packet);
     uint8_t remove_packet_from_common_packet_array(common_packet_t& _packet);

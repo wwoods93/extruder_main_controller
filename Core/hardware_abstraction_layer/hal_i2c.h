@@ -14,11 +14,11 @@
 #define MAIN_CONTROLLER_HAL_I2C_H
 
 #include "hal_general.h"
-#include "../meta_structure/meta_structure_hal_level_resource.h"
+#include "../meta_structure/meta_structure_resource.h"
 #include "stm32f4xx.h"
 #include <cstdint>
 
-class i2c : public hal_level_resource
+class i2c : public resource
 {
     public:
         /* type definitions */

@@ -30,7 +30,7 @@
 
 /* meta structure includes */
 #include "../meta_structure/meta_structure_system_manager.h"
-#include "../meta_structure/meta_structure_hal_level_resource.h"
+#include "../meta_structure/meta_structure_resource.h"
 
     #define SPI_USE_REGISTER_CALLBACKS          1U
     #define SPI_USE_CRC                         0U
@@ -194,7 +194,7 @@
                 STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_CRC_ENABLE); } while(0U)
 
 
-class spi : public hal_level_resource
+class spi : public resource
 {
     public:
 
@@ -362,7 +362,7 @@ class spi : public hal_level_resource
         /* public methods */
         spi();
         void initialize(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr);
-        id_number_t create_channel(uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin);
+        spi::status_t create_channel(id_number_t& _channel_id, uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin);
         status_t transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _tx_size, const uint8_t* _tx_bytes);
         void process_send_buffer();
         uint8_t process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SPI_BYTE_COUNT_MAX]);

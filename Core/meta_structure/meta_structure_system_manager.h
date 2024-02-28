@@ -31,7 +31,7 @@
 
 #define DEFAULT_MAX_MANIFEST_ENTRIES        32U
 
-#define MAX_DRIVER_LEVEL_USERS              DEFAULT_MAX_MANIFEST_ENTRIES
+#define SYSTEM_MANAGER_USERS_MAX                 DEFAULT_MAX_MANIFEST_ENTRIES
 #define MAX_PERIPHERAL_DEVICES              DEFAULT_MAX_MANIFEST_ENTRIES
 #define MAX_HAL_RESOURCES                   DEFAULT_MAX_MANIFEST_ENTRIES
 
@@ -86,12 +86,11 @@ typedef enum
 
 } port_name_t;
 
-
 typedef struct
 {
     user_t user_type;
     std::string user_name;
-    id_number_t global_id;
+    id_number_t user_id;
 
 } user_manifest_entry_t;
 
@@ -99,7 +98,7 @@ typedef struct
 {
     device_t device_type;
     std::string device_name;
-    id_number_t global_id;
+    id_number_t device_id;
 
 } device_manifest_entry_t;
 
@@ -107,7 +106,7 @@ typedef struct
 {
     resource_t resource_type;
     std::string resource_name;
-    id_number_t global_id;
+    id_number_t resource_id;
 
 } resource_manifest_entry_t;
 
@@ -116,7 +115,7 @@ static std::vector<device_manifest_entry_t *> device_manifest;
 static std::vector<resource_manifest_entry_t *> resource_manifest;
 
 void initialize_system_manifests();
-id_number_t claim_next_available_global_user_id();
+id_number_t claim_next_available_user_id();
 id_number_t claim_next_available_global_device_id();
 id_number_t claim_next_available_global_resource_id();
 

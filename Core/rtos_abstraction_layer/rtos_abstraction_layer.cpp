@@ -40,14 +40,6 @@ namespace rtos_al
         return spi_tx_buffer_mutex_initialized_flag;
     }
 
-//    osSemaphoreId_t spi_resource_semaphore_handle;
-//
-//    const osSemaphoreAttr_t spi_resource_semaphore_attributes = { .name = "spi_resource_emaphore" };
-
-//    osMutexId_t spi_tx_data_buffer_mutexHandle;
-//    const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = { .name = "spi_tx_data_buffer_mutex" };
-
-
 
 
     void initializae_spi_common_packet_array()
@@ -59,31 +51,10 @@ namespace rtos_al
         }
     }
 
-    void create_semaphores()
-    {
-//        spi_tx_data_buffer_mutexHandle = osMutexNew(&spi_tx_data_buffer_mutex_attributes);
-//
-//        if (spi_tx_data_buffer_mutexHandle == nullptr)
-//        {
-//            // handle error, semaphore not created
-//        }
-    }
-
-    void get_spi_tx_buffer_mutex_handle(osMutexId_t& mutex_id)
-    {
-//        mutex_id = spi_tx_data_buffer_mutexHandle;
-    }
-
-    osStatus_t release_spi_resource_semaphore()
-    {
-//        return osSemaphoreRelease(spi_tx_data_buffer_mutexHandle);
-        return osOK;
-    }
-
     void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes)
     {
         memset(&_packet, '\0', sizeof(common_packet_t));
-        _packet.status = 0U; // packet active
+        _packet.status = 0xFF; // packet active
         _packet.channel_id = _channel_id;
         memcpy(&_packet.bytes, _bytes, sizeof(_packet.bytes));
     }

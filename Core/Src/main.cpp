@@ -17,6 +17,7 @@
 #include "task.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
+#include "../rtos_abstraction_layer/rtos_globals.h"
 #include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
 #include "../system_operation_layer/sys_op_initialization.h"
 #include "../system_operation_layer/sys_op_comms_handler.h"
@@ -29,6 +30,14 @@
 #include "../hardware_abstraction_layer/hal_callbacks.h"
 
 
+osMutexId_t spi_tx_data_buffer_mutex_handle;
+const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = { .name = "spi_tx_data_buffer_mutex" };
+
+osMessageQueueId_t initialization_task_queue_handle;
+osMessageQueueId_t extrusion_task_spi_tx_queue_handle;
+
+const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "initialization_task_queue" };
+const osMessageQueueAttr_t extrusion_task_spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
 
 osThreadId_t initialization_taskHandle;
 osThreadId_t comms_handler_taskHandle;
@@ -36,29 +45,25 @@ osThreadId_t preparation_process_taskHandle;
 osThreadId_t extrusion_process_taskHandle;
 osThreadId_t spooling_process_taskHandle;
 
-
-osMutexId_t spi_tx_data_buffer_mutexHandle;
-osMutexId_t spi_rx_data_buffer_mutexHandle;
-osMutexId_t i2c_tx_data_buffer_mutexHandle;
-osMutexId_t i2c_rx_data_buffer_mutexHandle;
-
 const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 512 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
 
-
-const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = { .name = "spi_tx_data_buffer_mutex" };
-const osMutexAttr_t spi_rx_data_buffer_mutex_attributes = { .name = "spi_rx_data_buffer_mutex" };
-const osMutexAttr_t i2c_tx_data_buffer_mutex_attributes = { .name = "i2c_tx_data_buffer_mutex" };
-const osMutexAttr_t i2c_rx_data_buffer_mutex_attributes = { .name = "i2c_rx_data_buffer_mutex" };
-
 void start_initialization_task(void *argument);
 void start_comms_handler_task(void *argument);
 void start_preparation_process_task(void *argument);
 void start_extrusion_process_task(void *argument);
 void start_spooling_process_task(void *argument);
+
+// not in use
+osMutexId_t spi_rx_data_buffer_mutexHandle;
+osMutexId_t i2c_tx_data_buffer_mutexHandle;
+osMutexId_t i2c_rx_data_buffer_mutexHandle;
+const osMutexAttr_t spi_rx_data_buffer_mutex_attributes = { .name = "spi_rx_data_buffer_mutex" };
+const osMutexAttr_t i2c_tx_data_buffer_mutex_attributes = { .name = "i2c_tx_data_buffer_mutex" };
+const osMutexAttr_t i2c_rx_data_buffer_mutex_attributes = { .name = "i2c_rx_data_buffer_mutex" };
 
 
 int main()
@@ -67,7 +72,10 @@ int main()
     timers_initialize();
     osKernelInitialize();
 
-    spi_tx_data_buffer_mutexHandle  = osMutexNew(&spi_tx_data_buffer_mutex_attributes);
+    initialization_task_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &initialization_task_queue_attributes);
+    extrusion_task_spi_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_spi_tx_queue_attributes);
+
+    spi_tx_data_buffer_mutex_handle  = osMutexNew(&spi_tx_data_buffer_mutex_attributes);
     spi_rx_data_buffer_mutexHandle  = osMutexNew(&spi_rx_data_buffer_mutex_attributes);
     i2c_tx_data_buffer_mutexHandle  = osMutexNew(&i2c_tx_data_buffer_mutex_attributes);
     i2c_rx_data_buffer_mutexHandle  = osMutexNew(&i2c_rx_data_buffer_mutex_attributes);
@@ -78,10 +86,7 @@ int main()
     extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_task_attributes);
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
 
-//    rtos_al::create_semaphores();
     rtos_al::initializae_spi_common_packet_array();
-//    rtos_al::release_spi_resource_semaphore();
-
 
     osKernelStart();
     while (true);
@@ -144,9 +149,19 @@ void start_spooling_process_task(void *argument)
     }
 }
 
+osMessageQueueId_t get_initialization_task_queue_handle()
+{
+    return initialization_task_queue_handle;
+}
+
+osMessageQueueId_t get_extrusion_task_spi_tx_queue_handle()
+{
+    return extrusion_task_spi_tx_queue_handle;
+}
+
 osMutexId_t get_spi_tx_buffer_mutex()
 {
-    return spi_tx_data_buffer_mutexHandle;
+    return spi_tx_data_buffer_mutex_handle;
 }
 
 #ifdef  USE_FULL_ASSERT

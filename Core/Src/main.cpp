@@ -35,9 +35,17 @@ const osMutexAttr_t spi_tx_data_buffer_mutex_attributes = { .name = "spi_tx_data
 
 osMessageQueueId_t initialization_task_queue_handle;
 osMessageQueueId_t extrusion_task_spi_tx_queue_handle;
+osMessageQueueId_t extrusion_task_spi_rx_queue_handle;
+osMessageQueueId_t extrusion_task_i2c_tx_queue_handle;
+osMessageQueueId_t extrusion_task_i2c_rx_queue_handle;
+osMessageQueueId_t spooling_task_i2c_tx_queue_handle;
+osMessageQueueId_t spooling_task_i2c_rx_queue_handle;
 
 const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "initialization_task_queue" };
 const osMessageQueueAttr_t extrusion_task_spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
+const osMessageQueueAttr_t extrusion_task_spi_rx_queue_attributes = { .name = "extrusion_task_spi_rx_queue" };
+const osMessageQueueAttr_t extrusion_task_i2c_tx_queue_attributes = { .name = "extrusion_task_i2c_tx_queue" };
+const osMessageQueueAttr_t extrusion_task_i2c_rx_queue_attributes = { .name = "extrusion_task_i2c_rx_queue" };
 
 osThreadId_t initialization_taskHandle;
 osThreadId_t comms_handler_taskHandle;
@@ -159,9 +167,29 @@ osMessageQueueId_t get_extrusion_task_spi_tx_queue_handle()
     return extrusion_task_spi_tx_queue_handle;
 }
 
-osMutexId_t get_spi_tx_buffer_mutex()
+osMessageQueueId_t get_extrusion_task_spi_rx_queue_handle()
 {
-    return spi_tx_data_buffer_mutex_handle;
+    return extrusion_task_spi_rx_queue_handle;
+}
+
+osMessageQueueId_t get_extrusion_task_i2c_tx_queue_handle()
+{
+    return extrusion_task_i2c_tx_queue_handle;
+}
+
+osMessageQueueId_t get_extrusion_task_i2c_rx_queue_handle()
+{
+    return extrusion_task_i2c_rx_queue_handle;
+}
+
+osMessageQueueId_t get_spooling_task_i2c_tx_queue_handle()
+{
+    return spooling_task_i2c_tx_queue_handle;
+}
+
+osMessageQueueId_t get_spooling_task_i2c_rx_queue_handle()
+{
+    return spooling_task_i2c_rx_queue_handle;
 }
 
 #ifdef  USE_FULL_ASSERT

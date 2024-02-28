@@ -28,7 +28,7 @@ namespace sys_op
     static uint16_t success_counter = 0;
 
 
-    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
+//    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
 
     osMessageQueueId_t extrusion_task_spi_tx_from_extrusion_queue_handle = nullptr;
 
@@ -49,7 +49,7 @@ namespace sys_op
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
                 extrusion_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
-                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
+//                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }

@@ -35,6 +35,10 @@
 #define MAX_PERIPHERAL_DEVICES              DEFAULT_MAX_MANIFEST_ENTRIES
 #define MAX_HAL_RESOURCES                   DEFAULT_MAX_MANIFEST_ENTRIES
 
+#define NAME_LENGTH_MAX                     16U
+#define USER_NAME_LENGTH_MAX                NAME_LENGTH_MAX
+#define DEVICE_NAME_LENGTH_MAX              NAME_LENGTH_MAX
+#define RESOURCE_NAME_LENGTH_MAX            NAME_LENGTH_MAX
 
 typedef int16_t id_number_t;
 
@@ -88,27 +92,26 @@ typedef enum
 
 typedef struct
 {
-    user_t user_type;
-    std::string user_name;
     id_number_t user_id;
-
+    std::string user_name;
+    user_t user_type;
 } user_manifest_entry_t;
 
 typedef struct
 {
-    device_t device_type;
-    std::string device_name;
     id_number_t device_id;
-
+    std::string device_name;
+    device_t device_type;
 } device_manifest_entry_t;
 
 typedef struct
 {
-    resource_t resource_type;
-    std::string resource_name;
     id_number_t resource_id;
-
+    std::string resource_name;
+    resource_t resource_type;
 } resource_manifest_entry_t;
+
+
 
 static std::vector<user_manifest_entry_t *> user_manifest;
 static std::vector<device_manifest_entry_t *> device_manifest;

@@ -9,12 +9,19 @@
  * Description:
  *
  **********************************************************************************************************************/
-
+#include <cstdint>
+#include "cmsis_os2.h"
+#include "../rtos_abstraction_layer/rtos_globals.h"
 #include "sys_op_initialization.h"
 
+#define INITIALIZATION_TASK_STATE_INITIALIZE      0
+#define INITIALIZATION_TASK_STATE_RUN             1
 
 namespace sys_op
 {
+
+    osMessageQueueId_t initialization_messaging_queue_handle = nullptr;
+
     // user_init structs
 
     // device_init structs
@@ -28,6 +35,25 @@ namespace sys_op
 
     void initialization_state_machine()
     {
+        static uint8_t initialization_state = INITIALIZATION_TASK_STATE_INITIALIZE;
+
+
+        switch (initialization_state)
+        {
+            case INITIALIZATION_TASK_STATE_INITIALIZE:
+            {
+                initialization_messaging_queue_handle = get_initialization_task_queue_handle();
+
+                break;
+            }
+            case INITIALIZATION_TASK_STATE_RUN:
+            {
+
+                break;
+            }
+            default:
+                break;
+        }
 
         // in main
         //      1. declare mutex/queue handles, attributes

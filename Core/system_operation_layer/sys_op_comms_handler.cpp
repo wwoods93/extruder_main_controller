@@ -78,6 +78,13 @@ rtd* get_rtd_object()
 
 namespace sys_op
 {
+    osMessageQueueId_t initialization_queue_handle = nullptr;
+    osMessageQueueId_t spi_tx_from_extrusion_task_queue_handle = nullptr;
+    osMessageQueueId_t spi_rx_to_extrusion_task_queue_handle   = nullptr;
+    osMessageQueueId_t i2c_tx_from_extrusion_task_queue_handle = nullptr;
+    osMessageQueueId_t i2c_rx_to_extrusion_task_queue_handle   = nullptr;
+
+
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
 
@@ -86,8 +93,7 @@ namespace sys_op
 
     static spi::channel_t channel;
     common_packet_t packet;
-    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
-    osMessageQueueId_t comms_handler_task_spi_tx_from_extrusion_queue_handle = nullptr;
+//    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
 
     void comms_handler_intitialize()
     {
@@ -107,6 +113,12 @@ namespace sys_op
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
             {
+                initialization_queue_handle                 = get_initialization_task_queue_handle();
+                spi_tx_from_extrusion_task_queue_handle     = get_extrusion_task_spi_tx_queue_handle();
+                spi_rx_to_extrusion_task_queue_handle       = get_extrusion_task_spi_rx_queue_handle();
+                i2c_tx_from_extrusion_task_queue_handle     = get_extrusion_task_i2c_tx_queue_handle();
+                i2c_rx_to_extrusion_task_queue_handle       = get_extrusion_task_i2c_rx_queue_handle();
+
                 comms_handler_iteration_tick = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
@@ -114,8 +126,8 @@ namespace sys_op
                 buffer_accessed = false;
                 common_array_accessed = false;
 
-                comms_handler_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
-                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
+//                comms_handler_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
+//                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
                 initialize_system_manifests();
                 register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
                 hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
@@ -131,7 +143,7 @@ namespace sys_op
                 if (osKernelGetTickCount() - comms_handler_iteration_tick > 25U/*rtos_kernel_tick_frequency_hz*/)
                 {
 
-                    if (osMessageQueueGet( comms_handler_task_spi_tx_from_extrusion_queue_handle, &packet, nullptr, 50U) == osOK)
+                    if (osMessageQueueGet( spi_tx_from_extrusion_task_queue_handle, &packet, nullptr, 50U) == osOK)
                     {
                         common_array_accessed = true;
                     }

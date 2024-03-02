@@ -13,10 +13,10 @@
 #ifndef MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H
 #define MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H
 
-namespace sys_op
+namespace sys_op::extrusion
 {
-    void extrusion_process_intitialize();
-    void extrusion_process_state_machine();
+    void task_intitialize();
+    void task_state_machine();
 }
 
 #endif //MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H

@@ -31,13 +31,20 @@
 
 #define QUEUE_LENGTH_MAX    16
 
+static constexpr uint32_t READY_FOR_RESOURCE_INIT_FLAG  = 0x00000001;
+static constexpr uint32_t READY_FOR_DEVICE_INIT_FLAG    = 0x00000010;
+static constexpr uint32_t READY_FOR_USER_INIT_FLAG      = 0x00000100;
+
+
 osMessageQueueId_t get_initialization_task_queue_handle();
-osMessageQueueId_t get_extrusion_task_spi_tx_queue_handle();
-osMessageQueueId_t get_extrusion_task_spi_rx_queue_handle();
+osMessageQueueId_t get_spi_tx_queue_handle();
+osMessageQueueId_t get_spi_rx_queue_handle();
 osMessageQueueId_t get_extrusion_task_i2c_tx_queue_handle();
 osMessageQueueId_t get_extrusion_task_i2c_rx_queue_handle();
 osMessageQueueId_t get_spooling_task_i2c_tx_queue_handle();
 osMessageQueueId_t get_spooling_task_i2c_rx_queue_handle();
+
+osEventFlagsId_t get_initialization_event_flags_handle();
 
 osMutexId_t get_spi_tx_buffer_mutex();
 

@@ -13,9 +13,9 @@
 #ifndef MAIN_CONTROLLER_SYS_OP_INITIALIZATION_H
 #define MAIN_CONTROLLER_SYS_OP_INITIALIZATION_H
 
-namespace sys_op
+namespace sys_op::initialization
 {
-    void initialization_state_machine();
+    void task_state_machine();
 }
 
 

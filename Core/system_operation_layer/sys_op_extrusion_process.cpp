@@ -19,8 +19,11 @@
 #define EXTRUSION_PROCESS_STATE_INITIALIZE      0
 #define EXTRUSION_PROCESS_STATE_RUN             1
 
-namespace sys_op
+namespace sys_op::extrusion
 {
+    osEventFlagsId_t initialization_event_flags_handle = nullptr;
+    osMessageQueueId_t spi_tx_queue_handle = nullptr;
+
     static uint32_t extrusion_process_iteration_tick;
     uint32_t kernel_tick_frequency_hz;
 
@@ -30,15 +33,16 @@ namespace sys_op
 
 //    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
 
-    osMessageQueueId_t extrusion_task_spi_tx_from_extrusion_queue_handle = nullptr;
 
-    uint8_t tx[8] = {0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02 };
-    void extrusion_process_intitialize()
+
+    uint8_t tx[8] = { 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02 };
+
+    void task_intitialize()
     {
 
     }
 
-    void extrusion_process_state_machine()
+    void task_state_machine()
     {
         static uint8_t extrusion_process_state = EXTRUSION_PROCESS_STATE_INITIALIZE;
 
@@ -46,9 +50,12 @@ namespace sys_op
         {
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
             {
+//                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_DEVICE_INIT_FLAG, osFlagsWaitAny, 0U);
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
-                extrusion_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
+                spi_tx_queue_handle = get_spi_tx_queue_handle();
+                initialization_event_flags_handle = get_initialization_task_queue_handle();
+
 //                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
@@ -60,7 +67,7 @@ namespace sys_op
                     common_packet_t packet;
                     rtos_al::build_common_packet(packet, 0, tx);
 
-                    if ( osMessageQueuePut(extrusion_task_spi_tx_from_extrusion_queue_handle, &packet, 0, 50U) == osOK)
+                    if (osMessageQueuePut(spi_tx_queue_handle, &packet, 0, 50U) == osOK)
                     {
                         packet_added = true;
                     }

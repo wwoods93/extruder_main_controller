@@ -70,8 +70,8 @@ void rtd::initialize(read_rate_t _read_rate_hz)
             break;
     }
 
-    std::string rtd_name = "RTD ZONE 1";
-    user_id = register_new_user_to_user_manifest(USER_TYPE_RTD_INTERFACE, rtd_name);
+//    std::string rtd_name = "RTD ZONE 1";
+//    user_id = register_new_user_to_user_manifest(USER_TYPE_RTD, rtd_name);
 }
 
 void rtd::pass_available_sensor_command_to_buffer(common_packet_t& _packet)

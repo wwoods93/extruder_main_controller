@@ -13,10 +13,10 @@
 #ifndef MAIN_CONTROLLER_SYS_OP_PREPARATION_PROCESS_H
 #define MAIN_CONTROLLER_SYS_OP_PREPARATION_PROCESS_H
 
-namespace sys_op
+namespace sys_op::preparation
 {
-    void preparation_process_intitialize();
-    void preparation_process_state_machine();
+    void task_intitialize();
+    void task_state_machine();
 }
 
 

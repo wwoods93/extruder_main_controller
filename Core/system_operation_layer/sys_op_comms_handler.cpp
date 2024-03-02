@@ -76,14 +76,11 @@ rtd* get_rtd_object()
     return &driver::rtd_1;
 }
 
-namespace sys_op
+namespace sys_op::comms_handler
 {
+    osEventFlagsId_t  initialization_event_flags_handle = nullptr;
     osMessageQueueId_t initialization_queue_handle = nullptr;
-    osMessageQueueId_t spi_tx_from_extrusion_task_queue_handle = nullptr;
-    osMessageQueueId_t spi_rx_to_extrusion_task_queue_handle   = nullptr;
-    osMessageQueueId_t i2c_tx_from_extrusion_task_queue_handle = nullptr;
-    osMessageQueueId_t i2c_rx_to_extrusion_task_queue_handle   = nullptr;
-
+    osMessageQueueId_t spi_tx_queue_handle = nullptr;
 
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
@@ -95,12 +92,12 @@ namespace sys_op
     common_packet_t packet;
 //    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
 
-    void comms_handler_intitialize()
+    void task_intitialize()
     {
 
     }
 
-    void comms_handler_state_machine()
+    void task_state_machine()
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
         static uint8_t counter = 0;
@@ -113,24 +110,67 @@ namespace sys_op
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
             {
-                initialization_queue_handle                 = get_initialization_task_queue_handle();
-                spi_tx_from_extrusion_task_queue_handle     = get_extrusion_task_spi_tx_queue_handle();
-                spi_rx_to_extrusion_task_queue_handle       = get_extrusion_task_spi_rx_queue_handle();
-                i2c_tx_from_extrusion_task_queue_handle     = get_extrusion_task_i2c_tx_queue_handle();
-                i2c_rx_to_extrusion_task_queue_handle       = get_extrusion_task_i2c_rx_queue_handle();
+//                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, 0U);
+
+                spi_tx_queue_handle                 = get_spi_tx_queue_handle();
+                initialization_event_flags_handle   = get_initialization_event_flags_handle();
+                initialization_queue_handle         = get_initialization_task_queue_handle();
 
                 comms_handler_iteration_tick = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
-
                 buffer_accessed = false;
                 common_array_accessed = false;
 
+
 //                comms_handler_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
 //                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
-                initialize_system_manifests();
-                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
+//                initialize_system_manifests();
+//                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
                 hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
+                device_config_t device;
+                for (uint8_t index = 0; index < MAX_DEVICES; ++index)
+                {
+                    memset(&device, '\0', sizeof(device_config_t));
+                    meta_structure::get_device_from_device_manifest(device, index);
+                    switch (device.device_resource_type)
+                    {
+                        case RESOURCE_TYPE_ADC:
+                        {
+
+                            break;
+                        }
+                        case RESOURCE_TYPE_CAN:
+                        {
+
+                            break;
+                        }
+                        case RESOURCE_TYPE_I2C:
+                        {
+
+                            break;
+                        }
+                        case RESOURCE_TYPE_SPI:
+                        {
+                            id_number_t _channel_id = ID_INVALID;
+                            hal::spi_2.create_channel(_channel_id, device.packet_size, device.tx_size, device.device_port, device.device_pin);
+                            meta_structure::set_channel_id_for_device_in_manifest(_channel_id, index);
+                            break;
+                        }
+                        case RESOURCE_TYPE_PWM:
+                        {
+
+                            break;
+                        }
+                        case RESOURCE_TYPE_UART:
+                        {
+
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
                 hal::spi_2.create_channel(channel_id, 8, 2, PORT_B, GPIO_PIN_14);
                 hal::spi_2.get_channel_by_channel_id(channel, channel_id);
 
@@ -143,7 +183,7 @@ namespace sys_op
                 if (osKernelGetTickCount() - comms_handler_iteration_tick > 25U/*rtos_kernel_tick_frequency_hz*/)
                 {
 
-                    if (osMessageQueueGet( spi_tx_from_extrusion_task_queue_handle, &packet, nullptr, 50U) == osOK)
+                    if (osMessageQueueGet( spi_tx_queue_handle, &packet, nullptr, 50U) == osOK)
                     {
                         common_array_accessed = true;
                     }

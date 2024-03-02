@@ -45,7 +45,7 @@ spi::spi()
 void spi::initialize(handle_t* spi_handle, callback_id_t complete_callback_id, spi_callback_ptr_t complete_callback_ptr, callback_id_t error_callback_id, spi_callback_ptr_t error_callback_ptr)
 {
     const std::string spi_name = "SPI 2";
-    register_new_resource_to_resource_manifest(RESOURCE_TYPE_SPI, spi_name);
+//    register_new_resource_to_resource_manifest(RESOURCE_TYPE_SPI, spi_name);
     configure_protocol(spi_handle);
     spi_register_callback(complete_callback_id, complete_callback_ptr);
     spi_register_callback(error_callback_id, error_callback_ptr);

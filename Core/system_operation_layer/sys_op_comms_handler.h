@@ -23,10 +23,10 @@ spi* get_spi_object();
 spi::handle_t* get_spi_handle();
 rtd* get_rtd_object();
 
-namespace sys_op
+namespace sys_op::comms_handler
 {
-    void comms_handler_intitialize();
-    void comms_handler_state_machine();
+    void task_intitialize();
+    void task_state_machine();
 }
 
 

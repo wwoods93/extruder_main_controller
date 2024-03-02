@@ -12,14 +12,14 @@
 
 #include "sys_op_spooling_process.h"
 
-namespace sys_op
+namespace sys_op::spooling
 {
-    void spooling_process_intitialize()
+    void task_intitialize()
     {
 
     }
 
-    void spooling_process_state_machine()
+    void task_state_machine()
     {
 
 

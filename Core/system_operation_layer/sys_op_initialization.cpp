@@ -10,40 +10,82 @@
  *
  **********************************************************************************************************************/
 #include <cstdint>
+#include "stm32f4xx.h"
 #include "cmsis_os2.h"
 #include "../rtos_abstraction_layer/rtos_globals.h"
+#include "../meta_structure/meta_structure_system_manager.h"
 #include "sys_op_initialization.h"
 
 #define INITIALIZATION_TASK_STATE_INITIALIZE      0
 #define INITIALIZATION_TASK_STATE_RUN             1
 
-namespace sys_op
+namespace sys_op::initialization
 {
 
+    #define DCM_0_ADDRESS       0x14
+    #define DCM_1_ADDRESS       0x00
+
+    osEventFlagsId_t initialization_event_flags_handle = nullptr;
     osMessageQueueId_t initialization_messaging_queue_handle = nullptr;
 
-    // user_init structs
+    resource_config_t   SPI_0;
+    resource_config_t   I2C_0;
 
-    // device_init structs
+    device_config_t     RTD_0;
+    device_config_t     RTD_1;
+    device_config_t     RTD_2;
+    device_config_t     DCM_0;
+    device_config_t     DCM_1;
 
-    // resource_init structs
+    user_config_t       RTD_DRIVER_0;
+    user_config_t       RTD_DRIVER_1;
+    user_config_t       RTD_DRIVER_2;
+    user_config_t       DCM_DRIVER_0;
+    user_config_t       DCM_DRIVER_1;
 
+    device_config_t null_device;
 
+    char spi_0_name[NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
+    char i2c_0_name[NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
 
+    char rtd_0_name[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+    char rtd_1_name[NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
+    char rtd_2_name[NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
+    char dcm_0_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
+    char dcm_1_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
 
+    char rtd_driver_0_name[NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
+    char rtd_driver_1_name[NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
+    char rtd_driver_2_name[NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
+    char dcm_driver_0_name[NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
+    char dcm_driver_1_name[NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
 
-
-    void initialization_state_machine()
+    void task_state_machine()
     {
         static uint8_t initialization_state = INITIALIZATION_TASK_STATE_INITIALIZE;
-
 
         switch (initialization_state)
         {
             case INITIALIZATION_TASK_STATE_INITIALIZE:
             {
+                initialization_event_flags_handle = get_initialization_task_queue_handle();
                 initialization_messaging_queue_handle = get_initialization_task_queue_handle();
 
+                meta_structure::initialize_system_manifests();
+                meta_structure::create_resource_config(SPI_0, spi_0_name, RESOURCE_TYPE_SPI);
+                meta_structure::create_resource_config(I2C_0, i2c_0_name, RESOURCE_TYPE_I2C);
+                id_number_t rtd_0_id = meta_structure::create_device_config(RTD_0, rtd_0_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 8U, 2U, ADDRESS_NULL_8_BIT, PORT_B, GPIO_PIN_14);
+                id_number_t rtd_1_id = meta_structure::create_device_config(RTD_1, rtd_1_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 8U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
+                id_number_t rtd_2_id = meta_structure::create_device_config(RTD_2, rtd_2_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 8U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
+                id_number_t dcm_0_id = meta_structure::create_device_config(DCM_0, dcm_0_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_0_ADDRESS, PORT_NULL, PIN_NULL);
+                id_number_t dcm_1_id = meta_structure::create_device_config(DCM_1, dcm_1_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_1_ADDRESS, PORT_NULL, PIN_NULL);
+                meta_structure::create_user_config(RTD_DRIVER_0, rtd_driver_0_name, USER_TYPE_RTD, 1U, rtd_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
+                meta_structure::create_user_config(RTD_DRIVER_1, rtd_driver_1_name, USER_TYPE_RTD, 1U, rtd_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
+                meta_structure::create_user_config(RTD_DRIVER_2, rtd_driver_2_name, USER_TYPE_RTD, 1U, rtd_2_id, ID_INVALID, ID_INVALID, ID_INVALID);
+                meta_structure::create_user_config(DCM_DRIVER_0, dcm_driver_0_name, USER_TYPE_DCM, 2U, dcm_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
+                meta_structure::create_user_config(DCM_DRIVER_1, dcm_driver_1_name, USER_TYPE_DCM, 1U, dcm_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                osEventFlagsSet(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG);
+                initialization_state = INITIALIZATION_TASK_STATE_RUN;
                 break;
             }
             case INITIALIZATION_TASK_STATE_RUN:

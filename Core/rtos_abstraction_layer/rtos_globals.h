@@ -31,9 +31,10 @@
 
 #define QUEUE_LENGTH_MAX    16
 
-static constexpr uint32_t READY_FOR_RESOURCE_INIT_FLAG  = 0x00000001;
-static constexpr uint32_t READY_FOR_DEVICE_INIT_FLAG    = 0x00000010;
-static constexpr uint32_t READY_FOR_USER_INIT_FLAG      = 0x00000100;
+static constexpr uint32_t READY_FOR_RESOURCE_INIT_FLAG  = 0x10000000;
+//static constexpr uint32_t READY_FOR_DEVICE_INIT_FLAG    = 0x001000000;
+static constexpr uint32_t READY_FOR_USER_INIT_FLAG      = 0x01000000;
+static constexpr uint32_t READY_FOR_COMMS_RUN           = 0X00100000;
 
 
 osMessageQueueId_t get_initialization_task_queue_handle();

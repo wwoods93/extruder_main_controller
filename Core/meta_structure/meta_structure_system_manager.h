@@ -120,6 +120,8 @@ struct user_config_t
     id_number_t device_ids[DEVICES_PER_USER_MAX] = { ID_INVALID, ID_INVALID, ID_INVALID, ID_INVALID };
 };
 
+
+
 namespace meta_structure
 {
     static std::vector<user_config_t *> user_manifest;
@@ -136,6 +138,8 @@ namespace meta_structure
     id_number_t create_user_config(user_config_t& _user_config, char* _user_name, user_t _type, uint8_t _device_count, id_number_t _device_id_0, id_number_t _device_id_1, id_number_t _device_id_2, id_number_t _device_id_3);
     void get_device_from_device_manifest(device_config_t& _device, uint8_t _index);
     void set_channel_id_for_device_in_manifest(id_number_t _channel_id, uint8_t _index);
+    uint8_t get_device_manifest_size();
+    id_number_t get_channel_id_by_device_name(char* _device_name);
 }
 
 

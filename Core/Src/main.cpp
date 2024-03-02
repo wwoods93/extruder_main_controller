@@ -83,7 +83,7 @@ int main()
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
 
     rtos_al::initializae_spi_common_packet_array();
-
+    osEventFlagsClear(initialization_event_flags_handle, 0xFFFFFFFF);
     osKernelStart();
     while (true);
 }

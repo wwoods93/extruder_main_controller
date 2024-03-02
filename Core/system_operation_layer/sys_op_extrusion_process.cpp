@@ -50,7 +50,7 @@ namespace sys_op::extrusion
         {
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
             {
-//                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_DEVICE_INIT_FLAG, osFlagsWaitAny, 0U);
+                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, osFlagsWaitAny, osWaitForever);
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
                 spi_tx_queue_handle = get_spi_tx_queue_handle();

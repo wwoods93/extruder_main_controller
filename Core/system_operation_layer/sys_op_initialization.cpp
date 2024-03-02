@@ -84,7 +84,7 @@ namespace sys_op::initialization
                 meta_structure::create_user_config(RTD_DRIVER_2, rtd_driver_2_name, USER_TYPE_RTD, 1U, rtd_2_id, ID_INVALID, ID_INVALID, ID_INVALID);
                 meta_structure::create_user_config(DCM_DRIVER_0, dcm_driver_0_name, USER_TYPE_DCM, 2U, dcm_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
                 meta_structure::create_user_config(DCM_DRIVER_1, dcm_driver_1_name, USER_TYPE_DCM, 1U, dcm_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
-//                osEventFlagsSet(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG);
+                osEventFlagsSet(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG);
                 initialization_state = INITIALIZATION_TASK_STATE_RUN;
                 break;
             }

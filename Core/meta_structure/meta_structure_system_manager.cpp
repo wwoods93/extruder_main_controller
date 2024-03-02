@@ -113,11 +113,28 @@ namespace meta_structure
     void get_device_from_device_manifest(device_config_t& _device, uint8_t _index)
     {
         memset(&_device, '\0', sizeof(device_config_t));
-        memcpy(&_device, &device_manifest[_index], sizeof(device_config_t));
+        memcpy(&_device, device_manifest[_index], sizeof(device_config_t));
     }
 
     void set_channel_id_for_device_in_manifest(id_number_t _channel_id, uint8_t _index)
     {
         device_manifest[_index]->channel_id = _channel_id;
+    }
+
+    uint8_t get_device_manifest_size()
+    {
+        return (uint8_t)device_manifest.size();
+    }
+    id_number_t get_channel_id_by_device_name(char* _device_name)
+    {
+        id_number_t channel_id = ID_INVALID;
+        for (uint8_t index = 0; index < (uint8_t)device_manifest.size(); ++index)
+        {
+            if (!strcmp( device_manifest[index]->device_name, _device_name))
+            {
+                channel_id = device_manifest[index]->channel_id;
+            }
+        }
+        return channel_id;
     }
 }

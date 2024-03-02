@@ -89,6 +89,7 @@ namespace sys_op::comms_handler
     static uint8_t common_array_accessed;
 
     static spi::channel_t channel;
+    id_number_t _channel_id = ID_INVALID;
     common_packet_t packet;
 //    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
 
@@ -110,11 +111,10 @@ namespace sys_op::comms_handler
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
             {
-//                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, 0U);
-
-                spi_tx_queue_handle                 = get_spi_tx_queue_handle();
                 initialization_event_flags_handle   = get_initialization_event_flags_handle();
+                spi_tx_queue_handle                 = get_spi_tx_queue_handle();
                 initialization_queue_handle         = get_initialization_task_queue_handle();
+                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
                 comms_handler_iteration_tick = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
@@ -122,58 +122,63 @@ namespace sys_op::comms_handler
                 buffer_accessed = false;
                 common_array_accessed = false;
 
-
 //                comms_handler_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
 //                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
 //                initialize_system_manifests();
 //                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
                 hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 device_config_t device;
-                for (uint8_t index = 0; index < MAX_DEVICES; ++index)
+                for (uint8_t index = 0; index < meta_structure::get_device_manifest_size(); ++index)
                 {
                     memset(&device, '\0', sizeof(device_config_t));
                     meta_structure::get_device_from_device_manifest(device, index);
-                    switch (device.device_resource_type)
+                    if (device.device_id != ID_INVALID)
                     {
-                        case RESOURCE_TYPE_ADC:
+                        switch (device.device_resource_type)
                         {
+                            case RESOURCE_TYPE_ADC:
+                            {
 
-                            break;
-                        }
-                        case RESOURCE_TYPE_CAN:
-                        {
+                                break;
+                            }
+                            case RESOURCE_TYPE_CAN:
+                            {
 
-                            break;
-                        }
-                        case RESOURCE_TYPE_I2C:
-                        {
+                                break;
+                            }
+                            case RESOURCE_TYPE_I2C:
+                            {
 
-                            break;
-                        }
-                        case RESOURCE_TYPE_SPI:
-                        {
-                            id_number_t _channel_id = ID_INVALID;
-                            hal::spi_2.create_channel(_channel_id, device.packet_size, device.tx_size, device.device_port, device.device_pin);
-                            meta_structure::set_channel_id_for_device_in_manifest(_channel_id, index);
-                            break;
-                        }
-                        case RESOURCE_TYPE_PWM:
-                        {
+                                break;
+                            }
+                            case RESOURCE_TYPE_SPI:
+                            {
 
-                            break;
-                        }
-                        case RESOURCE_TYPE_UART:
-                        {
+                                hal::spi_2.create_channel(_channel_id, device.packet_size, device.tx_size,
+                                                          device.device_port, device.device_pin);
+                                meta_structure::set_channel_id_for_device_in_manifest(_channel_id, index);
+                                break;
+                            }
+                            case RESOURCE_TYPE_PWM:
+                            {
 
-                            break;
+                                break;
+                            }
+                            case RESOURCE_TYPE_UART:
+                            {
+
+                                break;
+                            }
+                            default:
+                                break;
                         }
-                        default:
-                            break;
                     }
                 }
-                hal::spi_2.create_channel(channel_id, 8, 2, PORT_B, GPIO_PIN_14);
-                hal::spi_2.get_channel_by_channel_id(channel, channel_id);
-
+//                hal::spi_2.create_channel(channel_id, 8, 2, PORT_B, GPIO_PIN_14);
+                char name_of_rtd_0[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+                _channel_id = meta_structure::get_channel_id_by_device_name(name_of_rtd_0);
+                hal::spi_2.get_channel_by_channel_id(channel, _channel_id);
+                osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             }

@@ -31,6 +31,21 @@
 /* meta_structure_system_manager header */
 #include "meta_structure_system_manager.h"
 
+char spi_0_name[NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
+char i2c_0_name[NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
+
+char rtd_0_name[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+char rtd_1_name[NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
+char rtd_2_name[NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
+char dcm_0_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
+char dcm_1_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
+
+char rtd_driver_0_name[NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
+char rtd_driver_1_name[NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
+char rtd_driver_2_name[NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
+char dcm_driver_0_name[NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
+char dcm_driver_1_name[NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
+
 namespace meta_structure
 {
     static uint8_t next_available_user_id;
@@ -136,5 +151,24 @@ namespace meta_structure
             }
         }
         return channel_id;
+    }
+
+    void get_user_config_from_user_manifest(user_config_t& _user, uint8_t _index)
+    {
+        memset(&_user, '\0', sizeof(user_config_t));
+        memcpy(&_user, device_manifest[_index], sizeof(user_config_t));
+    }
+
+    void get_user_config_by_user_name(user_config_t& _user, char* _user_name)
+    {
+        for (uint8_t index = 0; index < (uint8_t)user_manifest.size(); ++index)
+        {
+            if (!strcmp( user_manifest[index]->user_name, _user_name))
+            {
+                memset(&_user, '\0', sizeof(user_config_t));
+                memcpy(&_user, user_manifest[index], sizeof(user_config_t));
+                break;
+            }
+        }
     }
 }

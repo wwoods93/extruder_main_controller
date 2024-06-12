@@ -52,8 +52,8 @@ void SPI2_IRQHandler()
 
 namespace driver
 {
-    dc_motor_controller motor_controller_1;
-    rtd rtd_1;
+//    dc_motor_controller motor_controller_1;
+//    rtd rtd_1;
 }
 
 namespace hal
@@ -71,10 +71,10 @@ spi::handle_t* get_spi_handle()
     return &spi_2_handle;
 }
 
-rtd* get_rtd_object()
-{
-    return &driver::rtd_1;
-}
+//rtd* get_rtd_object()
+//{
+////    return &driver::rtd_1;
+//}
 
 namespace sys_op::comms_handler
 {
@@ -175,8 +175,8 @@ namespace sys_op::comms_handler
                     }
                 }
 //                hal::spi_2.create_channel(channel_id, 8, 2, PORT_B, GPIO_PIN_14);
-                char name_of_rtd_0[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
-                _channel_id = meta_structure::get_channel_id_by_device_name(name_of_rtd_0);
+//                char name_of_rtd_0[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+                _channel_id = meta_structure::get_channel_id_by_device_name(rtd_0_name);
                 hal::spi_2.get_channel_by_channel_id(channel, _channel_id);
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;

@@ -290,3 +290,8 @@ rtd::rtd() : user()
 {
 
 }
+
+void rtd::configure_rtd(user_config_t& _user_config)
+{
+
+}

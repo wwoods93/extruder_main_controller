@@ -46,6 +46,21 @@ constexpr id_number_t ID_INVALID = -1;
 
 const char default_name[NAME_LENGTH_MAX] = "default_name\0";
 
+extern char spi_0_name[NAME_LENGTH_MAX];
+extern char i2c_0_name[NAME_LENGTH_MAX];
+
+extern char rtd_0_name[NAME_LENGTH_MAX];
+extern char rtd_1_name[NAME_LENGTH_MAX];
+extern char rtd_2_name[NAME_LENGTH_MAX];
+extern char dcm_0_name[NAME_LENGTH_MAX];
+extern char dcm_1_name[NAME_LENGTH_MAX];
+
+extern char rtd_driver_0_name[NAME_LENGTH_MAX];
+extern char rtd_driver_1_name[NAME_LENGTH_MAX];
+extern char rtd_driver_2_name[NAME_LENGTH_MAX];
+extern char dcm_driver_0_name[NAME_LENGTH_MAX];
+extern char dcm_driver_1_name[NAME_LENGTH_MAX];
+
 typedef enum
 {
     USER_TYPE_SCREW_MOTOR   = 0x00,
@@ -140,6 +155,8 @@ namespace meta_structure
     void set_channel_id_for_device_in_manifest(id_number_t _channel_id, uint8_t _index);
     uint8_t get_device_manifest_size();
     id_number_t get_channel_id_by_device_name(char* _device_name);
+    void get_user_config_from_user_manifest(user_config_t& _user, uint8_t _index);
+    void get_user_config_by_user_name(user_config_t& _user, char* _user_name);
 }
 
 

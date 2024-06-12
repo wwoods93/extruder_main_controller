@@ -14,10 +14,20 @@
 #include "cmsis_os2.h"
 #include "../rtos_abstraction_layer/rtos_globals.h"
 #include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
+#include "../driver_layer/driver_rtd.h"
 #include "sys_op_extrusion_process.h"
 
-#define EXTRUSION_PROCESS_STATE_INITIALIZE      0
-#define EXTRUSION_PROCESS_STATE_RUN             1
+#define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
+#define EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION      1
+#define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
+#define EXTRUSION_PROCESS_STATE_RUN                                 3
+
+namespace driver
+{
+    rtd rtd_zone_0;
+    rtd rtd_zone_1;
+    rtd rtd_zone_2;
+}
 
 namespace sys_op::extrusion
 {
@@ -35,7 +45,7 @@ namespace sys_op::extrusion
 
 
 
-    uint8_t tx[8] = { 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02, 0x02 };
+    uint8_t tx[8] = { 0x01, 0x03, 0x05, 0x07, 0x09 };
 
     void task_intitialize()
     {
@@ -50,13 +60,26 @@ namespace sys_op::extrusion
         {
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
             {
-                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, osFlagsWaitAny, osWaitForever);
+                initialization_event_flags_handle = get_initialization_event_flags_handle();
+
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
-                initialization_event_flags_handle = get_initialization_task_queue_handle();
+//                initialization_event_flags_handle = get_initialization_task_queue_handle();
 
 //                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
+                extrusion_process_state = EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION;
+                break;
+            }
+            case EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION:
+            {
+                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, osFlagsWaitAny, osWaitForever);
+                extrusion_process_state = EXTRUSION_PROCESS_STATE_CONFIGURE_USERS;
+                break;
+            }
+            case EXTRUSION_PROCESS_STATE_CONFIGURE_USERS:
+            {
+
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }

@@ -45,20 +45,20 @@ namespace sys_op::initialization
 
     device_config_t null_device;
 
-    char spi_0_name[NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
-    char i2c_0_name[NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
-
-    char rtd_0_name[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
-    char rtd_1_name[NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
-    char rtd_2_name[NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
-    char dcm_0_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
-    char dcm_1_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
-
-    char rtd_driver_0_name[NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
-    char rtd_driver_1_name[NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
-    char rtd_driver_2_name[NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
-    char dcm_driver_0_name[NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
-    char dcm_driver_1_name[NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
+//    char spi_0_name[NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
+//    char i2c_0_name[NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
+//
+//    char rtd_0_name[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+//    char rtd_1_name[NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
+//    char rtd_2_name[NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
+//    char dcm_0_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
+//    char dcm_1_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
+//
+//    char rtd_driver_0_name[NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
+//    char rtd_driver_1_name[NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
+//    char rtd_driver_2_name[NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
+//    char dcm_driver_0_name[NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
+//    char dcm_driver_1_name[NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
 
     void task_state_machine()
     {

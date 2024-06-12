@@ -21,7 +21,7 @@
 
 spi* get_spi_object();
 spi::handle_t* get_spi_handle();
-rtd* get_rtd_object();
+//rtd* get_rtd_object();
 
 namespace sys_op::comms_handler
 {

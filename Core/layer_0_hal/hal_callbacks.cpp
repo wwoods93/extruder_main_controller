@@ -26,7 +26,7 @@
 
 /* meta structure includes */
 
-/* header */
+/* hal_callbacks header */
 #include "hal_callbacks.h"
 
 

@@ -10,10 +10,25 @@
  *
  **********************************************************************************************************************/
 
+
+/* c/c++ includes */
+
+/* stm32 includes */
 #include "stm32f4xx.h"
+/* third-party includes */
+
+/* hal includes */
 #include "peripheral_common.h"
-#include "hal_i2c.h"
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
 #include "../meta_structure/meta_structure_resource.h"
+/* hal_i2c header */
+#include "hal_i2c.h"
 
 i2c::i2c(handle_t* handle)
 {

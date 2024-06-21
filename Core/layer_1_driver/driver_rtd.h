@@ -16,9 +16,9 @@
 #include "stm32f4xx.h"
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_user.h"
-#include "../hardware_abstraction_layer/hal_spi.h"
-#include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
-#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
+#include "../layer_0_hal//hal_spi.h"
+#include "../layer_2_rtosal/rtosal_spi_shared_resources.h"
+#include "../layer_2_rtosal/rtosal.h"
 
 class rtd : public user
 {

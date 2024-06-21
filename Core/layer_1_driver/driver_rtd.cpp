@@ -17,13 +17,13 @@
 #include "cmsis_os2.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
-#include "../hardware_abstraction_layer/hal_spi.h"
+#include "../layer_0_hal//hal_spi.h"
 #include "driver_rtd.h"
-#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
-#include "../hardware_abstraction_layer/hal_callbacks.h"
+#include "../layer_2_rtosal/rtosal.h"
+#include "../layer_0_hal//hal_callbacks.h"
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_user.h"
-#include "../rtos_abstraction_layer/rtos_spi_shared_resources.h"
+#include "../layer_2_rtosal/rtosal_spi_shared_resources.h"
 
 // div2 = 8MHz
 // div4 = 4MHz

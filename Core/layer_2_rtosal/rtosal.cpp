@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Main_Controller
- * rtos_abstraction_layer.cpp
+ * layer_2_rtosal.cpp
  *
  * wilson
  * 11/6/22
@@ -10,11 +10,24 @@
  *
  **********************************************************************************************************************/
 
+/* c/c++ includes */
 #include <cstring>
-#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+/* stm32 includes */
 
+/* third-party includes */
+#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+/* hal includes */
+
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
 #include "../meta_structure/meta_structure_system_manager.h"
-#include "rtos_abstraction_layer.h"
+/* layer_2_rtosal header */
+#include "rtosal.h"
 
 
 static uint8_t spi_tx_buffer_mutex_initialized_flag = false;
@@ -27,9 +40,20 @@ static uint8_t packet_valid = false;
 static common_packet_t spi_common_packet_array[COMMON_PACKET_ARRAY_LENGTH_MAX];
 
 
-namespace rtos_al
+namespace rtosal
 {
 
+    #if (USE_CMSIS_OS2 == 1U)
+        uint32_t get_rtos_kernel_tick_frequency()
+        {
+            return osKernelGetTickFreq();
+        }
+
+        uint32_t get_rtos_kernel_tick_count()
+        {
+            return osKernelGetTickCount();
+        }
+    #endif
     void set_spi_tx_buffer_mutex_initialized_flag(uint8_t _flag)
     {
         spi_tx_buffer_mutex_initialized_flag = _flag;

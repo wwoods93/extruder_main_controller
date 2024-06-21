@@ -13,7 +13,7 @@
 #include <cstdint>
 #include "stm32f4xx.h"
 #include "mcu_clock_timers.h"
-#include "../hardware_abstraction_layer/hal_i2c.h"
+#include "../layer_0_hal//hal_i2c.h"
 #include "driver_dc_motor_controller.h"
 
 /***************************************************** hal objects ****************************************************/

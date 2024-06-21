@@ -12,9 +12,9 @@
 
 #include <cstdint>
 #include "cmsis_os2.h"
-#include "../rtos_abstraction_layer/rtos_globals.h"
-#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
-#include "../driver_layer/driver_rtd.h"
+#include "../layer_2_rtosal/rtosal_globals.h"
+#include "../layer_2_rtosal/rtosal.h"
+#include "../layer_1_driver/driver_rtd.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
@@ -45,7 +45,7 @@ namespace sys_op::extrusion
 
 
 
-    uint8_t tx[8] = { 0x01, 0x03, 0x05, 0x07, 0x09 };
+    uint8_t tx[8] = { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F };
 
     void task_intitialize()
     {
@@ -63,7 +63,7 @@ namespace sys_op::extrusion
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
 
                 extrusion_process_iteration_tick = 0;
-                kernel_tick_frequency_hz = osKernelGetTickFreq() * 2;
+                kernel_tick_frequency_hz = rtosal::get_rtos_kernel_tick_frequency() * 2;
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
 //                initialization_event_flags_handle = get_initialization_task_queue_handle();
 
@@ -85,10 +85,10 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_RUN:
             {
-                if (osKernelGetTickCount() - extrusion_process_iteration_tick > 50U/*kernel_tick_frequency_hz*/)
+                if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 50U /*kernel_tick_frequency_hz*/)
                 {
                     common_packet_t packet;
-                    rtos_al::build_common_packet(packet, 0, tx);
+                    rtosal::build_common_packet(packet, 0, tx);
 
                     if (osMessageQueuePut(spi_tx_queue_handle, &packet, 0, 50U) == osOK)
                     {

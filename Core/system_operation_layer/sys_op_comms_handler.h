@@ -13,10 +13,9 @@
 #ifndef MAIN_CONTROLLER_SYS_OP_COMMS_HANDLER_H
 #define MAIN_CONTROLLER_SYS_OP_COMMS_HANDLER_H
 
-#include "../hardware_abstraction_layer/hal_spi.h"
-#include "../hardware_abstraction_layer/hal_i2c.h"
-
-#include "../driver_layer/driver_rtd.h"
+#include "../layer_0_hal/hal_spi.h"
+#include "../layer_0_hal/hal_i2c.h"
+#include "../layer_1_driver/driver_rtd.h"
 
 
 spi* get_spi_object();

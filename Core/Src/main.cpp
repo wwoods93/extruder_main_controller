@@ -17,17 +17,17 @@
 #include "task.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
-#include "../rtos_abstraction_layer/rtos_globals.h"
-#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
+#include "../layer_2_rtosal/rtosal_globals.h"
+#include "../layer_2_rtosal/rtosal.h"
 #include "../system_operation_layer/sys_op_initialization.h"
 #include "../system_operation_layer/sys_op_comms_handler.h"
 #include "../system_operation_layer/sys_op_preparation_process.h"
 #include "../system_operation_layer/sys_op_extrusion_process.h"
 #include "../system_operation_layer/sys_op_spooling_process.h"
 
-#include "../hardware_abstraction_layer/hal_spi.h"
+#include "../layer_0_hal//hal_spi.h"
 
-#include "../hardware_abstraction_layer/hal_callbacks.h"
+#include "../layer_0_hal//hal_callbacks.h"
 
 
 
@@ -49,18 +49,21 @@ osThreadId_t comms_handler_taskHandle;
 osThreadId_t preparation_process_taskHandle;
 osThreadId_t extrusion_process_taskHandle;
 osThreadId_t spooling_process_taskHandle;
+osThreadId_t heartbeat_taskHandle;
 
-const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 512 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t heartbeat_task_attributes      = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 
 void start_initialization_task(void *argument);
 void start_comms_handler_task(void *argument);
 void start_preparation_process_task(void *argument);
 void start_extrusion_process_task(void *argument);
 void start_spooling_process_task(void *argument);
+void start_heartbeat_task(void *argument);
 
 
 
@@ -81,11 +84,20 @@ int main()
     preparation_process_taskHandle  = osThreadNew(start_preparation_process_task,   nullptr, &preparation_task_attributes);
     extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_task_attributes);
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
+    heartbeat_taskHandle            = osThreadNew(start_heartbeat_task,             nullptr, &heartbeat_task_attributes);
 
-    rtos_al::initializae_spi_common_packet_array();
+    rtosal::initializae_spi_common_packet_array();
     osEventFlagsClear(initialization_event_flags_handle, 0xFFFFFFFF);
     osKernelStart();
     while (true);
+}
+
+void start_heartbeat_task(void *argument)
+{
+    while (true)
+    {
+        osDelay(1);
+    }
 }
 
 void start_initialization_task(void *argument)
@@ -182,4 +194,8 @@ void assert_failed(uint8_t *file, uint32_t line)
      ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
   /* USER CODE END 6 */
 }
+
+
+
+
 #endif /* USE_FULL_ASSERT */

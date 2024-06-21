@@ -13,7 +13,7 @@
 #include <queue>
 
 #include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
-#include "rtos_spi_shared_resources.h"
+#include "rtosal_spi_shared_resources.h"
 
 
 //std::queue<packet_t*> send_buffer;

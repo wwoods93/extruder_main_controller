@@ -13,7 +13,22 @@
 #ifndef MAIN_CONTROLLER_HAL_CALLBACKS_H
 #define MAIN_CONTROLLER_HAL_CALLBACKS_H
 
+/* c/c++ includes */
+
+/* stm32 includes */
+
+/* third-party includes */
+
+/* hal includes */
 #include "hal_spi.h"
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
+
 
 uint8_t hal_callbacks_get_spi_rx_data_ready_flag();
 void hal_callbacks_set_spi_rx_data_ready_flag(uint8_t status);

@@ -1,10 +1,10 @@
 /***********************************************************************************************************************
  * Main_Controller
- * hal_gpio.cpp
+ * hal_defs.cpp
  *
  * wilson
- * 3/3/23
- * 11:55 PM
+ * 6/17/24
+ * 5:20 AM
  *
  * Description:
  *
@@ -22,14 +22,9 @@
 
 /* rtos abstraction includes */
 
-/* system includes */
+/* sys op includes */
 
+/* meta structure includes */
 
-
-
-
-
-
-
-/* hal_gpio header */
-#include "hal_gpio.h"
+/* hal_defs header */
+#include "hal_defs.h"

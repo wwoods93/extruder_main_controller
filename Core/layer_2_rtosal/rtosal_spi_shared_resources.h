@@ -10,8 +10,8 @@
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_RTOS_SPI_SHARED_RESOURCES_H
-#define MAIN_CONTROLLER_RTOS_SPI_SHARED_RESOURCES_H
+#ifndef MAIN_CONTROLLER_RTOSAL_SPI_SHARED_RESOURCES_H
+#define MAIN_CONTROLLER_RTOSAL_SPI_SHARED_RESOURCES_H
 
 #include <cstdint>
 #include "../meta_structure/meta_structure_system_manager.h"
@@ -28,4 +28,4 @@
 //
 //void rtos_spi_transmit(id_number_t _channel_id, uint8_t* _tx_bytes, uint8_t _tx_size);
 
-#endif //MAIN_CONTROLLER_RTOS_SPI_SHARED_RESOURCES_H
+#endif //MAIN_CONTROLLER_RTOSAL_SPI_SHARED_RESOURCES_H

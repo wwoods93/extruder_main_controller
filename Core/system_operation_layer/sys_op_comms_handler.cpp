@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Main_Controller
- * system_operation_comms_handler.cpp
+ * sys_op_comms_handler.cpp
  *
  * wilson
  * 11/6/22
@@ -19,21 +19,22 @@
 /* 3rd-party includes */
 #include "cmsis_os2.h"
 /* hal includes */
-#include "../hardware_abstraction_layer/hal_general.h"
-#include "../hardware_abstraction_layer/hal_callbacks.h"
-#include "../hardware_abstraction_layer/hal_spi.h"
-#include "../hardware_abstraction_layer/hal_i2c.h"
+#include "../layer_0_hal//hal_general.h"
+#include "../layer_0_hal//hal_callbacks.h"
+#include "../layer_0_hal//hal_spi.h"
+#include "../layer_0_hal//hal_i2c.h"
+#include "../Inc/peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "system_clock.h"
 #include "gpio.h"
 #include "spi.h"
 /* driver includes */
-#include "../driver_layer/driver_dc_motor_controller.h"
-#include "../driver_layer/driver_rtd.h"
+#include "../layer_1_driver/driver_dc_motor_controller.h"
+#include "../layer_1_driver/driver_rtd.h"
 /* system includes */
 /* rtos includes */
-#include "../rtos_abstraction_layer/rtos_globals.h"
-#include "../rtos_abstraction_layer/rtos_abstraction_layer.h"
+#include "../layer_2_rtosal/rtosal_globals.h"
+#include "../layer_2_rtosal/rtosal.h"
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
@@ -71,6 +72,35 @@ spi::handle_t* get_spi_handle()
     return &spi_2_handle;
 }
 
+
+const char user_data[29] = "The application is running\r\n"; //demo data for transmission
+uint8_t send_data[6] = {(uint8_t)'h', (uint8_t)'e', (uint8_t)'l', (uint8_t)'l', (uint8_t)'o', '\r' };
+uint8_t recvd_data; // receive buffer
+uint8_t data_buffer[100]; // data buffer
+uint32_t cnt = 0;
+
+//UART 2 transmission complete callback
+void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
+{
+//    memset(&user_data, '\0' , strlen(user_data)); //empty the transmission data buffer
+}
+//UART 2 receive complete callback
+void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
+{
+    if(recvd_data == '\r') //when enter is pressed go to this condition
+    {
+        data_buffer[cnt++]='\r';
+        HAL_UART_Transmit(huart, send_data, cnt,HAL_MAX_DELAY); //transmit the full sentence again
+        memset(data_buffer, 0, cnt); // enpty the data buffer
+    }
+    else
+    {
+        data_buffer[cnt++] = recvd_data; // every time when interrput is happen, received 1 byte of data
+    }
+    HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //start next data receive interrupt
+
+}
+
 //rtd* get_rtd_object()
 //{
 ////    return &driver::rtd_1;
@@ -93,6 +123,7 @@ namespace sys_op::comms_handler
     common_packet_t packet;
 //    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
 
+
     void task_intitialize()
     {
 
@@ -102,6 +133,7 @@ namespace sys_op::comms_handler
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
         static uint8_t counter = 0;
+        static uint8_t uart_counter = 0;
         static uint8_t packet_valid = false;
         static id_number_t channel_id;
         uint8_t tx_d[8] = { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F };
@@ -126,7 +158,7 @@ namespace sys_op::comms_handler
 //                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
 //                initialize_system_manifests();
 //                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
-                hal::spi_2.initialize(&spi_2_handle, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
+                hal::spi_2.initialize(&spi_2_handle, SPI_2, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 device_config_t device;
                 for (uint8_t index = 0; index < meta_structure::get_device_manifest_size(); ++index)
                 {
@@ -187,6 +219,14 @@ namespace sys_op::comms_handler
 
                 if (osKernelGetTickCount() - comms_handler_iteration_tick > 25U/*rtos_kernel_tick_frequency_hz*/)
                 {
+                    if (uart_counter > 20)
+                    {
+                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t*)user_data,strlen(user_data)); //Transmit data in interrupt mode
+                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
+                        uart_counter = 0;
+                    }
+                    ++uart_counter;
+
 
                     if (osMessageQueueGet( spi_tx_queue_handle, &packet, nullptr, 50U) == osOK)
                     {

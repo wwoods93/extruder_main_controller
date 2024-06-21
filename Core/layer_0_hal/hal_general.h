@@ -13,7 +13,22 @@
 #ifndef MAIN_CONTROLLER_HAL_GENERAL_H
 #define MAIN_CONTROLLER_HAL_GENERAL_H
 
+/* c/c++ includes */
 #include <cstdint>
+/* stm32 includes */
+
+/* third-party includes */
+
+/* hal includes */
+
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
+
 
 #define STM_HAL_SET_BIT(REG, BIT)                       ((REG) |=  (BIT))
 #define STM_HAL_CLEAR_BIT(REG, BIT)                     ((REG) &= ~(BIT))
@@ -21,6 +36,9 @@
 #define STM_HAL_UNUSED(X)                               (void) X
 #define STM_HAL_CHECK_FOR_BIT_STATE_SET(REG, BIT)       (((REG) & (BIT)) == (BIT))
 #define STM_HAL_CHECK_FOR_BIT_STATE_RESET(REG, BIT)     (((REG) & (BIT)) == 0U)
+
+//void assert_failed(uint8_t *file, uint32_t line);
+//#define ASSERT_PARAM(expr) ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
 
 #if (USE_RTOS == 1U)
   #error "USE_RTOS should be 0 in the current HAL release"
@@ -74,6 +92,7 @@
 #define STM_HAL_SPI_CR1_CRC_ENABLE_POSITION                             (13U)
 #define STM_HAL_SPI_CR1_CRC_ENABLE_MASK                                 (0x1UL << STM_HAL_SPI_CR1_CRC_ENABLE_POSITION)
 #define STM_HAL_SPI_CR1_CRC_ENABLE                                      STM_HAL_SPI_CR1_CRC_ENABLE_MASK
+#define STM_HAL_SPI_CR1_CRC_DISABLE                                     (0x00000000U)
  #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION               (14U)
 #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK                    (0x1UL << STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION)
 #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE                         STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK

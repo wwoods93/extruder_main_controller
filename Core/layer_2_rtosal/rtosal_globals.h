@@ -10,11 +10,11 @@
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_RTOS_GLOBALS_H
-#define MAIN_CONTROLLER_RTOS_GLOBALS_H
+#ifndef MAIN_CONTROLLER_RTOSAL_GLOBALS_H
+#define MAIN_CONTROLLER_RTOSAL_GLOBALS_H
 
 /* c/c++ includes */
-
+#include <cstdint>
 /* stm32 includes */
 
 /* third-party includes */
@@ -50,4 +50,4 @@ osEventFlagsId_t get_initialization_event_flags_handle();
 osMutexId_t get_spi_tx_buffer_mutex();
 
 
-#endif //MAIN_CONTROLLER_RTOS_GLOBALS_H
+#endif //MAIN_CONTROLLER_RTOSAL_GLOBALS_H

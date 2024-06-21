@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Main_Controller
- * rtos_abstraction_layer.h
+ * layer_2_rtosal.h
  *
  * wilson
  * 11/6/22
@@ -10,10 +10,13 @@
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_RTOS_ABSTRACTION_LAYER_H
-#define MAIN_CONTROLLER_RTOS_ABSTRACTION_LAYER_H
+#ifndef MAIN_CONTROLLER_RTOSAL_H
+#define MAIN_CONTROLLER_RTOSAL_H
 
 #include "../meta_structure/meta_structure_system_manager.h"
+
+#define USE_FREERTROS                       1U
+#define USE_CMSIS_OS2                       1U
 
 #define BINARY_SEMPAHORE_MAX_COUNT          1U
 #define BINARY_SEMAPHORE_INITIAL_COUNT      0U
@@ -30,8 +33,13 @@ typedef struct
 
 
 
-namespace rtos_al
+namespace rtosal
 {
+    uint32_t get_rtos_kernel_tick_count();
+    uint32_t get_rtos_kernel_tick_frequency();
+
+
+
     void initializae_spi_common_packet_array();
     void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes);
     uint8_t add_packet_to_common_packet_array(common_packet_t& _packet);
@@ -41,4 +49,4 @@ namespace rtos_al
     uint8_t common_packet_is_valid();
 }
 
-#endif //MAIN_CONTROLLER_RTOS_ABSTRACTION_LAYER_H
+#endif //MAIN_CONTROLLER_RTOSAL_H

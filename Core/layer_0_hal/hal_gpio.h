@@ -13,6 +13,7 @@
 //#ifndef MAIN_CONTROLLER_HAL_GPIO_H
 //#define MAIN_CONTROLLER_HAL_GPIO_H
 //
+//
 ///* c/c++ includes */
 //
 ///* stm32 includes */
@@ -25,8 +26,9 @@
 //
 ///* rtos abstraction includes */
 //
-///* system includes */
+///* sys op includes */
 //
+///* meta structure includes */
 //
 //
 //

@@ -13,10 +13,24 @@
 #ifndef MAIN_CONTROLLER_HAL_I2C_H
 #define MAIN_CONTROLLER_HAL_I2C_H
 
-#include "hal_general.h"
-#include "../meta_structure/meta_structure_resource.h"
-#include "stm32f4xx.h"
+/* c/c++ includes */
 #include <cstdint>
+/* stm32 includes */
+#include "stm32f4xx.h"
+/* third-party includes */
+
+/* hal includes */
+#include "hal_general.h"
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
+#include "../meta_structure/meta_structure_resource.h"
+
+
 
 class i2c : public resource
 {

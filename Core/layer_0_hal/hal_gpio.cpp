@@ -1,13 +1,30 @@
 /***********************************************************************************************************************
  * Main_Controller
- * osal_i2c_shared_resources.cpp
+ * hal_gpio.cpp
  *
  * wilson
- * 11/6/22
- * 2:31 AM
+ * 3/3/23
+ * 11:55 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#include "rtos_i2c_shared_resources.h"
+/* c/c++ includes */
+
+/* stm32 includes */
+
+/* third-party includes */
+
+/* hal includes */
+
+/* driver includes */
+
+/* rtos abstraction includes */
+
+/* sys op includes */
+
+/* meta structure includes */
+
+/* hal_gpio header */
+#include "hal_gpio.h"

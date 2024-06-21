@@ -14,7 +14,7 @@
 
 #include <cstdint>
 #include "stm32f4xx.h"
-#include "../hardware_abstraction_layer/hal_i2c.h"
+#include "../layer_0_hal//hal_i2c.h"
 #include "../meta_structure/meta_structure_user.h"
 #include "driver_dc_motor.h"
 

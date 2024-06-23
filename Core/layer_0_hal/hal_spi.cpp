@@ -82,6 +82,7 @@ void spi::initialize(handle_t* _spi_handle, hal_spi_t* _spi_instance, callback_i
 spi::procedure_status_t spi::create_channel(id_number_t& _channel_id, uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin)
 {
     _channel_id = ID_INVALID;
+
     id_number_t new_channel_id = assign_next_available_channel_id();
 
     if (new_channel_id != ID_INVALID)
@@ -91,35 +92,55 @@ spi::procedure_status_t spi::create_channel(id_number_t& _channel_id, uint8_t _p
         new_user_channel.channel_id = new_channel_id;
         new_user_channel.packet_size = _packet_size;
         new_user_channel.tx_size = _tx_size;
+
         GPIO_TypeDef* chip_select_port = nullptr;
+
         switch (_chip_select_port)
         {
             case PORT_A:
+            {
                 chip_select_port = GPIOA;
                 break;
+            }
             case PORT_B:
+            {
                 chip_select_port = GPIOB;
                 break;
+            }
             case PORT_C:
+            {
                 chip_select_port = GPIOC;
                 break;
+            }
             case PORT_D:
+            {
                 chip_select_port = GPIOD;
                 break;
+            }
             case PORT_E:
+
                 chip_select_port = GPIOE;
                 break;
+
             case PORT_F:
+            {
                 chip_select_port = GPIOF;
                 break;
+            }
             case PORT_G:
+            {
                 chip_select_port = GPIOG;
                 break;
+            }
             case PORT_H:
+            {
                 chip_select_port = GPIOH;
                 break;
+            }
             default:
+            {
                 break;
+            }
         }
         new_user_channel.chip_select.port = chip_select_port;
         new_user_channel.chip_select.pin = _chip_select_pin;
@@ -127,46 +148,66 @@ spi::procedure_status_t spi::create_channel(id_number_t& _channel_id, uint8_t _p
         switch (new_channel_id)
         {
             case CHANNEL_0:
+            {
                 memset(&user_list.channel_0, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_0, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_1:
+            {
                 memset(&user_list.channel_1, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_1, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_2:
+            {
                 memset(&user_list.channel_2, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_2, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_3:
+            {
                 memset(&user_list.channel_3, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_3, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_4:
+            {
                 memset(&user_list.channel_4, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_4, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_5:
+            {
                 memset(&user_list.channel_5, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_5, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_6:
+            {
                 memset(&user_list.channel_6, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_6, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             case CHANNEL_7:
+            {
                 memset(&user_list.channel_7, '\0', sizeof(channel_t));
                 memcpy(&user_list.channel_7, &new_user_channel, sizeof(channel_t));
                 break;
+            }
             default:
+            {
                 break;
+            }
         }
     }
     else
     {
         return PROCEDURE_STATUS_ERROR;
     }
+
     _channel_id = new_channel_id;
+
     return PROCEDURE_STATUS_OK;
 }
 
@@ -174,11 +215,16 @@ spi::procedure_status_t spi::transmit(id_number_t _channel_id, uint8_t _total_by
 {
     packet_t packet;
     channel_t channel;
+
     get_channel_by_channel_id(channel, _channel_id);
+
     memset(&packet, '\0', sizeof(packet_t));
+
     packet.channel_id = _channel_id;
     memcpy(&packet.tx_bytes, _tx_bytes, sizeof(packet.tx_bytes));
+
     send_buffer_push(packet);
+
     return PROCEDURE_STATUS_OK;
 }
 
@@ -190,6 +236,7 @@ void spi::process_send_buffer()
     static uint8_t rx_size;
     static uint8_t transaction_size;
     static uint8_t num_transmissions;
+
     if (!send_buffer.empty())
     {
         switch (send_state)
@@ -197,16 +244,22 @@ void spi::process_send_buffer()
             case SPI_TRANSACTION_NOT_IN_PROGRESS:
             {
                 set_active_packet_from_send_buffer();
+
                 get_channel_by_channel_id(active_channel, active_packet.channel_id);
+
                 module->chip_select.port = active_channel.chip_select.port;
                 module->chip_select.pin = active_channel.chip_select.pin;
+
                 tx_sent = false;
                 tx_index = 0;
                 last_tx_index = active_channel.packet_size - active_channel.tx_size + 1;
                 rx_size = active_channel.tx_size;
                 transaction_size = active_channel.packet_size;
+
                 num_transmissions = calculate_number_of_transmissions_for_active_packet();
+
                 send_state = SPI_TRANSACTION_IN_PROGRESS;
+
                 break;
             }
             case SPI_TRANSACTION_IN_PROGRESS:
@@ -218,20 +271,25 @@ void spi::process_send_buffer()
                         spi_transmit_receive_interrupt(module->rx_array, tx_index);
                         tx_sent = true;
                     }
+
                     if (tx_sent && hal_callbacks_get_spi_rx_data_ready_flag())
                     {
                         for (uint8_t rx_index = 0; rx_index < rx_size; ++rx_index)
                         {
                             active_packet.rx_bytes[tx_index++] = module->rx_array[rx_index];
                         }
+
                         tx_sent = false;
+
                         hal_callbacks_set_spi_rx_data_ready_flag(0);
                     }
+
                     if (tx_index >= transaction_size)
                     {
                         send_state = SPI_TRANSACTION_COMPLETE;
                     }
                 }
+
                 break;
             }
             case SPI_TRANSACTION_COMPLETE:
@@ -244,7 +302,9 @@ void spi::process_send_buffer()
                 break;
             }
             default:
+            {
                 break;
+            }
         }
     }
 }
@@ -253,81 +313,110 @@ uint8_t spi::process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SP
 {
     uint8_t buffer_accessed = 0;
     packet_t p;
+
     memset(&p, '\0', sizeof(packet_t));
+
     switch(_channel)
     {
         case CHANNEL_0:
+        {
             if (!return_buffer_0.empty())
             {
                 memcpy(&p, &return_buffer_0.front(), sizeof(packet_t));
                 return_buffer_0.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_1:
+        {
             if (!return_buffer_1.empty())
             {
                 memcpy(&p, &return_buffer_1.front(), sizeof(packet_t));
                 return_buffer_1.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_2:
+        {
             if (!return_buffer_2.empty())
             {
                 memcpy(&p, &return_buffer_2.front(), sizeof(packet_t));
                 return_buffer_2.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_3:
+        {
             if (!return_buffer_3.empty())
             {
                 memcpy(&p, &return_buffer_3.front(), sizeof(packet_t));
                 return_buffer_3.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_4:
+        {
             if (!return_buffer_4.empty())
             {
                 memcpy(&p, &return_buffer_4.front(), sizeof(packet_t));
                 return_buffer_4.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_5:
+        {
             if (!return_buffer_5.empty())
             {
                 memcpy(&p, &return_buffer_5.front(), sizeof(packet_t));
                 return_buffer_5.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_6:
+        {
             if (!return_buffer_6.empty())
             {
                 memcpy(&p, &return_buffer_6.front(), sizeof(packet_t));
                 return_buffer_6.pop();
                 buffer_accessed = 1;
             }
+
             break;
+        }
         case CHANNEL_7:
+        {
             if (!return_buffer_7.empty())
             {
                 memcpy(&p, &return_buffer_7.front(), sizeof(packet_t));
                 return_buffer_7.pop();
                 buffer_accessed = 1;
-                break;
             }
-        default:
+
             break;
+        }
+        default:
+        {
+            break;
+        }
     }
 
     if (buffer_accessed)
     {
         memcpy(&_rx_array, &p.rx_bytes, sizeof(_rx_array));
     }
+
     return buffer_accessed;
 }
 
@@ -336,7 +425,9 @@ uint8_t spi::process_return_buffer(id_number_t _channel, uint8_t (&_rx_array)[SP
 spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_t* _spi_instance)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
+
     module = _spi_handle;
+
     module->state = SPI_STATE_RESET;
     module->instance = _spi_instance;
     module->init.mode = SPI_MODE_CONTROLLER;
@@ -403,7 +494,9 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_
             module->AbortCpltCallback    = HAL_SPI_AbortCpltCallback;
 
             if (module->MspInitCallback == nullptr)
+            {
                 module->MspInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
+            }
             module->MspInitCallback(module);
         #else
             HAL_SPI_MspInit(reinterpret_cast<SPI_HandleTypeDef *>(spi_module_handle));
@@ -429,7 +522,9 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_
 
     #if (SPI_USE_CRC != 0U)
         if (spi_handle->init.crc_calculation == SPI_CRCCALCULATION_ENABLE)
-                WRITE_REG(spi_handle->instance->CRC_POLYNOMIAL_REG, (spi_handle->init.crc_polynomial & SPI_CRCPR_CRCPOLY_Msk));
+        {
+            WRITE_REG(spi_handle->instance->CRC_POLYNOMIAL_REG, (spi_handle->init.crc_polynomial & SPI_CRCPR_CRCPOLY_Msk));
+        }
     #endif
 
     #if (SPI_I2S_MODE_SELECT != 0U)
@@ -450,14 +545,17 @@ spi::procedure_status_t spi::initialize_active_packet()
 spi::procedure_status_t spi::initialize_send_buffer()
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
+
     while (!send_buffer.empty())
     {
         send_buffer.pop();
     }
+
     if (!send_buffer.empty())
     {
         status = PROCEDURE_STATUS_ERROR;
     }
+
     return status;
 }
 
@@ -480,6 +578,7 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *rx_data_poi
 
     assert_param(SPI_VERIFY_DIRECTION_2_LINE(module->init.direction));
     verify_communication_direction(SPI_DIRECTION_2_LINE);
+
     lock_module();
 
     if (! ((module->state == SPI_STATE_READY) || ((module->init.mode == SPI_MODE_CONTROLLER)
@@ -495,12 +594,28 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *rx_data_poi
     set_transaction_parameters(tx_data_pointer, rx_data_pointer, active_channel.tx_size);
     set_rx_and_tx_interrupt_service_routines();
     reset_enabled_crc();
+
     assert_chip_select();
+
     SPI_ENABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-    if ((module->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE) { SPI_ENABLE_MODULE(module); }
+
+    if ((module->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)
+    {
+        SPI_ENABLE_MODULE(module);
+    }
+
     unlock_module();
-    if (error == SPI_PROCEDURE_STATE_BUS_ERROR)  { transmit_status = PROCEDURE_STATUS_BUSY;  }
-    if (error == SPI_PROCEDURE_STATE_DATA_ERROR) { transmit_status = PROCEDURE_STATUS_ERROR; }
+
+    if (error == SPI_PROCEDURE_STATE_BUS_ERROR)
+    {
+        transmit_status = PROCEDURE_STATUS_BUSY;
+    }
+
+    if (error == SPI_PROCEDURE_STATE_DATA_ERROR)
+    {
+        transmit_status = PROCEDURE_STATUS_ERROR;
+    }
+
     return transmit_status;
 }
 
@@ -528,34 +643,53 @@ id_number_t spi::assign_next_available_channel_id()
 void spi::get_channel_by_channel_id(channel_t& channel, id_number_t channel_id)
 {
     memset(&channel, '\0', sizeof(channel_t));
+
     switch (channel_id)
     {
         case CHANNEL_0:
+        {
             memcpy(&channel, &user_list.channel_0, sizeof(channel_t));
             break;
+        }
         case CHANNEL_1:
+        {
             memcpy(&channel, &user_list.channel_1, sizeof(channel_t));
             break;
+        }
         case CHANNEL_2:
+        {
             memcpy(&channel, &user_list.channel_2, sizeof(channel_t));
             break;
+        }
         case CHANNEL_3:
+        {
             memcpy(&channel, &user_list.channel_3, sizeof(channel_t));
             break;
+        }
         case CHANNEL_4:
+        {
             memcpy(&channel, &user_list.channel_4, sizeof(channel_t));
             break;
+        }
         case CHANNEL_5:
+        {
             memcpy(&channel, &user_list.channel_5, sizeof(channel_t));
             break;
+        }
         case CHANNEL_6:
+        {
             memcpy(&channel, &user_list.channel_6, sizeof(channel_t));
             break;
+        }
         case CHANNEL_7:
+        {
             memcpy(&channel, &user_list.channel_7, sizeof(channel_t));
             break;
+        }
         default:
+        {
             break;
+        }
     }
 }
 
@@ -591,31 +725,49 @@ void spi::push_active_packet_to_return_buffer()
     switch(active_packet.channel_id)
     {
         case CHANNEL_0:
+        {
             return_buffer_0.push(active_packet);
             break;
+        }
         case CHANNEL_1:
+        {
             return_buffer_1.push(active_packet);
             break;
+        }
         case CHANNEL_2:
+        {
             return_buffer_2.push(active_packet);
             break;
+        }
         case CHANNEL_3:
+        {
             return_buffer_3.push(active_packet);
             break;
+        }
         case CHANNEL_4:
+        {
             return_buffer_4.push(active_packet);
             break;
+        }
         case CHANNEL_5:
+        {
             return_buffer_5.push(active_packet);
             break;
+        }
         case CHANNEL_6:
+        {
             return_buffer_6.push(active_packet);
             break;
+        }
         case CHANNEL_7:
+        {
             return_buffer_7.push(active_packet);
             break;
+        }
         default:
+        {
             break;
+        }
     }
 }
 
@@ -623,6 +775,7 @@ spi::procedure_status_t spi::reset_active_packet()
 {
     memset(&active_packet, '\0', sizeof(packet_t));
     active_packet.channel_id = ID_INVALID;
+
     return PROCEDURE_STATUS_OK;
 }
 
@@ -636,7 +789,10 @@ uint8_t spi::calculate_number_of_transmissions_for_active_packet() const
 {
     uint8_t num_transmissions = active_channel.packet_size / active_channel.tx_size;
     if (active_channel.packet_size % active_channel.tx_size != 0)
+    {
         ++num_transmissions;
+    }
+
     return num_transmissions;
 }
 
@@ -645,9 +801,11 @@ uint8_t spi::calculate_number_of_transmissions_for_active_packet() const
     spi::procedure_status_t spi::spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t callback_ptr) const
     {
         procedure_status_t status = PROCEDURE_STATUS_OK;
+
         if (callback_ptr == nullptr)
         {
             module->error_code |= SPI_ERROR_CALLBACK_ID;
+
             return PROCEDURE_STATUS_ERROR;
         }
         SPI_LOCK_MODULE(module);
@@ -791,26 +949,33 @@ uint8_t spi::calculate_number_of_transmissions_for_active_packet() const
 void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *(__IO uint8_t *)&spi_handle->instance->DATA_REG = (*spi_handle->tx_buffer_ptr);
+
     spi_handle->tx_buffer_ptr++;
     spi_handle->tx_transfer_counter--;
+
     if (spi_handle->tx_transfer_counter == 0U)
     {
 #if (SPI_USE_CRC != 0U)
         if (spi_module_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
-            {
-                STM_HAL_SET_BIT(spi_handle->instance->CONTROL_REG_1, SPI_CR1_CRCNEXT);
-                SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-                return;
-            }
+        {
+            STM_HAL_SET_BIT(spi_handle->instance->CONTROL_REG_1, SPI_CR1_CRCNEXT);
+            SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+            return;
+        }
 #endif
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+
+        if (spi_handle->rx_transfer_counter == 0U)
+        {
+            spi_object.close_rx_tx_isr();
+        }
     }
 }
 
 void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
-    *spi_handle->rx_buffer_ptr = *((__IO uint8_t *)&spi_handle->instance->DATA_REG);     // receive data in 8-bit mode
+    *spi_handle->rx_buffer_ptr = *((__IO uint8_t *)&spi_handle->instance->DATA_REG); // receive data in 8-bit mode
+
     spi_handle->rx_buffer_ptr++;
     spi_handle->rx_transfer_counter--;
 
@@ -818,19 +983,24 @@ void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
     {
 #if (SPI_USE_CRC != 0U)
         if (spi_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
-            {
-                spi_handle->rx_isr_pointer =  rx_2_line_8_bit_isrCRC;
-                return;
-            }
+        {
+            spi_handle->rx_isr_pointer =  rx_2_line_8_bit_isrCRC;
+            return;
+        }
 #endif
         SPI_DISABLE_INTERRUPTS(spi_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+
+        if (spi_handle->tx_transfer_counter == 0U)
+        {
+            spi_object.close_rx_tx_isr();
+        }
     }
 }
 
 void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     spi_handle->instance->DATA_REG = *((uint16_t *)spi_handle->tx_buffer_ptr);
+
     spi_handle->tx_buffer_ptr += sizeof(uint16_t);
     spi_handle->tx_transfer_counter--;
 
@@ -845,13 +1015,18 @@ void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
             }
 #endif
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+
+        if (spi_handle->rx_transfer_counter == 0U)
+        {
+            spi_object.close_rx_tx_isr();
+        }
     }
 }
 
 void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *((uint16_t *)spi_handle->rx_buffer_ptr) = (uint16_t)(spi_handle->instance->DATA_REG);
+
     spi_handle->rx_buffer_ptr += sizeof(uint16_t);
     spi_handle->rx_transfer_counter--;
 
@@ -865,7 +1040,11 @@ void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
             }
         #endif
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+
+        if (spi_handle->tx_transfer_counter == 0U)
+        {
+            spi_object.close_rx_tx_isr();
+        }
     }
 }
 /*************************************************** friend functions *************************************************/
@@ -886,14 +1065,17 @@ spi::procedure_status_t dma_abort_interrupt(dma_handle_t *dma_handle)
         dma_handle->state = DMA_STATE_ABORT;
         STM_HAL_DMA_DISABLE(dma_handle);
     }
+
     return spi::PROCEDURE_STATUS_OK;
 }
 
 void dma_abort_on_error(dma_handle_t *dma_handle)
 {
     auto *spi_handle = (spi::handle_t *)(((dma_handle_t *)dma_handle)->parent);
+
     spi_handle->rx_transfer_counter = 0U;
     spi_handle->tx_transfer_counter = 0U;
+
 #if (SPI_USE_REGISTER_CALLBACKS == 1U)
     spi_handle->ErrorCallback(spi_handle);
 #else
@@ -905,6 +1087,7 @@ void spi_irq_handler(spi* spi_object)
 {
     uint32_t interrupt_source = spi_object->module->instance->CONTROL_REG_2;
     uint32_t interrupt_flag   = spi_object->module->instance->STATUS_REG;
+
     if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) == FLAG_RESET)
         && (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_RX_BUFFER_NOT_EMPTY) != FLAG_RESET)
         && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
@@ -912,12 +1095,14 @@ void spi_irq_handler(spi* spi_object)
         spi_object->module->rx_isr_ptr(*spi_object, spi_object->module);
         return;
     }
+
     if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TX_BUFFER_EMPTY) != FLAG_RESET)
         && (SPI_CHECK_INTERRUPT_SOURCE(interrupt_source, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
     {
         spi_object->module->tx_isr_ptr(*spi_object, spi_object->module);
         return;
     }
+
     if (((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_MODE_FAULT) != FLAG_RESET)
          || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) != FLAG_RESET)
          || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET))
@@ -949,25 +1134,31 @@ void spi_irq_handler(spi* spi_object)
 
         if (spi_object->module->error_code != SPI_ERROR_NONE)
         {
-            SPI_DISABLE_INTERRUPTS(spi_object->module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE
-                                                       | SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE);
+            SPI_DISABLE_INTERRUPTS(spi_object->module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE);
+
             spi_object->module->state = spi::SPI_STATE_READY;
-            if ((STM_HAL_CHECK_FOR_BIT_STATE_SET(interrupt_source, SPI_CR2_TX_BUFFER_DMA_ENABLE))
-                || (HAL_IS_BIT_SET(interrupt_source, SPI_CR2_RX_BUFFER_DMA_ENABLE)))
+
+            if ((STM_HAL_CHECK_FOR_BIT_STATE_SET(interrupt_source, SPI_CR2_TX_BUFFER_DMA_ENABLE)) || (HAL_IS_BIT_SET(interrupt_source, SPI_CR2_RX_BUFFER_DMA_ENABLE)))
             {
-                STM_HAL_CLEAR_BIT(spi_object->module->instance->CONTROL_REG_2,
-                                  (SPI_CR2_TX_BUFFER_DMA_ENABLE | SPI_CR2_RX_BUFFER_DMA_ENABLE));
+                STM_HAL_CLEAR_BIT(spi_object->module->instance->CONTROL_REG_2, (SPI_CR2_TX_BUFFER_DMA_ENABLE | SPI_CR2_RX_BUFFER_DMA_ENABLE));
+
                 if (spi_object->module->rx_dma_handle != nullptr)
                 {
                     spi_object->module->rx_dma_handle->transfer_abort_callback = dma_abort_on_error;
+
                     if (spi::PROCEDURE_STATUS_OK != dma_abort_interrupt(spi_object->module->rx_dma_handle))
+                    {
                         STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_DURING_ABORT);
+                    }
                 }
                 if (spi_object->module->tx_dma_handle != nullptr)
                 {
                     spi_object->module->tx_dma_handle->transfer_abort_callback = dma_abort_on_error;
+
                     if (spi::PROCEDURE_STATUS_OK != dma_abort_interrupt(spi_object->module->tx_dma_handle))
+                    {
                         STM_HAL_SET_BIT(spi_object->module->error_code, SPI_ERROR_DURING_ABORT);
+                    }
                 }
             }
             else
@@ -987,8 +1178,13 @@ void spi_irq_handler(spi* spi_object)
 
 spi::procedure_status_t spi::lock_module() const
 {
-    if (module->lock == HAL_MODULE_LOCKED) { return PROCEDURE_STATUS_BUSY; }
+    if (module->lock == HAL_MODULE_LOCKED)
+    {
+        return PROCEDURE_STATUS_BUSY;
+    }
+
     module->lock = HAL_MODULE_LOCKED;
+
     return PROCEDURE_STATUS_OK;
 }
 
@@ -1000,6 +1196,7 @@ void spi::unlock_module() const
 void spi::set_transaction_parameters(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size) const
 {
     module->error_code = SPI_ERROR_NONE;
+
     module->tx_buffer_ptr = (uint8_t *)tx_data_pointer;
     module->tx_transfer_size = packet_size;
     module->tx_transfer_counter = packet_size;
@@ -1035,32 +1232,38 @@ uint32_t spi::get_module_operating_mode() const
 void spi::verify_communication_direction(uint32_t intended_direction) const
 {
     uint32_t set_direction = module->init.direction;
+
     switch (intended_direction)
     {
         case SPI_DIRECTION_2_LINE:
+        {
             assert_param(SPI_VERIFY_DIRECTION_2_LINE(set_direction));
             break;
+        }
         case SPI_DIRECTION_2_LINE_RX_ONLY:
+        {
             assert_param(SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(set_direction));
             break;
+        }
         case SPI_DIRECTION_1_LINE:
+        {
             assert_param(SPI_VERIFY_DIRECTION_1_LINE(set_direction));
             break;
+        }
         default:
+        {
             break;
+        }
     }
 }
 
 
 spi::procedure_status_t spi::wait_for_flag_until_timeout(uint32_t flag, flag_status_t flag_status, uint32_t flag_timeout, uint32_t start_time) const
 {
-    __IO uint32_t count;
-    uint32_t adjusted_timeout;
-    uint32_t wait_start_time;
+    uint32_t adjusted_timeout    = flag_timeout - (HAL_GetTick() - start_time);
+    uint32_t wait_start_time          = HAL_GetTick();
 
-    adjusted_timeout    = flag_timeout - (HAL_GetTick() - start_time);
-    wait_start_time          = HAL_GetTick();
-    count               = adjusted_timeout * ((SystemCoreClock * 32U) >> 20U);
+    __IO uint32_t count               = adjusted_timeout * ((SystemCoreClock * 32U) >> 20U);
 
     while ((SPI_GET_FLAG_STATUS(module, flag) ? FLAG_SET : FLAG_RESET) != flag_status)
     {
@@ -1068,31 +1271,40 @@ spi::procedure_status_t spi::wait_for_flag_until_timeout(uint32_t flag, flag_sta
         {
             if (((HAL_GetTick() - wait_start_time) >= adjusted_timeout) || (adjusted_timeout == 0U))
             {
-                SPI_DISABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
-                                                | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-                if ((module->init.mode == SPI_MODE_CONTROLLER)
-                        && ((module->init.direction == SPI_DIRECTION_1_LINE)
-                        || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+                SPI_DISABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
+                if ((module->init.mode == SPI_MODE_CONTROLLER) && ((module->init.direction == SPI_DIRECTION_1_LINE) || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+                {
                     SPI_DISABLE_MODULE(module);
+                }
+
                 if (module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+                {
                     SPI_RESET_CRC_CALCULATION(module);
+                }
+
                 module->state = SPI_STATE_READY;
                 SPI_UNLOCK_MODULE(module);
+
                 return PROCEDURE_STATUS_TIMEOUT;
             }
-            if (count == 0U) { adjusted_timeout = 0U; }
+            if (count == 0U)
+            {
+                adjusted_timeout = 0U;
+            }
             count--;
         }
     }
+
     return PROCEDURE_STATUS_OK;
 }
 
 spi::procedure_status_t spi::end_rx_transaction(uint32_t flag_timeout, uint32_t start_time)
 {
-    if ((module->init.mode == SPI_MODE_MASTER)
-            && ((module->init.direction == SPI_DIRECTION_1_LINE)
-            || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+    if ((module->init.mode == SPI_MODE_MASTER) && ((module->init.direction == SPI_DIRECTION_1_LINE) || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+    {
         SPI_DISABLE_MODULE(module);
+    }
     if (module->init.mode == SPI_MODE_MASTER)
     {
         if (module->init.direction != SPI_DIRECTION_2_LINE_RX_ONLY)
@@ -1100,6 +1312,7 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t flag_timeout, uint32_t 
             if (wait_for_flag_until_timeout(SPI_FLAG_BUSY, FLAG_RESET, flag_timeout, start_time) != PROCEDURE_STATUS_OK)
             {
                 STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+
                 return PROCEDURE_STATUS_TIMEOUT;
             }
         }
@@ -1108,6 +1321,7 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t flag_timeout, uint32_t 
             if (wait_for_flag_until_timeout(SPI_FLAG_RX_BUFFER_NOT_EMPTY, FLAG_RESET, flag_timeout, start_time) != PROCEDURE_STATUS_OK)
             {
                 STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+
                 return PROCEDURE_STATUS_TIMEOUT;
             }
         }
@@ -1117,20 +1331,24 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t flag_timeout, uint32_t 
         if (wait_for_flag_until_timeout(SPI_FLAG_RX_BUFFER_NOT_EMPTY, FLAG_RESET, flag_timeout, start_time) != PROCEDURE_STATUS_OK)
         {
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+
             return PROCEDURE_STATUS_TIMEOUT;
         }
     }
+
     return PROCEDURE_STATUS_OK;
 }
 
 spi::procedure_status_t spi::end_rx_tx_transaction(uint32_t flag_timeout, uint32_t start_time)
 {
     __IO uint32_t count = SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US * (SystemCoreClock / 24U / 1000000U);
+
     if (module->init.mode == SPI_MODE_CONTROLLER)
     {
         if (wait_for_flag_until_timeout(SPI_FLAG_BUSY, FLAG_RESET, flag_timeout, start_time) != PROCEDURE_STATUS_OK)
         {
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+
             return PROCEDURE_STATUS_TIMEOUT;
         }
     }
@@ -1138,8 +1356,13 @@ spi::procedure_status_t spi::end_rx_tx_transaction(uint32_t flag_timeout, uint32
     {
         do
         {
-            if (count == 0U) { break; }
+            if (count == 0U)
+            {
+                break;
+            }
+
             count--;
+
         }   while (SPI_GET_FLAG_STATUS(module, SPI_FLAG_BUSY) != FLAG_RESET);
     }
     return PROCEDURE_STATUS_OK;
@@ -1147,9 +1370,10 @@ spi::procedure_status_t spi::end_rx_tx_transaction(uint32_t flag_timeout, uint32
 
 void spi::close_rx_tx_isr()
 {
-    uint32_t tickstart;
     __IO uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
-    tickstart = HAL_GetTick();
+
+    uint32_t tickstart = HAL_GetTick();
+
     SPI_DISABLE_INTERRUPTS(module, SPI_ERROR_INTERRUPT_ENABLE);
     do
     {
@@ -1158,13 +1382,20 @@ void spi::close_rx_tx_isr()
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
             break;
         }
+
         count--;
+
     }   while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET);
 
     if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != PROCEDURE_STATUS_OK)
+    {
         STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+    }
+
     if (module->init.direction == SPI_DIRECTION_2_LINE)
+    {
         SPI_CLEAR_OVERRUN_FLAG(module);
+    }
 
     #if (SPI_USE_CRC != 0U)
         if (SPI_GET_FLAG_STATUS(spi_module_handle, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
@@ -1236,17 +1467,26 @@ void spi::close_rx_tx_isr()
         STM_HAL_UNUSED(register_contents8);
         SPI_DISABLE_INTERRUPTS(spi_module_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
         if (spi_module_handle->tx_transfer_counter == 0U)
+        {
             close_rx_tx_isr(spi_module_handle);
+        }
     }
 #endif
 
 void spi::close_rx_isr()
 {
     SPI_DISABLE_INTERRUPTS(module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
     if (end_rx_transaction(SPI_DEFAULT_TIMEOUT_100_US, HAL_GetTick()) != PROCEDURE_STATUS_OK)
+    {
         STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+    }
+
     if (module->init.direction == SPI_DIRECTION_2_LINE)
+    {
         SPI_CLEAR_OVERRUN_FLAG(module);
+    }
+
     module->state = SPI_STATE_READY;
 
     #if (SPI_USE_CRC != 0U)
@@ -1286,9 +1526,10 @@ void spi::close_rx_isr()
 
 void spi::close_tx_isr()
 {
-    uint32_t tickstart;
     __IO uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
-    tickstart = HAL_GetTick();
+
+    uint32_t tickstart = HAL_GetTick();
+
     do
     {
         if (count == 0U)
@@ -1296,15 +1537,25 @@ void spi::close_tx_isr()
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
             break;
         }
+
         count--;
+
     }   while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET);
 
     SPI_DISABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
     if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != PROCEDURE_STATUS_OK)
+    {
         STM_HAL_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
+    }
+
     if (module->init.direction == SPI_DIRECTION_2_LINE)
+    {
         SPI_CLEAR_OVERRUN_FLAG(module);
+    }
+
     module->state = SPI_STATE_READY;
+
     if (module->error_code != SPI_ERROR_NONE)
     {
         #if (SPI_USE_REGISTER_CALLBACKS == 1U)
@@ -1334,14 +1585,17 @@ void spi::abort_rx_isr()
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_DURING_ABORT );
             break;
         }
+
         count--;
+
     }   while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET);
 
     SPI_DISABLE_MODULE(module);
-    STM_HAL_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE
-                                                        | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    STM_HAL_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
     register_contents = STM_HAL_READ_REG(module->instance->DATA_REG);
     STM_HAL_UNUSED(register_contents);
+
     module->state = SPI_STATE_ABORT;
 }
 
@@ -1349,6 +1603,7 @@ void spi::abort_tx_isr()
 {
     STM_HAL_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE));
     SPI_DISABLE_MODULE(module);
+
     module->state = SPI_STATE_ABORT;
 }
 

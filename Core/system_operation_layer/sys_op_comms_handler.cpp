@@ -101,11 +101,6 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 }
 
-//rtd* get_rtd_object()
-//{
-////    return &driver::rtd_1;
-//}
-
 namespace sys_op::comms_handler
 {
     osEventFlagsId_t  initialization_event_flags_handle = nullptr;

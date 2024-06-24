@@ -17,7 +17,7 @@
 /* third-party includes */
 
 /* hal includes */
-
+#include "hal_general.h"
 /* driver includes */
 
 /* rtos abstraction includes */
@@ -69,27 +69,27 @@ void hal_callback_spi_tx_rx_complete(spi::handle_t* _module)
 
 void hal_callback_spi_tx_complete(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_rx_complete(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_tx_rx_half_complete(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_tx_half_complete(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_rx_half_complete(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_error(spi::handle_t* _module)
@@ -100,17 +100,17 @@ void hal_callback_spi_error(spi::handle_t* _module)
 
 void hal_callback_spi_abort(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_msp_init(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 void hal_callback_spi_msp_deinit(spi::handle_t* _module)
 {
-    STM_HAL_UNUSED(_module);
+    UNUSED_CAST_VOID(_module);
 }
 
 
@@ -131,30 +131,30 @@ void HAL_SPI_Error_Callback(spi::handle_t *hspi)
 
 void HAL_SPI_TxCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }
 
 void HAL_SPI_RxCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }
 
 void HAL_SPI_TxHalfCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }
 
 void HAL_SPI_RxHalfCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }
 
 void HAL_SPI_TxRxHalfCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }
 
 void HAL_SPI_AbortCpltCallback(spi::handle_t *spi_handle)
 {
-    STM_HAL_UNUSED(spi_handle);
+    UNUSED_CAST_VOID(spi_handle);
 }

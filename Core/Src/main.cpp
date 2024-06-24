@@ -25,13 +25,6 @@
 #include "../system_operation_layer/sys_op_extrusion_process.h"
 #include "../system_operation_layer/sys_op_spooling_process.h"
 
-#include "../layer_0_hal//hal_spi.h"
-
-#include "../layer_0_hal//hal_callbacks.h"
-
-
-
-
 const osEventFlagsAttr_t initialization_event_flags_attributes = { .name = "initialization_event_flags" };
 
 osEventFlagsId_t initialization_event_flags_handle;

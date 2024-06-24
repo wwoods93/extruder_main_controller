@@ -115,8 +115,8 @@ class i2c : public resource
         static constexpr uint8_t BYTE_TRANSFER_NOT_FINISHED_AND_ACK_FAILURE = 0x08;
 
         /* macros */
-        #define I2C_ENABLE_MODULE(__HANDLE__)           STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, I2C_CR1_MODULE_ENABLE)
-        #define I2C_DISABLE_MODULE(__HANDLE__)          STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, I2C_CR1_MODULE_ENABLE)
+        #define I2C_ENABLE_MODULE(__HANDLE__)           REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, I2C_CR1_MODULE_ENABLE)
+        #define I2C_DISABLE_MODULE(__HANDLE__)          REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, I2C_CR1_MODULE_ENABLE)
         #define HAL_I2C_FLAG_MASK                       0x0000FFFFU
         #define I2C_GET_FLAG(__HANDLE__, __FLAG__)      ((((uint8_t)((__FLAG__) >> 16U)) == 0x01U) ? (((((__HANDLE__)->instance->STATUS_REG_1)          \
                                                         & ((__FLAG__) & HAL_I2C_FLAG_MASK)) == ((__FLAG__) & HAL_I2C_FLAG_MASK)) ? SET : RESET)         \

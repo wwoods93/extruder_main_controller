@@ -30,28 +30,24 @@
 /* meta structure includes */
 
 
-#define STM_HAL_SET_BIT(REG, BIT)                       ((REG) |=  (BIT))
-#define STM_HAL_CLEAR_BIT(REG, BIT)                     ((REG) &= ~(BIT))
-#define STM_HAL_READ_REG(REG)                           ((REG))
-#define STM_HAL_UNUSED(X)                               (void) X
-#define STM_HAL_CHECK_FOR_BIT_STATE_SET(REG, BIT)       (((REG) & (BIT)) == (BIT))
-#define STM_HAL_CHECK_FOR_BIT_STATE_RESET(REG, BIT)     (((REG) & (BIT)) == 0U)
+#define REGISTER_SET_BIT(REG, BIT)          ((REG) |=  (BIT))
+#define REGISTER_CLEAR_BIT(REG, BIT)        ((REG) &= ~(BIT))
+#define REGISTER_READ(REG)                  ((REG))
+#define REGISTER_CHECK_SET_BIT(REG, BIT)    ((((REG) & (BIT)) == (BIT)) ? BIT_SET : BIT_CLEAR)
+#define UNUSED_CAST_VOID(X)                 (void) X
 
 //void assert_failed(uint8_t *file, uint32_t line);
 //#define ASSERT_PARAM(expr) ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
 
-#if (USE_RTOS == 1U)
-  #error "USE_RTOS should be 0 in the current HAL release"
-#else
-    #define STM_HAL_LOCK_MODULE(__HANDLE__)                                                                         \
-                                    do                                                                              \
-                                    {                                                                               \
-                                        if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return HAL_STATUS_BUSY; }     \
-                                        else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                            \
-                                    } while (0U)                                                                    \
+#define STM_HAL_LOCK_MODULE(__HANDLE__)                                                                         \
+                                do                                                                              \
+                                {                                                                               \
+                                    if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return HAL_STATUS_BUSY; }     \
+                                    else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                            \
+                                } while (0U)                                                                    \
 
-    #define STM_HAL_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
-#endif
+#define STM_HAL_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
+
 /*************************************** spi control register 1 definitions *******************************************/
 #define STM_HAL_SPI_CR1_CLOCK_PHASE_POSITION                            (0U)
 #define STM_HAL_SPI_CR1_CLOCK_PHASE_MASK                                (0x1UL << STM_HAL_SPI_CR1_CLOCK_PHASE_POSITION)
@@ -86,16 +82,14 @@
 #define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_POSITION                      (11U)
 #define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_MASK                          (0x1UL << STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_POSITION)
 #define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT                               STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_MASK
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_POSITION                      (12U)
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_MASK                          (0x1UL << STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_POSITION)
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT                               STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_MASK
+#define STM_HAL_SPI_CR1_SEND_CRC_NEXT_POSITION                          (12U)
+#define STM_HAL_SPI_CR1_SEND_CRC_NEXT_MASK                              (0x1UL << STM_HAL_SPI_CR1_SEND_CRC_NEXT_POSITION)
+#define STM_HAL_SPI_CR1_SEND_CRC_NEXT                                   STM_HAL_SPI_CR1_SEND_CRC_NEXT_MASK
 #define STM_HAL_SPI_CR1_CRC_ENABLE_POSITION                             (13U)
 #define STM_HAL_SPI_CR1_CRC_ENABLE_MASK                                 (0x1UL << STM_HAL_SPI_CR1_CRC_ENABLE_POSITION)
 #define STM_HAL_SPI_CR1_CRC_ENABLE                                      STM_HAL_SPI_CR1_CRC_ENABLE_MASK
 #define STM_HAL_SPI_CR1_CRC_DISABLE                                     (0x00000000U)
-#define STM_HAL_SPI_CR1_SEND_CRC_NEXT_POSITION                          (12U)
-#define STM_HAL_SPI_CR1_SEND_CRC_NEXT_MASK                              (0x1UL << STM_HAL_SPI_CR1_SEND_CRC_NEXT_POSITION)
-#define STM_HAL_SPI_CR1_SEND_CRC_NEXT                                   STM_HAL_SPI_CR1_SEND_CRC_NEXT_MASK
+
 #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION                (14U)
 #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK                    (0x1UL << STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION)
 #define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE                         STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK
@@ -157,6 +151,10 @@
 #define STM_HAL_SPI_DATA_REG_MASK                                       (0xFFFFUL << STM_HAL_SPI_DATA_REG_POSITION)
 #define STM_HAL_SPI_DATA_REG                                            STM_HAL_SPI_DATA_REG_MASK
 
+#define STM_HAL_SPI_CRC_POLYNOMIAL_REG_POSITION                         (0U)
+#define STM_HAL_SPI_CRC_POLYNOMIAL_REG_MASK                             (0xFFFFUL << STM_HAL_SPI_CRC_POLYNOMIAL_REG_POSITION)
+#define STM_HAL_SPI_CRC_POLYNOMIAL_REG                                  STM_HAL_SPI_CRC_POLYNOMIAL_REG_MASK
+
 /**********************************************************************************************************************/
 
 #define STM_HAL_SPI_I2S_MODE_SELECT_POSITION                            (11U)
@@ -194,6 +192,12 @@ typedef enum
     FLAG_RESET  = 0x00U,
     FLAG_SET    = 0x01U
 } flag_status_t;
+
+typedef enum
+{
+    BIT_CLEAR = 0x00,
+    BIT_SET = 0x01
+} bit_status_t;
 
 typedef enum
 {

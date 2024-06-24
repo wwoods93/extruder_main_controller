@@ -23,33 +23,17 @@ void MX_TIM6_Init(void);
 void MX_TIM7_Init(void);
 void MX_TIM11_Init(void);
 
-void ms_timer_base_timer_initialize(TIM_HandleTypeDef base_timer_handle);
-void ms_timer_base_timer_enable(void);
-void ms_timer_base_timer_disable(void);
-void ms_timer_base_timer_start(void);
-void ms_timer_base_timer_stop(void);
-void ms_timer_base_timer_reset(void);
-uint32_t ms_timer_base_timer_get_us_count(void);
-void ms_timer_initialize(TIM_HandleTypeDef base_timer_handle);
-void ms_timer_deinitialize(void);
-uint32_t ms_timer(void);
-uint32_t ms_timer_get_count(void);
+void timers_initialize(void);
 
-void us_timer_base_timer_initialize(TIM_HandleTypeDef base_timer_handle);
-void us_timer_base_timer_enable(void);
-void us_timer_base_timer_disable(void);
-void us_timer_base_timer_start(void);
-void us_timer_base_timer_stop(void);
-void us_timer_base_timer_reset(void);
-uint32_t us_timer_base_timer_get_us_count(void);
-void us_timer_initialize(TIM_HandleTypeDef base_timer_handle);
-void us_timer_deinitialize(void);
-uint32_t us_timer(void);
+void us_timer_enable(void);
+void us_timer_disable(void);
+void us_timer_start(void);
+void us_timer_stop(void);
+void us_timer_reset(void);
 uint32_t us_timer_get_count(void);
-
 void us_delay(uint16_t microseconds);
 
-void timers_initialize(void);
+
 
 #ifdef __cplusplus
 }

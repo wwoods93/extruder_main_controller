@@ -32,8 +32,12 @@
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_resource.h"
 
-    #define SPI_USE_REGISTER_CALLBACKS          1U
     #define SPI_USE_CRC                         0U
+
+    #define SPI_REGISTER_CALLBACK_COUNT         10U
+    #define SPI_REGISTER_CALLBACK_MIN_ID        0U
+    #define SPI_REGISTER_CALLBACK_MAX_ID        9U
+
 
     static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE                    = 0U;
     static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR               = 1U;
@@ -55,7 +59,7 @@
     static constexpr uint32_t   SPI_CR2_FRAME_FORMAT                        = STM_HAL_SPI_CR2_FRAME_FORMAT;
     static constexpr uint32_t   SPI_CR2_RX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE;
     static constexpr uint32_t   SPI_CR2_TX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE;
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
+
     static constexpr uint8_t    SPI_ERROR_NONE                          = (0x00000000U);
     static constexpr uint8_t    SPI_ERROR_MODE_FAULT                    = (0x00000001U);
     static constexpr uint8_t    SPI_ERROR_DURING_CRC_CALCULATION        = (0x00000002U);
@@ -65,7 +69,7 @@
     static constexpr uint8_t    SPI_ERROR_WAITING_FOR_FLAG              = (0x00000020U);
     static constexpr uint8_t    SPI_ERROR_DURING_ABORT                  = (0x00000040U);
     static constexpr uint8_t    SPI_ERROR_CALLBACK_INVALID              = (0x00000080U);
-#endif
+
     static constexpr uint32_t   SPI_FLAG_RX_BUFFER_NOT_EMPTY                = STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY;
     static constexpr uint32_t   SPI_FLAG_TX_BUFFER_EMPTY                    = STM_HAL_SPI_SR_TX_BUFFER_EMPTY;
     static constexpr uint32_t   SPI_FLAG_BUSY                               = STM_HAL_SPI_SR_BUSY;
@@ -290,20 +294,8 @@ class spi : public resource
             hal_lock_t          lock;
             volatile comms_state_t    state;
             volatile uint32_t   error_code;
+            void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *spi_handle);
 
-
-            #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                void (* TxCpltCallback)             (struct _handle_t *spi_handle);
-                void (* RxCpltCallback)             (struct _handle_t *spi_handle);
-                void (* TxRxCpltCallback)           (struct _handle_t *spi_handle);
-                void (* TxHalfCpltCallback)         (struct _handle_t *spi_handle);
-                void (* RxHalfCpltCallback)         (struct _handle_t *spi_handle);
-                void (* TxRxHalfCpltCallback)       (struct _handle_t *spi_handle);
-                void (* ErrorCallback)              (struct _handle_t *spi_handle);
-                void (* AbortCpltCallback)          (struct _handle_t *spi_handle);
-                void (* MspInitCallback)            (struct _handle_t *spi_handle);
-                void (* MspDeInitCallback)          (struct _handle_t *spi_handle);
-            #endif
         } handle_t;
 
         typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
@@ -370,10 +362,8 @@ class spi : public resource
         void abort_rx_isr();
         void abort_tx_isr();
 
-    #if (SPI_USE_REGISTER_CALLBACKS == 1U)
         procedure_status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback) const;
         procedure_status_t spi_unregister_callback(callback_id_t callback_id) const;
-    #endif
 
     private:
 

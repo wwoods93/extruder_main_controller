@@ -483,24 +483,24 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_
     if (module->state == SPI_STATE_RESET)
     {
         module->lock = HAL_MODULE_UNLOCKED;
-        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-            module->TxCpltCallback       = HAL_SPI_TxCpltCallback;
-            module->RxCpltCallback       = HAL_SPI_RxCpltCallback;
-            module->TxRxCpltCallback     = HAL_SPI_TxRxCplt_Callback;
-            module->TxHalfCpltCallback   = HAL_SPI_TxHalfCpltCallback;
-            module->RxHalfCpltCallback   = HAL_SPI_RxHalfCpltCallback;
-            module->TxRxHalfCpltCallback = HAL_SPI_TxRxHalfCpltCallback;
-            module->ErrorCallback        = HAL_SPI_Error_Callback;
-            module->AbortCpltCallback    = HAL_SPI_AbortCpltCallback;
 
-            if (module->MspInitCallback == nullptr)
-            {
-                module->MspInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
-            }
-            module->MspInitCallback(module);
-        #else
-            HAL_SPI_MspInit(reinterpret_cast<SPI_HandleTypeDef *>(spi_module_handle));
-        #endif
+        module->callbacks[SPI_TX_RX_COMPLETE_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID] = nullptr;
+
+        module->callbacks[SPI_TX_RX_HALF_COMPLETE_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_TX_HALF_COMPLETE_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_RX_HALF_COMPLETE_CALLBACK_ID] = nullptr;
+
+        module->callbacks[SPI_ERROR_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_ABORT_CALLBACK_ID] = nullptr;
+
+        module->callbacks[SPI_MSP_INIT_CALLBACK_ID] = nullptr;
+        module->callbacks[SPI_MSP_DEINIT_CALLBACK_ID] = nullptr;
+
+        module->callbacks[SPI_MSP_INIT_CALLBACK_ID] = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
+
+        module->callbacks[SPI_MSP_INIT_CALLBACK_ID](module);
     }
 
     module->state = SPI_STATE_BUSY;
@@ -796,155 +796,98 @@ uint8_t spi::calculate_number_of_transmissions_for_active_packet() const
     return num_transmissions;
 }
 
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
 
-    spi::procedure_status_t spi::spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t callback_ptr) const
+
+spi::procedure_status_t spi::spi_register_callback(callback_id_t _callback_id, spi_callback_ptr_t _callback_ptr) const
+{
+    procedure_status_t status = PROCEDURE_STATUS_OK;
+
+    if (_callback_ptr == nullptr)
     {
-        procedure_status_t status = PROCEDURE_STATUS_OK;
+        module->error_code |= SPI_ERROR_CALLBACK_ID;
 
-        if (callback_ptr == nullptr)
-        {
-            module->error_code |= SPI_ERROR_CALLBACK_ID;
+        return PROCEDURE_STATUS_ERROR;
+    }
 
-            return PROCEDURE_STATUS_ERROR;
-        }
-        SPI_LOCK_MODULE(module);
+    SPI_LOCK_MODULE(module);
 
-        if (SPI_STATE_READY == module->state)
+    if (SPI_STATE_READY == module->state)
+    {
+        if (_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && _callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
         {
-            switch (callback_id)
-            {
-                case SPI_TX_COMPLETE_CALLBACK_ID:
-                    module->TxCpltCallback = callback_ptr;
-                    break;
-                case SPI_RX_COMPLETE_CALLBACK_ID:
-                    module->RxCpltCallback = callback_ptr;
-                    break;
-                case SPI_TX_RX_COMPLETE_CALLBACK_ID:
-                    module->TxRxCpltCallback = callback_ptr;
-                    break;
-                case SPI_TX_HALF_COMPLETE_CALLBACK_ID:
-                    module->TxHalfCpltCallback = callback_ptr;
-                    break;
-                case SPI_RX_HALF_COMPLETE_CALLBACK_ID:
-                    module->RxHalfCpltCallback = callback_ptr;
-                    break;
-                case SPI_TX_RX_HALF_COMPLETE_CALLBACK_ID:
-                    module->TxRxHalfCpltCallback = callback_ptr;
-                    break;
-                case SPI_ERROR_CALLBACK_ID:
-                    module->ErrorCallback = callback_ptr;
-                    break;
-                case SPI_ABORT_CALLBACK_ID:
-                    module->AbortCpltCallback = callback_ptr;
-                    break;
-                case SPI_MSP_INIT_CALLBACK_ID:
-                    module->MspInitCallback = callback_ptr;
-                    break;
-                case SPI_MSP_DEINIT_CALLBACK_ID:
-                    module->MspDeInitCallback = callback_ptr;
-                    break;
-                default:
-                    STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
-                    status =  PROCEDURE_STATUS_ERROR;
-                    break;
-            }
-        }
-        else if (SPI_STATE_RESET == module->state)
-        {
-            switch (callback_id)
-            {
-                case SPI_MSP_INIT_CALLBACK_ID:
-                    module->MspInitCallback = callback_ptr;
-                    break;
-                case SPI_MSP_DEINIT_CALLBACK_ID:
-                    module->MspDeInitCallback = callback_ptr;
-                    break;
-                default:
-                    STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
-                    status =  PROCEDURE_STATUS_ERROR;
-                    break;
-            }
+            module->callbacks[_callback_id] = _callback_ptr;
         }
         else
         {
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
             status =  PROCEDURE_STATUS_ERROR;
         }
-        SPI_UNLOCK_MODULE(module);
-        return status;
     }
-
-    spi::procedure_status_t spi::spi_unregister_callback(callback_id_t callback_id) const
+    else if (SPI_STATE_RESET == module->state)
     {
-        procedure_status_t status = PROCEDURE_STATUS_OK;
-        SPI_LOCK_MODULE(module);
 
-        if (SPI_STATE_READY == module->state)
+        if (_callback_id == SPI_MSP_INIT_CALLBACK_ID || _callback_id == SPI_MSP_DEINIT_CALLBACK_ID)
         {
-            switch (callback_id)
-            {
-                case SPI_TX_COMPLETE_CALLBACK_ID:
-                    module->TxCpltCallback = HAL_SPI_TxCpltCallback;
-                    break;
-                case SPI_RX_COMPLETE_CALLBACK_ID:
-                    module->RxCpltCallback = HAL_SPI_RxCpltCallback;
-                    break;
-                case SPI_TX_RX_COMPLETE_CALLBACK_ID:
-                    module->TxRxCpltCallback = HAL_SPI_TxRxCplt_Callback;
-                    break;
-                case SPI_TX_HALF_COMPLETE_CALLBACK_ID:
-                    module->TxHalfCpltCallback = HAL_SPI_TxHalfCpltCallback;
-                    break;
-                case SPI_RX_HALF_COMPLETE_CALLBACK_ID:
-                    module->RxHalfCpltCallback = HAL_SPI_RxHalfCpltCallback;
-                    break;
-                case SPI_TX_RX_HALF_COMPLETE_CALLBACK_ID:
-                    module->TxRxHalfCpltCallback = HAL_SPI_TxRxHalfCpltCallback;
-                    break;
-                case SPI_ERROR_CALLBACK_ID:
-                    module->ErrorCallback = HAL_SPI_Error_Callback;
-                    break;
-                case SPI_ABORT_CALLBACK_ID:
-                    module->AbortCpltCallback = HAL_SPI_AbortCpltCallback;
-                    break;
-                case SPI_MSP_INIT_CALLBACK_ID:
-                    module->MspInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
-                    break;
-                case SPI_MSP_DEINIT_CALLBACK_ID:
-                    module->MspDeInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspDeInit);
-                    break;
-                default :
-                    STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
-                    status =  PROCEDURE_STATUS_ERROR;
-                    break;
-            }
-        }
-        else if (SPI_STATE_RESET == module->state)
-        {
-            switch (callback_id)
-            {
-                case SPI_MSP_INIT_CALLBACK_ID :
-                    module->MspInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
-                    break;
-                case SPI_MSP_DEINIT_CALLBACK_ID :
-                    module->MspDeInitCallback = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspDeInit);
-                    break;
-                default :
-                    STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
-                    status =  PROCEDURE_STATUS_ERROR;
-                    break;
-            }
+            module->callbacks[_callback_id] = _callback_ptr;
         }
         else
         {
             STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
             status =  PROCEDURE_STATUS_ERROR;
         }
-        SPI_UNLOCK_MODULE(module);
-        return status;
     }
-#endif
+    else
+    {
+        STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
+        status =  PROCEDURE_STATUS_ERROR;
+    }
+
+    SPI_UNLOCK_MODULE(module);
+
+    return status;
+}
+
+spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id) const
+{
+    procedure_status_t status = PROCEDURE_STATUS_OK;
+    SPI_LOCK_MODULE(module);
+
+    if (SPI_STATE_READY == module->state)
+    {
+        if (_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && _callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
+        {
+            module->callbacks[_callback_id] = nullptr;
+        }
+        else
+        {
+            STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
+            status =  PROCEDURE_STATUS_ERROR;
+        }
+    }
+    else if (SPI_STATE_RESET == module->state)
+    {
+
+        if (_callback_id == SPI_MSP_INIT_CALLBACK_ID || _callback_id == SPI_MSP_DEINIT_CALLBACK_ID)
+        {
+            module->callbacks[_callback_id] = nullptr;
+        }
+        else
+        {
+            STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
+            status =  PROCEDURE_STATUS_ERROR;
+        }
+    }
+    else
+    {
+        STM_HAL_SET_BIT(module->error_code, SPI_ERROR_CALLBACK_ID);
+        status =  PROCEDURE_STATUS_ERROR;
+    }
+
+    SPI_UNLOCK_MODULE(module);
+
+    return status;
+}
+
 /********************************************** interrupt service routines ********************************************/
 void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
@@ -1076,11 +1019,7 @@ void dma_abort_on_error(dma_handle_t *dma_handle)
     spi_handle->rx_transfer_counter = 0U;
     spi_handle->tx_transfer_counter = 0U;
 
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
-    spi_handle->ErrorCallback(spi_handle);
-#else
-    HAL_SPI_ErrorCallback(spi_handle);
-#endif
+    spi_handle->callbacks[spi::SPI_ERROR_CALLBACK_ID](spi_handle);
 }
 
 void spi_irq_handler(spi* spi_object)
@@ -1163,11 +1102,7 @@ void spi_irq_handler(spi* spi_object)
             }
             else
             {
-                #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                    spi_object->module->ErrorCallback(spi_object->module);
-                #else
-                    HAL_SPI_ErrorCallback(spi_object->spi_module_handle);
-                #endif
+                spi_object->module->callbacks[spi::SPI_ERROR_CALLBACK_ID](spi_object->module);
             }
         }
         return;
@@ -1403,11 +1338,9 @@ void spi::close_rx_tx_isr()
             spi_module_handle->state = SPI_STATE_READY;
             STM_HAL_SET_BIT(spi_module_handle->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
             __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
-            #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                spi_module_handle->ErrorCallback(spi_module_handle);
-            #else
-                HAL_SPI_ErrorCallback(spi_module_handle);
-            #endif
+
+            module->callbacks[SPI_ERROR_CALLBACK_ID](module);
+
         }
         else
         {
@@ -1417,30 +1350,18 @@ void spi::close_rx_tx_isr()
                 if (module->state == SPI_STATE_BUSY_RX)
                 {
                     module->state = SPI_STATE_READY;
-                    #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                        module->RxCpltCallback(module);
-                    #else
-                        HAL_SPI_RxCpltCallback(spi_module_handle);
-                    #endif
+                    module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
                 }
                 else
                 {
                     module->state = SPI_STATE_READY;
-                    #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                        module->TxRxCpltCallback(module);
-                    #else
-                        HAL_SPI_TxRxCpltCallback(spi_module_handle);
-                    #endif
+                    module->callbacks[SPI_TX_RX_COMPLETE_CALLBACK_ID](module);
                 }
             }
             else
             {
                 module->state = SPI_STATE_READY;
-                #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                    module->ErrorCallback(module);
-                #else
-                    HAL_SPI_ErrorCallback(spi_module_handle);
-                #endif
+                module->callbacks[SPI_ERROR_CALLBACK_ID](module);
             }
     #if (SPI_USE_CRC != 0U)
         }
@@ -1494,30 +1415,18 @@ void spi::close_rx_isr()
         {
             STM_HAL_SET_BIT(spi_module_handle->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
             __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
-            #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                spi_module_handle->ErrorCallback(spi_module_handle);
-            #else
-                HAL_SPI_ErrorCallback(spi_module_handle);
-            #endif
+            module->callbacks[SPI_ERROR_CALLBACK_ID](module);
         }
         else
         {
     #endif
             if (module->error_code == SPI_ERROR_NONE)
             {
-                #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                    module->RxCpltCallback(module);
-                #else
-                    HAL_SPI_RxCpltCallback(spi_module_handle);
-                #endif
+                module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
             }
             else
             {
-                #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-                    module->ErrorCallback(module);
-                #else
-                    HAL_SPI_ErrorCallback(spi_module_handle);
-                #endif
+                module->callbacks[SPI_ERROR_CALLBACK_ID](module);
             }
     #if (SPI_USE_CRC != 0U)
         }
@@ -1558,19 +1467,11 @@ void spi::close_tx_isr()
 
     if (module->error_code != SPI_ERROR_NONE)
     {
-        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-            module->ErrorCallback(module);
-        #else
-            HAL_SPI_ErrorCallback(spi_module_handle);
-        #endif
+        module->callbacks[SPI_ERROR_CALLBACK_ID](module);
     }
     else
     {
-        #if (SPI_USE_REGISTER_CALLBACKS == 1U)
-            module->TxCpltCallback(module);
-        #else
-            HAL_SPI_TxCpltCallback(spi_module_handle);
-        #endif
+        module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID](module);
     }
 }
 

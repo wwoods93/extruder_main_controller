@@ -34,6 +34,23 @@ uint8_t hal_callbacks_get_spi_rx_data_ready_flag();
 void hal_callbacks_set_spi_rx_data_ready_flag(uint8_t status);
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
+
+
+void hal_callback_spi_tx_rx_complete(spi::handle_t* _module);
+void hal_callback_spi_tx_complete(spi::handle_t* _module);
+void hal_callback_spi_rx_complete(spi::handle_t* _module);
+
+void hal_callback_spi_tx_rx_half_complete(spi::handle_t* _module);
+void hal_callback_spi_tx_half_complete(spi::handle_t* _module);
+void hal_callback_spi_rx_half_complete(spi::handle_t* _module);
+
+void hal_callback_spi_error(spi::handle_t* _module);
+void hal_callback_spi_abort(spi::handle_t* _module);
+
+void hal_callback_spi_msp_init(spi::handle_t* _module);
+void hal_callback_spi_msp_deinit(spi::handle_t* _module);
+
+
 void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi);
 void HAL_SPI_Error_Callback(spi::handle_t *hspi);
 void HAL_SPI_TxCpltCallback(spi::handle_t *spi_handle);

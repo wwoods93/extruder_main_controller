@@ -42,9 +42,11 @@ spi::spi()
 
 }
 
-void spi::initialize(handle_t* _spi_handle, hal_spi_t* _spi_instance, callback_id_t _complete_callback_id, spi_callback_ptr_t _complete_callback_ptr, callback_id_t _error_callback_id, spi_callback_ptr_t _error_callback_ptr)
+void spi::initialize(handle_t* _spi_handle, hal_spi_t* _spi_instance, uint8_t _use_crc, callback_id_t _complete_callback_id, spi_callback_ptr_t _complete_callback_ptr, callback_id_t _error_callback_id, spi_callback_ptr_t _error_callback_ptr)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
+
+    use_crc = _use_crc;
 
     status = initialize_protocol(_spi_handle, _spi_instance);
     if (status != PROCEDURE_STATUS_OK)
@@ -472,13 +474,18 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_
     if (module->init.ti_mode != SPI_TI_MODE_DISABLE
         && module->init.ti_mode != SPI_TI_MODE_ENABLE)                          { status = PROCEDURE_STATUS_ERROR; }
 
-    #if (SPI_USE_CRC == 1U)
-        if (module->init.crc_calculation != SPI_CR1_CRC_ENABLE
-            && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)                 { status = PROCEDURE_STATUS_ERROR; }
-        if (module->init.crc_polynomial < SPI_CRC_POLYNOMIAL_MIN
-            || module->init.crc_polynomial > SPI_CRC_POLYNOMIAL_MAX
-            || module->init.crc_polynomial & 0x01U == 0U)                           { status = PROCEDURE_STATUS_ERROR; }
-    #endif
+    if (use_crc != 0U)
+    {
+        if (module->init.crc_calculation != SPI_CR1_CRC_ENABLE && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)
+        {
+            status = PROCEDURE_STATUS_ERROR;
+        }
+
+        if (module->init.crc_polynomial < SPI_CRC_POLYNOMIAL_MIN || module->init.crc_polynomial > SPI_CRC_POLYNOMIAL_MAX || (module->init.crc_polynomial & 0x01U) == 0U)
+        {
+            status = PROCEDURE_STATUS_ERROR;
+        }
+    }
 
     if (module->state == SPI_STATE_RESET)
     {
@@ -520,12 +527,10 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* _spi_handle, hal_spi_
              (module->init.chip_select_setting >> 16U) & SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE) |
              (module->init.ti_mode & SPI_CR2_FRAME_FORMAT)));
 
-    #if (SPI_USE_CRC != 0U)
-        if (spi_handle->init.crc_calculation == SPI_CRCCALCULATION_ENABLE)
-        {
-            WRITE_REG(spi_handle->instance->CRC_POLYNOMIAL_REG, (spi_handle->init.crc_polynomial & SPI_CRCPR_CRCPOLY_Msk));
-        }
-    #endif
+    if (use_crc != 0U && module->init.crc_calculation == SPI_CRCCALCULATION_ENABLE)
+    {
+        WRITE_REG(module->instance->CRC_POLYNOMIAL_REG, (module->init.crc_polynomial & SPI_CRCPR_CRCPOLY_Msk));
+    }
 
     #if (SPI_I2S_MODE_SELECT != 0U)
         STM_HAL_CLEAR_BIT(spi_module_handle->instance->I2S_CONFIG_REG, SPI_I2S_MODE_SELECT);
@@ -889,6 +894,70 @@ spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id)
 }
 
 /********************************************** interrupt service routines ********************************************/
+
+void spi_rx_2_line_8_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module)
+{
+    __IO uint8_t  *ptmpreg8;
+    __IO uint8_t  tmpreg8 = 0;
+
+    /* Initialize the 8bit temporary pointer */
+    ptmpreg8 = (__IO uint8_t *)&_module->instance->DATA_REG;
+    /* Read 8bit CRC to flush Data Register */
+    tmpreg8 = *ptmpreg8;
+    /* To avoid GCC warning */
+    UNUSED(tmpreg8);
+
+    /* Disable RXNE and ERR interrupt */
+    SPI_DISABLE_INTERRUPTS(_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
+    if (_module->tx_transfer_counter == 0U)
+    {
+        _spi_object.close_rx_tx_isr();
+    }
+}
+
+void spi_rx_2_line_16_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module)
+{
+    __IO uint32_t tmpreg = 0U;
+
+    tmpreg = READ_REG(_module->instance->DATA_REG);
+    UNUSED(tmpreg);
+
+    SPI_DISABLE_INTERRUPTS(_module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
+
+    _spi_object.close_rx_tx_isr();
+}
+
+void spi_rx_1_line_8_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module)
+{
+    __IO uint8_t  *ptmpreg8;
+    __IO uint8_t  tmpreg8 = 0;
+
+    /* Initialize the 8bit temporary pointer */
+    ptmpreg8 = (__IO uint8_t *)&_module->instance->DATA_REG;
+    /* Read 8bit CRC to flush Data Register */
+    tmpreg8 = *ptmpreg8;
+    /* To avoid GCC warning */
+    UNUSED(tmpreg8);
+
+    _spi_object.close_rx_isr();
+}
+
+void spi_rx_1_line_16_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module)
+{
+    __IO uint32_t tmpreg = 0U;
+
+    /* Read 16bit CRC to flush Data Register */
+    tmpreg = READ_REG(_module->instance->DATA_REG);
+    /* To avoid GCC warning */
+    UNUSED(tmpreg);
+
+    /* Disable RXNE and ERR interrupt */
+    SPI_DISABLE_INTERRUPTS(_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+
+    _spi_object.close_rx_isr();
+}
+
 void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *(__IO uint8_t *)&spi_handle->instance->DATA_REG = (*spi_handle->tx_buffer_ptr);
@@ -898,14 +967,13 @@ void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 
     if (spi_handle->tx_transfer_counter == 0U)
     {
-#if (SPI_USE_CRC != 0U)
-        if (spi_module_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        if (spi_object.use_crc != 0U && spi_object.module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
         {
-            STM_HAL_SET_BIT(spi_handle->instance->CONTROL_REG_1, SPI_CR1_CRCNEXT);
+            STM_HAL_SET_BIT(spi_handle->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SEND_CRC_NEXT);
             SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
             return;
         }
-#endif
+
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
 
         if (spi_handle->rx_transfer_counter == 0U)
@@ -924,13 +992,13 @@ void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 
     if (spi_handle->rx_transfer_counter == 0U)
     {
-#if (SPI_USE_CRC != 0U)
-        if (spi_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+
+        if (spi_object.use_crc != 0U && spi_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
         {
-            spi_handle->rx_isr_pointer =  rx_2_line_8_bit_isrCRC;
+            spi_handle->rx_isr_ptr =  spi_rx_2_line_8_bit_isr_with_crc;
             return;
         }
-#endif
+
         SPI_DISABLE_INTERRUPTS(spi_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
 
         if (spi_handle->tx_transfer_counter == 0U)
@@ -949,14 +1017,14 @@ void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 
     if (spi_handle->tx_transfer_counter == 0U)
     {
-#if (SPI_USE_CRC != 0U)
-        if (spi_module_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
-            {
-                STM_HAL_SET_BIT(spi_module_handle->instance->CONTROL_REG_1, SPI_CR1_CRCNEXT);
-                SPI_DISABLE_INTERRUPTS(spi_module_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-                return;
-            }
-#endif
+
+        if (spi_object.use_crc != 0U && spi_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        {
+            STM_HAL_SET_BIT(spi_handle->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SEND_CRC_NEXT);
+            SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+            return;
+        }
+
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
 
         if (spi_handle->rx_transfer_counter == 0U)
@@ -975,13 +1043,12 @@ void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 
     if (spi_handle->rx_transfer_counter == 0U)
     {
-        #if (SPI_USE_CRC != 0U)
-            if (spi_module_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
-            {
-                spi_module_handle->rx_isr_pointer =  rx_2_line_16_bit_isrCRC;
-                return;
-            }
-        #endif
+        if (spi_object.use_crc != 0U && spi_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        {
+            spi_handle->rx_isr_ptr =  spi_rx_2_line_16_bit_isr_with_crc;
+            return;
+        }
+
         SPI_DISABLE_INTERRUPTS(spi_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
 
         if (spi_handle->tx_transfer_counter == 0U)
@@ -1332,19 +1399,17 @@ void spi::close_rx_tx_isr()
         SPI_CLEAR_OVERRUN_FLAG(module);
     }
 
-    #if (SPI_USE_CRC != 0U)
-        if (SPI_GET_FLAG_STATUS(spi_module_handle, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
+        if (use_crc != 0U && SPI_GET_FLAG_STATUS(module, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
         {
-            spi_module_handle->state = SPI_STATE_READY;
-            STM_HAL_SET_BIT(spi_module_handle->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
-            __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
+            module->state = SPI_STATE_READY;
+
+            STM_HAL_SET_BIT(module->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
+            SPI_CLEAR_CRC_ERROR(module);
 
             module->callbacks[SPI_ERROR_CALLBACK_ID](module);
-
         }
         else
         {
-    #endif
             if (module->error_code == SPI_ERROR_NONE)
             {
                 if (module->state == SPI_STATE_BUSY_RX)
@@ -1363,36 +1428,8 @@ void spi::close_rx_tx_isr()
                 module->state = SPI_STATE_READY;
                 module->callbacks[SPI_ERROR_CALLBACK_ID](module);
             }
-    #if (SPI_USE_CRC != 0U)
         }
-    #endif
 }
-
-#if (SPI_USE_CRC != 0U)
-    static void rx_2_line_16_bit_isrCRC(struct _handle_t *spi_module_handle)
-    {
-        __IO uint32_t register_contents = 0U;
-        register_contents = STM_HAL_READ_REG(spi_module_handle->instance->DATA_REG);
-        STM_HAL_UNUSED(register_contents);
-        SPI_DISABLE_INTERRUPTS(spi_module_handle, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
-        close_rx_tx_isr(spi_module_handle);
-    }
-
-    static void rx_2_line_8_bit_isrCRC(struct _handle_t *spi_module_handle)
-    {
-        __IO uint8_t  *pregister_contents8;
-        __IO uint8_t  register_contents8 = 0;
-
-        pregister_contents8 = (__IO uint8_t *)&spi_module_handle->instance->DATA_REG;
-        register_contents8 = *pregister_contents8;
-        STM_HAL_UNUSED(register_contents8);
-        SPI_DISABLE_INTERRUPTS(spi_module_handle, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
-        if (spi_module_handle->tx_transfer_counter == 0U)
-        {
-            close_rx_tx_isr(spi_module_handle);
-        }
-    }
-#endif
 
 void spi::close_rx_isr()
 {
@@ -1410,16 +1447,14 @@ void spi::close_rx_isr()
 
     module->state = SPI_STATE_READY;
 
-    #if (SPI_USE_CRC != 0U)
-        if (SPI_GET_FLAG_STATUS(spi_module_handle, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
+        if (use_crc != 0U && SPI_GET_FLAG_STATUS(module, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
         {
-            STM_HAL_SET_BIT(spi_module_handle->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
-            __HAL_SPI_CLEAR_CRCERRFLAG(spi_module_handle);
+            STM_HAL_SET_BIT(module->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
+            SPI_CLEAR_CRC_ERROR(module);
             module->callbacks[SPI_ERROR_CALLBACK_ID](module);
         }
         else
         {
-    #endif
             if (module->error_code == SPI_ERROR_NONE)
             {
                 module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
@@ -1428,9 +1463,7 @@ void spi::close_rx_isr()
             {
                 module->callbacks[SPI_ERROR_CALLBACK_ID](module);
             }
-    #if (SPI_USE_CRC != 0U)
         }
-    #endif
 }
 
 void spi::close_tx_isr()
@@ -1510,7 +1543,5 @@ void spi::abort_tx_isr()
 
 void spi::reset_enabled_crc()
 {
-#if (SPI_USE_CRC != 0U)
-    if (spi_module_handle->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE) { SPI_RESET_CRC_CALCULATION(spi_module_handle); }
-#endif
+    if (module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE) { SPI_RESET_CRC_CALCULATION(module); }
 }

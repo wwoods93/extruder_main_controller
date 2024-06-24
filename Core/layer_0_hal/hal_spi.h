@@ -32,8 +32,6 @@
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_resource.h"
 
-    #define SPI_USE_CRC                         0U
-
     #define SPI_REGISTER_CALLBACK_COUNT         10U
     #define SPI_REGISTER_CALLBACK_MIN_ID        0U
     #define SPI_REGISTER_CALLBACK_MAX_ID        9U
@@ -172,6 +170,7 @@
                 do { STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_CRC_ENABLE);  \
                 STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_CRC_ENABLE); } while(0U)
 
+#define SPI_CLEAR_CRC_ERROR(__HANDLE__) ((__HANDLE__)->instance->DATA_REG = (uint16_t)(~STM_HAL_SPI_SR_CRC_ERROR))
 
 class spi : public resource
 {
@@ -326,6 +325,7 @@ class spi : public resource
         uint8_t         send_state = 0;
         channel_t       active_channel;
         packet_t        active_packet;
+        uint8_t         use_crc = 0;
 
         std::queue<packet_t> send_buffer;
         std::queue<packet_t> return_buffer_0;
@@ -339,7 +339,7 @@ class spi : public resource
 
         /* public methods */
         spi();
-        void initialize(handle_t* _spi_handle, hal_spi_t* _spi_instance, callback_id_t _complete_callback_id, spi_callback_ptr_t _complete_callback_ptr, callback_id_t _error_callback_id, spi_callback_ptr_t _error_callback_ptr);
+        void initialize(handle_t* _spi_handle, hal_spi_t* _spi_instance, uint8_t _use_crc, callback_id_t _complete_callback_id, spi_callback_ptr_t _complete_callback_ptr, callback_id_t _error_callback_id, spi_callback_ptr_t _error_callback_ptr);
         spi::procedure_status_t create_channel(id_number_t& _channel_id, uint8_t _packet_size, uint8_t _tx_size, port_name_t _chip_select_port, uint16_t _chip_select_pin);
         procedure_status_t transmit(id_number_t _channel_id, uint8_t _total_byte_count, uint8_t _tx_size, const uint8_t* _tx_bytes);
         void process_send_buffer();
@@ -352,6 +352,10 @@ class spi : public resource
         friend void dma_abort_on_error(dma_handle_t *dma_handle);
         friend void spi_irq_handler(spi* spi_object);
 
+        friend void spi_rx_2_line_8_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module);
+        friend void spi_rx_2_line_16_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module);
+        friend void spi_rx_1_line_8_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module);
+        friend void spi_rx_1_line_16_bit_isr_with_crc(spi _spi_object, struct spi::_handle_t *_module);
         friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
         friend void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
         friend void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);

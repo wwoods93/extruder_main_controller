@@ -158,7 +158,7 @@ namespace sys_op::comms_handler
 //                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
 //                initialize_system_manifests();
 //                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
-                hal::spi_2.initialize(&spi_2_handle, SPI_2, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
+                hal::spi_2.initialize(&spi_2_handle, SPI_2, 0U, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
                 device_config_t device;
                 for (uint8_t index = 0; index < meta_structure::get_device_manifest_size(); ++index)
                 {

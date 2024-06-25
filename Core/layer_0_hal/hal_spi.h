@@ -33,84 +33,14 @@
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_resource.h"
 
-    #define SPI_REGISTER_CALLBACK_COUNT         10U
-    #define SPI_REGISTER_CALLBACK_MIN_ID        0U
-    #define SPI_REGISTER_CALLBACK_MAX_ID        9U
 
-
-    static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE                    = 0U;
-    static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR               = 1U;
-    static constexpr uint8_t    SPI_PROCEDURE_STATE_DATA_ERROR              = 2U;
-    // control register 1 (CR1)
-
-
-    static constexpr uint8_t    SPI_ERROR_NONE                              = (0x00000000U);
-    static constexpr uint8_t    SPI_ERROR_MODE_FAULT                        = (0x00000001U);
-    static constexpr uint8_t    SPI_ERROR_DURING_CRC_CALCULATION            = (0x00000002U);
-    static constexpr uint8_t    SPI_ERROR_OVERRUN                           = (0x00000004U);
-    static constexpr uint8_t    SPI_ERROR_TI_MODE_FRAME_FORMAT              = (0x00000008U);
-    static constexpr uint8_t    SPI_ERROR_DMA_TRANSFER                      = (0x00000010U);
-    static constexpr uint8_t    SPI_ERROR_WAITING_FOR_FLAG                  = (0x00000020U);
-    static constexpr uint8_t    SPI_ERROR_DURING_ABORT                      = (0x00000040U);
-    static constexpr uint8_t    SPI_ERROR_CALLBACK_INVALID                  = (0x00000080U);
-
-    static constexpr uint32_t   SPI_FLAG_RX_BUFFER_NOT_EMPTY                = STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY;
-    static constexpr uint32_t   SPI_FLAG_TX_BUFFER_EMPTY                    = STM_HAL_SPI_SR_TX_BUFFER_EMPTY;
-    static constexpr uint32_t   SPI_FLAG_BUSY                               = STM_HAL_SPI_SR_BUSY;
-    static constexpr uint32_t   SPI_FLAG_CRC_ERROR                          = STM_HAL_SPI_SR_CRC_ERROR;
-    static constexpr uint32_t   SPI_FLAG_MODE_FAULT                         = STM_HAL_SPI_SR_MODE_FAULT;
-    static constexpr uint32_t   SPI_FLAG_OVERRUN                            = STM_HAL_SPI_SR_OVERRUN;
-    static constexpr uint32_t   SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR         = STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR;
-    static constexpr uint32_t   SPI_FLAGS_BIT_MASK                          = (STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY | STM_HAL_SPI_SR_TX_BUFFER_EMPTY | STM_HAL_SPI_SR_BUSY
-                                                                                | STM_HAL_SPI_SR_CRC_ERROR | STM_HAL_SPI_SR_MODE_FAULT | STM_HAL_SPI_SR_OVERRUN
-                                                                                | STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR);
-    static constexpr uint32_t   SPI_MODE_PERIPHERAL                         = (0x00000000U);
-    static constexpr uint32_t   SPI_MODE_CONTROLLER                         = (SPI_CR1_CONTROLLER_MODE_BIT | SPI_CR1_INTERNAL_CHIP_SELECT_BIT);
-    static constexpr uint32_t   SPI_DIRECTION_2_LINE                        = (0x00000000U);
-    static constexpr uint32_t   SPI_DIRECTION_2_LINE_RX_ONLY                = SPI_CR1_RECEIVE_ONLY_BIT;
-    static constexpr uint32_t   SPI_DIRECTION_1_LINE                        = SPI_BIDIRECTIONAL_OUTPUT_ENABLE_BIT;
-    static constexpr uint32_t   SPI_DATA_SIZE_8_BIT                         = (0x00000000U);
-    static constexpr uint32_t   SPI_DATA_SIZE_16_BIT                        = SPI_CR1_DATA_FRAME_FORMAT_BIT;
-    static constexpr uint32_t   SPI_DATA_MSB_FIRST                          = (0x00000000U);
-    static constexpr uint32_t   SPI_DATA_LSB_FIRST                          = SPI_CR1_LSB_FIRST_BIT;
-    static constexpr uint32_t   SPI_CLOCK_POLARITY_LOW                      = (0x00000000U);
-    static constexpr uint32_t   SPI_CLOCK_POLARITY_HIGH                     = SPI_CR1_CLOCK_POLARITY_BIT;
-    static constexpr uint32_t   SPI_CLOCK_PHASE_LEADING_EDGE                = (0x00000000U);
-    static constexpr uint32_t   SPI_CLOCK_PHASE_TRAILING_EDGE               = SPI_CR1_CLOCK_PHASE_BIT;
-    static constexpr uint32_t   SPI_CHIP_SELECT_SOFTWARE                    = SPI_CR1_SOFTWARE_CHIP_SELECT_BIT;
-    static constexpr uint32_t   SPI_CHIP_SELECT_HARDWARE_INPUT              = (0x00000000U);
-    static constexpr uint32_t   SPI_CHIP_SELECT_HARDWARE_OUTPUT             = (STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE << 16U);
-
-    static constexpr uint32_t   SPI_CRC_POLYNOMIAL_REG                      = STM_HAL_SPI_CRC_POLYNOMIAL_REG;
-    static constexpr uint16_t   SPI_CRC_POLYNOMIAL_MIN                      = (0x0001U);
-    static constexpr uint32_t   SPI_CRC_POLYNOMIAL_MAX                      = (0xFFFFU);
-
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_2                   = (0x00000000U);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_4                   = (SPI_CR1_BAUD_RATE_0_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_8                   = (SPI_CR1_BAUD_RATE_1_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_16                  = (SPI_CR1_BAUD_RATE_1_BIT | SPI_CR1_BAUD_RATE_0_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_32                  = (SPI_CR1_BAUD_RATE_2_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_64                  = (SPI_CR1_BAUD_RATE_2_BIT | SPI_CR1_BAUD_RATE_0_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_128                 = (SPI_CR1_BAUD_RATE_2_BIT | SPI_CR1_BAUD_RATE_1_BIT);
-    static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_256                 = (SPI_CR1_BAUD_RATE_2_BIT | SPI_CR1_BAUD_RATE_1_BIT | SPI_CR1_BAUD_RATE_0_BIT);
-
-    static constexpr uint32_t   SPI_TI_MODE_DISABLE                         = (0x00000000U);
-    static constexpr uint32_t   SPI_TI_MODE_ENABLE                          = STM_HAL_SPI_CR2_FRAME_FORMAT;
-    static constexpr uint32_t   SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE        = STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE;
-    static constexpr uint32_t   SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE    = STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE;
-    static constexpr uint32_t   SPI_ERROR_INTERRUPT_ENABLE                  = STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE;
-    static constexpr uint32_t   SPI_DEFAULT_TIMEOUT_100_US                  = 100U;
-    static constexpr uint32_t   SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US   = 1000U;
-    static constexpr uint32_t   SPI_CRC_CALCULATION_DISABLE                 = (0x00000000U);
-    static constexpr uint32_t   SPI_CRC_CALCULATION_ENABLE                  = SPI_CR1_CRC_ENABLE_BIT;
-    static constexpr uint32_t   SPI_I2S_MODE_SELECT                         = STM_HAL_SPI_I2S_MODE_SELECT;
 
     /* macros */
 
     #define STM_HAL_DMA_ENABLE(__HANDLE__)                      ((__HANDLE__)->instance->CONFIG_REG |=  STM_HAL_DMA_SxCR_ENABLE)
     #define STM_HAL_DMA_DISABLE(__HANDLE__)                     ((__HANDLE__)->instance->CONFIG_REG &=  ~STM_HAL_DMA_SxCR_ENABLE)
-    #define SPI_ENABLE_MODULE(__HANDLE__)                       REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_SPI_ENABLE_BIT)
-    #define SPI_DISABLE_MODULE(__HANDLE__)                      REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_SPI_ENABLE_BIT)
+    #define SPI_ENABLE_MODULE(__HANDLE__)                       REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE)
+    #define SPI_DISABLE_MODULE(__HANDLE__)                      REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE)
     #define SPI_ENABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)    REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
     #define SPI_DISABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)   REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
     #define SPI_GET_STATUS_REG_BIT(__HANDLE__, __BIT__)         ((((__HANDLE__)->instance->STATUS_REG) & (__BIT__)) == (__BIT__))
@@ -119,40 +49,12 @@
     #define SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(__MODE__)       ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)
     #define SPI_VERIFY_DIRECTION_1_LINE(__MODE__)               ((__MODE__) == SPI_DIRECTION_1_LINE)
     #define SPI_CHECK_INTERRUPT_SOURCE(__CR2__, __INTERRUPT__)  ((((__CR2__) & (__INTERRUPT__)) == (__INTERRUPT__)) ? FLAG_SET : FLAG_RESET)
-    #define SPI_CLEAR_CRC_ERROR(__HANDLE__)                     ((__HANDLE__)->instance->DATA_REG = (uint16_t)(~STM_HAL_SPI_SR_CRC_ERROR))
+    #define SPI_CLEAR_CRC_ERROR(__HANDLE__)                     ((__HANDLE__)->instance->DATA_REG = (uint16_t)(~SPI_SR_BIT_CRC_ERROR))
 
 class spi : public resource
 {
     public:
 
-        static constexpr uint8_t SPI_TRANSACTION_NOT_IN_PROGRESS            = 0U;
-        static constexpr uint8_t SPI_TRANSACTION_IN_PROGRESS                = 1U;
-        static constexpr uint8_t SPI_TRANSACTION_COMPLETE                   = 2U;
-
-        static constexpr uint8_t SPI_USER_CHANNELS_MAX                      = 8U;
-        static constexpr uint8_t SPI_BYTE_COUNT_MAX                         = 8U;
-
-        static constexpr uint8_t ACTIVE_LOW                                 = 0U;
-        static constexpr uint8_t CHIP_SELECT_LOGIC_LEVEL                    = ACTIVE_LOW;
-        static constexpr uint8_t CHIP_SELECT_SET                            = CHIP_SELECT_LOGIC_LEVEL;
-        static constexpr uint8_t CHIP_SELECT_RESET                          = !CHIP_SELECT_LOGIC_LEVEL;
-
-        static constexpr uint8_t CHANNEL_0                                  = 0U;
-        static constexpr uint8_t CHANNEL_1                                  = 1U;
-        static constexpr uint8_t CHANNEL_2                                  = 2U;
-        static constexpr uint8_t CHANNEL_3                                  = 3U;
-        static constexpr uint8_t CHANNEL_4                                  = 4U;
-        static constexpr uint8_t CHANNEL_5                                  = 5U;
-        static constexpr uint8_t CHANNEL_6                                  = 6U;
-        static constexpr uint8_t CHANNEL_7                                  = 7U;
-
-        static constexpr uint8_t SPI_INIT_PROTOCOL_ERROR                    = 0U;
-        static constexpr uint8_t SPI_INIT_REGISTER_CALLBACKS_ERROR          = 1U;
-        static constexpr uint8_t SPI_INIT_DATA_STRUCTURES_ERROR             = 2U;
-        static constexpr uint8_t SPI_INIT_RESET_CHIP_SELECTS_ERROR          = 3U;
-
-
-        /* type definitions */
         typedef enum
         {
             PROCEDURE_STATUS_OK                 = 0x00U,
@@ -352,7 +254,7 @@ class spi : public resource
 inline void spi::clear_mode_fault_flag() const
 {
     UNUSED_CAST_VOID(REGISTER_READ(module->instance->STATUS_REG));
-    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_SPI_ENABLE_BIT);
+    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE);
 }
 
 inline void spi::clear_overrun_flag() const

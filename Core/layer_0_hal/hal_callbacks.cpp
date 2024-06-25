@@ -44,13 +44,13 @@ void hal_callbacks_set_spi_rx_data_ready_flag(uint8_t status)
 
 void hal_callbacks_assert_spi_chip_select(spi::handle_t* _module)
 {
-    if (HAL_GPIO_ReadPin(_module->chip_select.port, _module->chip_select.pin) == spi::CHIP_SELECT_RESET)
-        HAL_GPIO_WritePin(_module->chip_select.port, _module->chip_select.pin, (GPIO_PinState) spi::CHIP_SELECT_SET);
+    if (HAL_GPIO_ReadPin(_module->chip_select.port, _module->chip_select.pin) == CHIP_SELECT_RESET)
+        HAL_GPIO_WritePin(_module->chip_select.port, _module->chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
 }
 void hal_callbacks_deassert_spi_chip_select(spi::handle_t* _module)
 {
-    if (HAL_GPIO_ReadPin(_module->chip_select.port, _module->chip_select.pin) == spi::CHIP_SELECT_SET)
-        HAL_GPIO_WritePin(_module->chip_select.port, _module->chip_select.pin, (GPIO_PinState) spi::CHIP_SELECT_RESET);
+    if (HAL_GPIO_ReadPin(_module->chip_select.port, _module->chip_select.pin) == CHIP_SELECT_SET)
+        HAL_GPIO_WritePin(_module->chip_select.port, _module->chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)

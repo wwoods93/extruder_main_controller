@@ -89,14 +89,14 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* arg_module, hal_spi_t
 
     module->state = SPI_STATE_RESET;
     module->instance = arg_instance;
-    module->init.mode = SPI_MODE_CONTROLLER;
-    module->init.direction = SPI_DIRECTION_2_LINE;
-    module->init.data_size = SPI_DATA_SIZE_8_BIT;
-    module->init.clock_polarity = SPI_CLOCK_POLARITY_LOW;
+    module->init.mode = SPI_CONFIG_MODE_CONTROLLER;
+    module->init.direction = SPI_CONFIG_DIRECTION_2_LINE;
+    module->init.data_size = SPI_CONFIG_DATA_SIZE_8_BIT;
+    module->init.clock_polarity = SPI_CONFIG_CLOCK_POLARITY_LOW;
     module->init.clock_phase = SPI_PHASE_2EDGE;
-    module->init.chip_select_setting = SPI_CHIP_SELECT_SOFTWARE;
-    module->init.baud_rate_prescaler = SPI_BAUD_RATE_PRESCALER_16;
-    module->init.first_bit_setting = SPI_DATA_MSB_FIRST;
+    module->init.chip_select_setting = SPI_CONFIG_CHIP_SELECT_SOFTWARE;
+    module->init.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_16;
+    module->init.first_bit_setting = SPI_CONFIG_DATA_MSB_FIRST;
     module->init.ti_mode = SPI_TI_MODE_DISABLE;
     module->init.crc_calculation = SPI_CRC_CALCULATION_DISABLE;
     module->init.crc_polynomial = 10U;
@@ -104,36 +104,36 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* arg_module, hal_spi_t
     if (module == nullptr)                                                      { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
         && module->instance != SPI_3 && module->instance != SPI_4)              { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.mode != SPI_MODE_CONTROLLER
-        && module->init.mode != SPI_MODE_PERIPHERAL)                            { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.direction != SPI_DIRECTION_2_LINE
-        && module->init.direction != SPI_DIRECTION_2_LINE_RX_ONLY
-        && module->init.direction != SPI_DIRECTION_1_LINE)                      { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.data_size != SPI_DATA_SIZE_8_BIT
-        && module->init.data_size != SPI_DATA_SIZE_16_BIT)                      { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.clock_polarity != SPI_CLOCK_POLARITY_LOW
-        && module->init.clock_polarity != SPI_CLOCK_POLARITY_HIGH)              { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.clock_phase != SPI_CLOCK_PHASE_LEADING_EDGE
-        && module->init.clock_phase != SPI_CLOCK_PHASE_TRAILING_EDGE)           { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.chip_select_setting != SPI_CHIP_SELECT_SOFTWARE
-        && module->init.chip_select_setting != SPI_CHIP_SELECT_HARDWARE_INPUT
-        && module->init.chip_select_setting != SPI_CHIP_SELECT_HARDWARE_OUTPUT) { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_2
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_4
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_8
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_16
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_32
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_64
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_128
-        && module->init.baud_rate_prescaler != SPI_BAUD_RATE_PRESCALER_256)     { status = PROCEDURE_STATUS_ERROR; }
-    if (module->init.first_bit_setting != SPI_DATA_MSB_FIRST
-        && module->init.first_bit_setting != SPI_DATA_LSB_FIRST)                { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.mode != SPI_CONFIG_MODE_CONTROLLER
+        && module->init.mode != SPI_CONFIG_MODE_PERIPHERAL)                            { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.direction != SPI_CONFIG_DIRECTION_2_LINE
+        && module->init.direction != SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY
+        && module->init.direction != SPI_CONFIG_DIRECTION_1_LINE)                      { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.data_size != SPI_CONFIG_DATA_SIZE_8_BIT
+        && module->init.data_size != SPI_CONFIG_DATA_SIZE_16_BIT)                      { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.clock_polarity != SPI_CONFIG_CLOCK_POLARITY_LOW
+        && module->init.clock_polarity != SPI_CONFIG_CLOCK_POLARITY_HIGH)              { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.clock_phase != SPI_CONFIG_CLOCK_PHASE_LEADING_EDGE
+        && module->init.clock_phase != SPI_CONFIG_CLOCK_PHASE_TRAILING_EDGE)           { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.chip_select_setting != SPI_CONFIG_CHIP_SELECT_SOFTWARE
+        && module->init.chip_select_setting != SPI_CONFIG_CHIP_SELECT_HARDWARE_INPUT
+        && module->init.chip_select_setting != SPI_CONFIG_CHIP_SELECT_HARDWARE_OUTPUT) { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_2
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_4
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_8
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_16
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_32
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_64
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_128
+        && module->init.baud_rate_prescaler != SPI_CONFIG_BAUD_RATE_PRESCALER_256)     { status = PROCEDURE_STATUS_ERROR; }
+    if (module->init.first_bit_setting != SPI_CONFIG_DATA_MSB_FIRST
+        && module->init.first_bit_setting != SPI_CONFIG_DATA_LSB_FIRST)                { status = PROCEDURE_STATUS_ERROR; }
     if (module->init.ti_mode != SPI_TI_MODE_DISABLE
-        && module->init.ti_mode != SPI_TI_MODE_ENABLE)                          { status = PROCEDURE_STATUS_ERROR; }
+        && module->init.ti_mode != SPI_CONFIG_TI_MODE_ENABLE)                          { status = PROCEDURE_STATUS_ERROR; }
 
     if (use_crc != 0U)
     {
-        if (module->init.crc_calculation != SPI_CR1_CRC_ENABLE_BIT && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)
+        if (module->init.crc_calculation != SPI_CR1_BIT_CRC_ENABLE && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)
         {
             status = PROCEDURE_STATUS_ERROR;
         }
@@ -172,18 +172,18 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* arg_module, hal_spi_t
     SPI_DISABLE_MODULE(module);
 
     WRITE_REG(module->instance->CONTROL_REG_1, (
-        (module->init.mode & (SPI_CR1_CONTROLLER_MODE_BIT | SPI_CR1_INTERNAL_CHIP_SELECT_BIT)) |
-        (module->init.direction & (SPI_CR1_RECEIVE_ONLY_BIT | SPI_CR1_BIDIRECTIONAL_MODE_BIT)) |
-        (module->init.data_size & SPI_CR1_DATA_FRAME_FORMAT_BIT) |
-        (module->init.clock_polarity & SPI_CR1_CLOCK_POLARITY_BIT) |
-        (module->init.clock_phase & SPI_CR1_CLOCK_PHASE_BIT) |
-        (module->init.chip_select_setting & SPI_CR1_SOFTWARE_CHIP_SELECT_BIT) |
-        (module->init.baud_rate_prescaler & SPI_CR1_BAUD_RATE_BIT_MASK) |
-        (module->init.first_bit_setting & SPI_CR1_LSB_FIRST_BIT) |
-        (module->init.crc_calculation & SPI_CR1_CRC_ENABLE_BIT)));
+        (module->init.mode & (SPI_CR1_BIT_CONTROLLER_MODE | SPI_CR1_BIT_INTERNAL_CHIP_SELECT)) |
+        (module->init.direction & (SPI_CR1_BIT_RECEIVE_ONLY | SPI_CR1_BIT_BIDIRECTIONAL_MODE)) |
+        (module->init.data_size & SPI_CR1_BIT_DATA_FRAME_FORMAT) |
+        (module->init.clock_polarity & SPI_CR1_BIT_CLOCK_POLARITY) |
+        (module->init.clock_phase & SPI_CR1_BIT_CLOCK_PHASE) |
+        (module->init.chip_select_setting & SPI_CR1_BIT_SOFTWARE_CHIP_SELECT) |
+        (module->init.baud_rate_prescaler & SPI_CR1_BIT_BAUD_RATE_MASK) |
+        (module->init.first_bit_setting & SPI_CR1_BIT_LSB_FIRST) |
+        (module->init.crc_calculation & SPI_CR1_BIT_CRC_ENABLE)));
     WRITE_REG(module->instance->CONTROL_REG_2, (((module->init.chip_select_setting >> 16U) & SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE) | (module->init.ti_mode & SPI_CR2_FRAME_FORMAT)));
 
-    if (use_crc != 0U && module->init.crc_calculation == SPI_CR1_CRC_ENABLE_BIT)
+    if (use_crc != 0U && module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
     {
         WRITE_REG(module->instance->CRC_POLYNOMIAL_REG, (module->init.crc_polynomial & SPI_CRC_POLYNOMIAL_REG));
     }
@@ -517,12 +517,12 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *arg_rx_data
     }
 
     assert_param(SPI_VERIFY_DIRECTION_2_LINE(module->init.direction));
-    verify_communication_direction(SPI_DIRECTION_2_LINE);
+    verify_communication_direction(SPI_CONFIG_DIRECTION_2_LINE);
 
     lock_module();
 
-    if (! ((module->state == SPI_STATE_READY) || ((module->init.mode == SPI_MODE_CONTROLLER)
-                                                  && (module->init.direction == SPI_DIRECTION_2_LINE) && (module->state == SPI_STATE_BUSY_RX))))
+    if (! ((module->state == SPI_STATE_READY) || ((module->init.mode == SPI_CONFIG_MODE_CONTROLLER)
+                                                  && (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE) && (module->state == SPI_STATE_BUSY_RX))))
     {
         error = SPI_PROCEDURE_STATE_BUS_ERROR;
     }
@@ -537,7 +537,7 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *arg_rx_data
 
     assert_chip_select();
 
-    SPI_ENABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_ENABLE_INTERRUPTS(module, (SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     if ((module->instance->CONTROL_REG_1 & SPI_CR1_SPE) != SPI_CR1_SPE)
     {
@@ -890,7 +890,7 @@ void spi_rx_2_line_8_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg
     REGISTER_READ(register_contents);
     UNUSED_CAST_VOID(register_contents);
 
-    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     if (arg_module->tx_transfer_counter == 0U)
     {
@@ -903,7 +903,7 @@ void spi_rx_2_line_16_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *ar
     volatile uint32_t register_contents = REGISTER_READ(arg_module->instance->DATA_REG);
     REGISTER_READ(register_contents);
     UNUSED_CAST_VOID(register_contents);
-    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     if (arg_module->tx_transfer_counter == 0U)
     {
@@ -917,7 +917,7 @@ void spi_rx_1_line_8_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg
     REGISTER_READ(register_contents);
     UNUSED_CAST_VOID(register_contents);
 
-    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     arg_object.close_rx_isr();
 }
@@ -928,7 +928,7 @@ void spi_rx_1_line_16_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *ar
     REGISTER_READ(register_contents);
     UNUSED_CAST_VOID(register_contents);
 
-    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(arg_module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     arg_object.close_rx_isr();
 }
@@ -942,14 +942,14 @@ void spi_tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 
     if (arg_module->tx_transfer_counter == 0U)
     {
-        if (arg_object.use_crc != 0U && arg_object.module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        if (arg_object.use_crc != 0U && arg_object.module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
         {
-            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT_BIT);
-            SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_BIT_SEND_CRC_NEXT);
+            SPI_DISABLE_INTERRUPTS(arg_module, SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
             return;
         }
 
-        SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(arg_module, SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
 
         arg_object.close_tx_rx_isr();
     }
@@ -964,13 +964,13 @@ void spi_rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 
     if (arg_module->rx_transfer_counter == 0U)
     {
-        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
         {
             arg_module->rx_isr_ptr =  spi_rx_2_line_8_bit_isr_with_crc;
             return;
         }
 
-        SPI_DISABLE_INTERRUPTS(arg_module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+        SPI_DISABLE_INTERRUPTS(arg_module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
         if (arg_module->tx_transfer_counter == 0U)
         {
@@ -989,14 +989,14 @@ void spi_tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
     if (arg_module->tx_transfer_counter == 0U)
     {
 
-        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
         {
-            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT_BIT);
-            SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_BIT_SEND_CRC_NEXT);
+            SPI_DISABLE_INTERRUPTS(arg_module, SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
             return;
         }
 
-        SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(arg_module, SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
 
         if (arg_module->rx_transfer_counter == 0U)
         {
@@ -1014,13 +1014,13 @@ void spi_rx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 
     if (arg_module->rx_transfer_counter == 0U)
     {
-        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+        if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
         {
             arg_module->rx_isr_ptr =  spi_rx_2_line_16_bit_isr_with_crc;
             return;
         }
 
-        SPI_DISABLE_INTERRUPTS(arg_module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
+        SPI_DISABLE_INTERRUPTS(arg_module, SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
 
         if (arg_module->tx_transfer_counter == 0U)
         {
@@ -1033,9 +1033,9 @@ void spi::close_tx_rx_isr()
 {
     volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
 
-    SPI_DISABLE_INTERRUPTS(module, SPI_ERROR_INTERRUPT_ENABLE);
+    SPI_DISABLE_INTERRUPTS(module, SPI_CONFIG_ERROR_INTERRUPT_ENABLE);
 
-    while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
+    while ((module->instance->STATUS_REG & SPI_SR_BIT_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
     {
         count--;
     }
@@ -1050,12 +1050,12 @@ void spi::close_tx_rx_isr()
         REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
     }
 
-    if (module->init.direction == SPI_DIRECTION_2_LINE)
+    if (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE)
     {
         clear_overrun_flag();
     }
 
-    if (use_crc != 0U && SPI_GET_STATUS_REG_BIT(module, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
+    if (use_crc != 0U && SPI_GET_STATUS_REG_BIT(module, SPI_SR_BIT_CRC_ERROR) != FLAG_RESET)
     {
         module->state = SPI_STATE_READY;
 
@@ -1091,7 +1091,7 @@ void spi::close_tx_isr()
 {
     volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
 
-    while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
+    while ((module->instance->STATUS_REG & SPI_SR_BIT_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
     {
         count--;
     }
@@ -1101,14 +1101,14 @@ void spi::close_tx_isr()
         REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
     }
 
-    SPI_DISABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(module, (SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     if (end_tx_rx_transaction(SPI_DEFAULT_TIMEOUT_100_US) != PROCEDURE_STATUS_OK)
     {
         REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
     }
 
-    if (module->init.direction == SPI_DIRECTION_2_LINE)
+    if (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE)
     {
         clear_overrun_flag();
     }
@@ -1127,21 +1127,21 @@ void spi::close_tx_isr()
 
 void spi::close_rx_isr()
 {
-    SPI_DISABLE_INTERRUPTS(module, (SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    SPI_DISABLE_INTERRUPTS(module, (SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     if (end_rx_transaction(SPI_DEFAULT_TIMEOUT_100_US) != PROCEDURE_STATUS_OK)
     {
         REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
     }
 
-    if (module->init.direction == SPI_DIRECTION_2_LINE)
+    if (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE)
     {
         clear_overrun_flag();
     }
 
     module->state = SPI_STATE_READY;
 
-    if (use_crc != 0U && SPI_GET_STATUS_REG_BIT(module, SPI_FLAG_CRC_ERROR) != FLAG_RESET)
+    if (use_crc != 0U && SPI_GET_STATUS_REG_BIT(module, SPI_SR_BIT_CRC_ERROR) != FLAG_RESET)
     {
         REGISTER_SET_BIT(module->error_code, SPI_ERROR_DURING_CRC_CALCULATION);
         SPI_CLEAR_CRC_ERROR(module);
@@ -1164,9 +1164,9 @@ spi::procedure_status_t spi::end_tx_rx_transaction(uint32_t arg_timeout)
 {
     volatile uint32_t count = SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US * (SystemCoreClock / 24U / 1000000U);
 
-    if (module->init.mode == SPI_MODE_CONTROLLER)
+    if (module->init.mode == SPI_CONFIG_MODE_CONTROLLER)
     {
-        if (wait_for_status_register_bit(SPI_FLAG_BUSY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
+        if (wait_for_status_register_bit(SPI_SR_BIT_RESOURCE_BUSY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
         {
             REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
 
@@ -1175,7 +1175,7 @@ spi::procedure_status_t spi::end_tx_rx_transaction(uint32_t arg_timeout)
     }
     else
     {
-        while (SPI_GET_STATUS_REG_BIT(module, SPI_FLAG_BUSY) != FLAG_RESET && count > 0U)
+        while (SPI_GET_STATUS_REG_BIT(module, SPI_SR_BIT_RESOURCE_BUSY) != FLAG_RESET && count > 0U)
         {
             count--;
         }
@@ -1185,15 +1185,15 @@ spi::procedure_status_t spi::end_tx_rx_transaction(uint32_t arg_timeout)
 
 spi::procedure_status_t spi::end_rx_transaction(uint32_t arg_timeout)
 {
-    if ((module->init.mode == SPI_MODE_MASTER) && ((module->init.direction == SPI_DIRECTION_1_LINE) || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+    if ((module->init.mode == SPI_MODE_MASTER) && ((module->init.direction == SPI_CONFIG_DIRECTION_1_LINE) || (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)))
     {
         SPI_DISABLE_MODULE(module);
     }
     if (module->init.mode == SPI_MODE_MASTER)
     {
-        if (module->init.direction != SPI_DIRECTION_2_LINE_RX_ONLY)
+        if (module->init.direction != SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)
         {
-            if (wait_for_status_register_bit(SPI_FLAG_BUSY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
+            if (wait_for_status_register_bit(SPI_SR_BIT_RESOURCE_BUSY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
             {
                 REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
 
@@ -1202,7 +1202,7 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t arg_timeout)
         }
         else
         {
-            if (wait_for_status_register_bit(SPI_FLAG_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
+            if (wait_for_status_register_bit(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
             {
                 REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
 
@@ -1212,7 +1212,7 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t arg_timeout)
     }
     else
     {
-        if (wait_for_status_register_bit(SPI_FLAG_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
+        if (wait_for_status_register_bit(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout) != PROCEDURE_STATUS_OK)
         {
             REGISTER_SET_BIT(module->error_code, SPI_ERROR_WAITING_FOR_FLAG);
 
@@ -1225,7 +1225,7 @@ spi::procedure_status_t spi::end_rx_transaction(uint32_t arg_timeout)
 
 void spi::abort_tx_isr()
 {
-    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE));
+    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE));
     SPI_DISABLE_MODULE(module);
 
     module->state = SPI_STATE_ABORT;
@@ -1236,7 +1236,7 @@ void spi::abort_rx_isr()
     volatile uint32_t register_contents = 0U;
     volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
 
-    while ((module->instance->STATUS_REG & SPI_FLAG_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
+    while ((module->instance->STATUS_REG & SPI_SR_BIT_TX_BUFFER_EMPTY) == FLAG_RESET && count > 0U)
     {
         count--;
     }
@@ -1247,7 +1247,7 @@ void spi::abort_rx_isr()
     }
 
     SPI_DISABLE_MODULE(module);
-    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_2, (SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
     register_contents = REGISTER_READ(module->instance->DATA_REG);
     UNUSED_CAST_VOID(register_contents);
@@ -1288,27 +1288,27 @@ void spi_irq_handler(spi* arg_active_object)
     uint32_t interrupt_source = active_module->instance->CONTROL_REG_2;
     uint32_t interrupt_flag   = active_module->instance->STATUS_REG;
 
-    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) == FLAG_RESET)
-        && (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_RX_BUFFER_NOT_EMPTY) != FLAG_RESET)
-        && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
+    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_OVERRUN) == FLAG_RESET)
+        && (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_RX_BUFFER_NOT_EMPTY) != FLAG_RESET)
+        && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
     {
         active_module->rx_isr_ptr(*arg_active_object, active_module);
         return;
     }
 
-    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TX_BUFFER_EMPTY) != FLAG_RESET)
-        && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
+    if ((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_TX_BUFFER_EMPTY) != FLAG_RESET)
+        && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) != FLAG_RESET))
     {
         active_module->tx_isr_ptr(*arg_active_object, active_module);
         return;
     }
 
-    if (((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_MODE_FAULT) != FLAG_RESET)
-         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) != FLAG_RESET)
-         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET))
-         && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_ERROR_INTERRUPT_ENABLE) != FLAG_RESET))
+    if (((SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_MODE_FAULT) != FLAG_RESET)
+         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_OVERRUN) != FLAG_RESET)
+         || (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET))
+         && (SPI_CHECK_INTERRUPT_SOURCE(active_module->instance->CONTROL_REG_2, SPI_CONFIG_ERROR_INTERRUPT_ENABLE) != FLAG_RESET))
     {
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_OVERRUN) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_OVERRUN) != FLAG_RESET)
         {
             if (active_module->state != spi::SPI_STATE_BUSY_TX)
             {
@@ -1322,13 +1322,13 @@ void spi_irq_handler(spi* arg_active_object)
             }
         }
 
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_MODE_FAULT) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_MODE_FAULT) != FLAG_RESET)
         {
             REGISTER_SET_BIT(active_module->error_code, SPI_ERROR_MODE_FAULT);
             arg_active_object->clear_mode_fault_flag();
         }
 
-        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET)
+        if (SPI_CHECK_FLAG_STATUS(interrupt_flag, SPI_SR_BIT_TI_MODE_FRAME_FORMAT_ERROR) != FLAG_RESET)
         {
             REGISTER_SET_BIT(active_module->error_code, SPI_ERROR_TI_MODE_FRAME_FORMAT);
             arg_active_object->clear_ti_frame_format_error_flag();
@@ -1336,7 +1336,7 @@ void spi_irq_handler(spi* arg_active_object)
 
         if (active_module->error_code != SPI_ERROR_NONE)
         {
-            SPI_DISABLE_INTERRUPTS(active_module, SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE);
+            SPI_DISABLE_INTERRUPTS(active_module, SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE);
 
             active_module->state = spi::SPI_STATE_READY;
 
@@ -1407,7 +1407,7 @@ void spi::set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_d
 
 void spi::set_rx_and_tx_interrupt_service_routines() const
 {
-    if (module->init.data_size == SPI_DATA_SIZE_8_BIT)
+    if (module->init.data_size == SPI_CONFIG_DATA_SIZE_8_BIT)
     {
         module->rx_isr_ptr     = spi_rx_2_line_8_bit_isr;
         module->tx_isr_ptr     = spi_tx_2_line_8_bit_isr;
@@ -1435,17 +1435,17 @@ void spi::verify_communication_direction(uint32_t arg_intended_direction) const
 
     switch (arg_intended_direction)
     {
-        case SPI_DIRECTION_2_LINE:
+        case SPI_CONFIG_DIRECTION_2_LINE:
         {
             assert_param(SPI_VERIFY_DIRECTION_2_LINE(set_direction));
             break;
         }
-        case SPI_DIRECTION_2_LINE_RX_ONLY:
+        case SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY:
         {
             assert_param(SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(set_direction));
             break;
         }
-        case SPI_DIRECTION_1_LINE:
+        case SPI_CONFIG_DIRECTION_1_LINE:
         {
             assert_param(SPI_VERIFY_DIRECTION_1_LINE(set_direction));
             break;
@@ -1467,14 +1467,14 @@ spi::procedure_status_t spi::wait_for_status_register_bit(uint32_t arg_bit, bit_
         {
             if ((HAL_GetTick() - start_time_) >= arg_timeout)
             {
-                SPI_DISABLE_INTERRUPTS(module, (SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_ERROR_INTERRUPT_ENABLE));
+                SPI_DISABLE_INTERRUPTS(module, (SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CONFIG_ERROR_INTERRUPT_ENABLE));
 
-                if ((module->init.mode == SPI_MODE_CONTROLLER) && ((module->init.direction == SPI_DIRECTION_1_LINE) || (module->init.direction == SPI_DIRECTION_2_LINE_RX_ONLY)))
+                if ((module->init.mode == SPI_CONFIG_MODE_CONTROLLER) && ((module->init.direction == SPI_CONFIG_DIRECTION_1_LINE) || (module->init.direction == SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)))
                 {
                     SPI_DISABLE_MODULE(module);
                 }
 
-                if (module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+                if (module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
                 {
                     reset_enabled_crc();
                 }
@@ -1492,9 +1492,9 @@ spi::procedure_status_t spi::wait_for_status_register_bit(uint32_t arg_bit, bit_
 
 void spi::reset_enabled_crc() const
 {
-    if (module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
+    if (module->init.crc_calculation == SPI_CR1_BIT_CRC_ENABLE)
     {
-        REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE_BIT);
-        REGISTER_SET_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE_BIT);
+        REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_BIT_CRC_ENABLE);
+        REGISTER_SET_BIT(module->instance->CONTROL_REG_1, SPI_CR1_BIT_CRC_ENABLE);
     }
 }

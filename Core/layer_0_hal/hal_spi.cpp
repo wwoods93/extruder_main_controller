@@ -133,7 +133,7 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* arg_module, hal_spi_t
 
     if (use_crc != 0U)
     {
-        if (module->init.crc_calculation != SPI_CR1_CRC_ENABLE && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)
+        if (module->init.crc_calculation != SPI_CR1_CRC_ENABLE_BIT && module->init.crc_calculation != SPI_CR1_CRC_DISABLE)
         {
             status = PROCEDURE_STATUS_ERROR;
         }
@@ -172,18 +172,18 @@ spi::procedure_status_t spi::initialize_protocol(handle_t* arg_module, hal_spi_t
     SPI_DISABLE_MODULE(module);
 
     WRITE_REG(module->instance->CONTROL_REG_1, (
-        (module->init.mode & (SPI_CR1_MODE_CONTROLLER | SPI_CR1_INTERNAL_CHIP_SELECT)) |
-        (module->init.direction & (SPI_CR1_RECEIVE_ONLY | SPI_CR1_BIDIRECTIONAL_MODE)) |
-        (module->init.data_size & SPI_CR1_DATA_FRAME_FORMAT) |
-        (module->init.clock_polarity & SPI_CR1_CLOCK_POLARITY) |
-        (module->init.clock_phase & SPI_CR1_CLOCK_PHASE) |
-        (module->init.chip_select_setting & SPI_CR1_SOFTWARE_CHIP_SELECT) |
-        (module->init.baud_rate_prescaler & SPI_CR1_BAUD_RATE_CONTROL_MASK) |
-        (module->init.first_bit_setting & SPI_CR1_LSB_FIRST) |
-        (module->init.crc_calculation & SPI_CR1_CRC_ENABLE)));
+        (module->init.mode & (SPI_CR1_CONTROLLER_MODE_BIT | SPI_CR1_INTERNAL_CHIP_SELECT_BIT)) |
+        (module->init.direction & (SPI_CR1_RECEIVE_ONLY_BIT | SPI_CR1_BIDIRECTIONAL_MODE_BIT)) |
+        (module->init.data_size & SPI_CR1_DATA_FRAME_FORMAT_BIT) |
+        (module->init.clock_polarity & SPI_CR1_CLOCK_POLARITY_BIT) |
+        (module->init.clock_phase & SPI_CR1_CLOCK_PHASE_BIT) |
+        (module->init.chip_select_setting & SPI_CR1_SOFTWARE_CHIP_SELECT_BIT) |
+        (module->init.baud_rate_prescaler & SPI_CR1_BAUD_RATE_BIT_MASK) |
+        (module->init.first_bit_setting & SPI_CR1_LSB_FIRST_BIT) |
+        (module->init.crc_calculation & SPI_CR1_CRC_ENABLE_BIT)));
     WRITE_REG(module->instance->CONTROL_REG_2, (((module->init.chip_select_setting >> 16U) & SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE) | (module->init.ti_mode & SPI_CR2_FRAME_FORMAT)));
 
-    if (use_crc != 0U && module->init.crc_calculation == SPI_CR1_CRC_ENABLE)
+    if (use_crc != 0U && module->init.crc_calculation == SPI_CR1_CRC_ENABLE_BIT)
     {
         WRITE_REG(module->instance->CRC_POLYNOMIAL_REG, (module->init.crc_polynomial & SPI_CRC_POLYNOMIAL_REG));
     }
@@ -944,7 +944,7 @@ void spi_tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
     {
         if (arg_object.use_crc != 0U && arg_object.module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
         {
-            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT);
+            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT_BIT);
             SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
             return;
         }
@@ -964,7 +964,6 @@ void spi_rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 
     if (arg_module->rx_transfer_counter == 0U)
     {
-
         if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
         {
             arg_module->rx_isr_ptr =  spi_rx_2_line_8_bit_isr_with_crc;
@@ -992,7 +991,7 @@ void spi_tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 
         if (arg_object.use_crc != 0U && arg_module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
         {
-            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT);
+            REGISTER_SET_BIT(arg_module->instance->CONTROL_REG_1, SPI_CR1_SEND_CRC_NEXT_BIT);
             SPI_DISABLE_INTERRUPTS(arg_module, SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
             return;
         }
@@ -1260,7 +1259,7 @@ spi::procedure_status_t dma_abort_interrupt(dma_handle_t *arg_dma_handle)
 {
     if(arg_dma_handle->state != DMA_STATE_BUSY)
     {
-        arg_dma_handle->error_code = STM_HAL_DMA_ERROR_NO_XFER;
+        arg_dma_handle->error_code = SPI_DMA_ERROR_NO_TRANSFER;
         return spi::PROCEDURE_STATUS_ERROR;
     }
     else
@@ -1495,7 +1494,7 @@ void spi::reset_enabled_crc() const
 {
     if (module->init.crc_calculation == SPI_CRC_CALCULATION_ENABLE)
     {
-        REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE);
-        REGISTER_SET_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE);
+        REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE_BIT);
+        REGISTER_SET_BIT(module->instance->CONTROL_REG_1, SPI_CR1_CRC_ENABLE_BIT);
     }
 }

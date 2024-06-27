@@ -48,7 +48,7 @@ i2c::handle_t i2c_2_handle;
 
 void SPI2_IRQHandler()
 {
-    spi_irq_handler(get_spi_object());
+    hal::spi_object_ptr()->spi_irq_handler();
 }
 
 namespace driver
@@ -60,12 +60,14 @@ namespace driver
 namespace hal
 {
     spi spi_2;
+
+    spi* spi_object_ptr()
+    {
+        return &spi_2;
+    }
 }
 
-spi* get_spi_object()
-{
-    return &hal::spi_2;
-}
+
 
 spi::handle_t* get_spi_handle()
 {
@@ -116,7 +118,6 @@ namespace sys_op::comms_handler
     static spi::channel_t channel;
     id_number_t _channel_id = ID_INVALID;
     common_packet_t packet;
-//    static osMutexId_t comms_handler_spi_tx_data_buffer_mutex;
 
 
     void task_intitialize()

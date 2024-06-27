@@ -18,7 +18,11 @@
 #include "../layer_1_driver/driver_rtd.h"
 
 
-spi* get_spi_object();
+namespace hal
+{
+    spi* spi_object_ptr();
+}
+
 spi::handle_t* get_spi_handle();
 //rtd* get_rtd_object();
 

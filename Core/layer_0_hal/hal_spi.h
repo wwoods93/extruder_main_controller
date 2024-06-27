@@ -34,26 +34,19 @@
 #include "../meta_structure/meta_structure_resource.h"
 
 
-
-    /* macros */
-
-    #define STM_HAL_DMA_ENABLE(__HANDLE__)                      ((__HANDLE__)->instance->CONFIG_REG |=  STM_HAL_DMA_SxCR_ENABLE)
-    #define STM_HAL_DMA_DISABLE(__HANDLE__)                     ((__HANDLE__)->instance->CONFIG_REG &=  ~STM_HAL_DMA_SxCR_ENABLE)
-    #define SPI_ENABLE_MODULE(__HANDLE__)                       REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE)
-    #define SPI_DISABLE_MODULE(__HANDLE__)                      REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE)
-    #define SPI_ENABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)    REGISTER_SET_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
-    #define SPI_DISABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)   REGISTER_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
-    #define SPI_GET_STATUS_REG_BIT(__HANDLE__, __BIT__)         ((((__HANDLE__)->instance->STATUS_REG) & (__BIT__)) == (__BIT__))
-    #define SPI_CHECK_FLAG_STATUS(__SR__, __FLAG__)             ((((__SR__) & ((__FLAG__) & SPI_FLAG_MASK)) == ((__FLAG__) & SPI_FLAG_MASK)) ? FLAG_SET : FLAG_RESET)
-    #define SPI_VERIFY_DIRECTION_2_LINE(__MODE__)               ((__MODE__) == SPI_DIRECTION_2_LINE)
-    #define SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(__MODE__)       ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)
-    #define SPI_VERIFY_DIRECTION_1_LINE(__MODE__)               ((__MODE__) == SPI_DIRECTION_1_LINE)
-    #define SPI_CHECK_INTERRUPT_SOURCE(__CR2__, __INTERRUPT__)  ((((__CR2__) & (__INTERRUPT__)) == (__INTERRUPT__)) ? FLAG_SET : FLAG_RESET)
-    #define SPI_CLEAR_CRC_ERROR(__HANDLE__)                     ((__HANDLE__)->instance->DATA_REG = (uint16_t)(~SPI_SR_BIT_CRC_ERROR))
-
 class spi : public resource
 {
     public:
+
+        typedef enum
+        {
+            DATA_REG_ID                         = 0x00U,
+            STATUS_REG_ID                       = 0x01U,
+            CONTROL_REG_1_ID                    = 0x02U,
+            CONTROL_REG_2_ID                    = 0x03U,
+            ERROR_CODE_BIT_FIELD_ID             = 0x04U,
+
+        } register_id_t;
 
         typedef enum
         {
@@ -204,9 +197,9 @@ class spi : public resource
         friend void spi_rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void spi_tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void spi_rx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend spi::procedure_status_t dma_abort_interrupt(dma_handle_t *arg_dma_handle);
+        friend spi::procedure_status_t dma_abort_interrupt(spi* arg_object, dma_handle_t *arg_dma_handle);
         friend void dma_abort_on_error(dma_handle_t *arg_dma_handle);
-        friend void spi_irq_handler(spi* arg_active_object);
+        void spi_irq_handler();
 
     private:
 
@@ -225,9 +218,9 @@ class spi : public resource
         void push_active_packet_to_return_buffer();
         procedure_status_t reset_active_packet();
         void reset_active_channel();
-        uint8_t calculate_number_of_transmissions_for_active_packet() const;
-        procedure_status_t spi_register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
-        procedure_status_t spi_unregister_callback(callback_id_t arg_callback_id) const;
+        [[nodiscard]] uint8_t calculate_number_of_transmissions_for_active_packet() const;
+        procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
+        [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
         void close_tx_rx_isr();
         void close_tx_isr();
         void close_rx_isr();
@@ -235,26 +228,138 @@ class spi : public resource
         procedure_status_t end_tx_rx_transaction(uint32_t arg_timeout);
         void abort_tx_isr();
         void abort_rx_isr();
-        procedure_status_t lock_module() const;
+        [[nodiscard]] procedure_status_t lock_module() const;
         void unlock_module() const;
         void set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const;
         void set_rx_and_tx_interrupt_service_routines() const;
-        comms_state_t get_module_communication_state() const;
-        uint32_t get_module_operating_mode() const;
+        [[nodiscard]] comms_state_t get_module_communication_state() const;
+        [[nodiscard]] uint32_t get_module_operating_mode() const;
         void verify_communication_direction(uint32_t arg_intended_direction) const;
-        procedure_status_t wait_for_status_register_bit(uint32_t arg_bit, bit_status_t arg_status, uint32_t arg_timeout) const;
+        [[nodiscard]] procedure_status_t wait_for_status_register_bit(uint32_t arg_bit, bit_status_t arg_bit_status, uint32_t arg_timeout) const;
 
+        void set_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
+        void clear_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
+        [[nodiscard]] bit_status_t get_status_register_bit(uint32_t arg_bit) const;
+        void enable_module() const;
+        void disable_module() const;
+        void set_error_bit(uint32_t arg_bit) const;
+        void enable_interrupts(uint32_t arg_interrupts) const;
+        bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
+        void disable_interrupts(uint32_t arg_interrupts) const;
         void reset_enabled_crc() const;
         void clear_mode_fault_flag() const;
         void clear_overrun_flag() const;
         void clear_ti_frame_format_error_flag() const;
+        void clear_crc_error() const;
+        static void enable_dma(dma_handle_t* arg_dma_module);
+        static void disable_dma(dma_handle_t* arg_dma_module);
 };
+
+
+inline void spi::set_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const
+{
+    switch(arg_register)
+    {
+        case CONTROL_REG_1_ID:
+        {
+            module->instance->CONTROL_REG_1 |= arg_bit;
+            break;
+        }
+        case CONTROL_REG_2_ID:
+        {
+            module->instance->CONTROL_REG_2 |= arg_bit;
+            break;
+        }
+        case ERROR_CODE_BIT_FIELD_ID:
+        {
+
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+inline void spi::clear_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const
+{
+    switch(arg_register)
+    {
+        case STATUS_REG_ID:
+        {
+            module->instance->STATUS_REG &= (~arg_bit);
+            break;
+        }
+        case CONTROL_REG_1_ID:
+        {
+            module->instance->CONTROL_REG_1 &= (~arg_bit);
+            break;
+        }
+        case CONTROL_REG_2_ID:
+        {
+            module->instance->CONTROL_REG_2 &= (~arg_bit);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
+inline bit_status_t spi::get_status_register_bit(uint32_t arg_bit) const
+{
+    bit_status_t bit_status = BIT_CLEAR;
+    if ((module->instance->STATUS_REG & arg_bit & SPI_SR_BITS_MASK) == (arg_bit & SPI_SR_BITS_MASK))
+    {
+        bit_status = BIT_SET;
+    }
+    return bit_status;
+}
+
+inline void spi::enable_module() const
+{
+    module->instance->CONTROL_REG_1 |= SPI_CR1_BIT_SPI_ENABLE;
+}
+
+inline void spi::disable_module() const
+{
+    clear_bit_spi_register_32(CONTROL_REG_1_ID, SPI_CR1_BIT_SPI_ENABLE);
+}
+
+inline void spi::set_error_bit(uint32_t arg_bit) const
+{
+    module->error_code |= arg_bit;
+}
+
+inline void spi::enable_interrupts(uint32_t arg_interrupts) const
+{
+    module->instance->CONTROL_REG_2 |= arg_interrupts;
+}
+
+inline bit_status_t spi::check_interrupt_source(uint32_t arg_interrupt) const
+{
+    bit_status_t bit_status = BIT_CLEAR;
+    if ((module->instance->CONTROL_REG_2 & arg_interrupt) == arg_interrupt)
+    {
+        bit_status = BIT_SET;
+    }
+
+    return bit_status;
+}
+
+inline void spi::disable_interrupts(uint32_t arg_interrupts) const
+{
+    module->instance->CONTROL_REG_2 &= (~arg_interrupts);
+}
+
 
 
 inline void spi::clear_mode_fault_flag() const
 {
-    UNUSED_CAST_VOID(REGISTER_READ(module->instance->STATUS_REG));
-    REGISTER_CLEAR_BIT(module->instance->CONTROL_REG_1, SPI_CR1_BIT_SPI_ENABLE);
+    uint32_t register_contents = module->instance->STATUS_REG;
+    UNUSED_CAST_VOID(register_contents);
+    clear_bit_spi_register_32(CONTROL_REG_1_ID, SPI_CR1_BIT_SPI_ENABLE);
 }
 
 inline void spi::clear_overrun_flag() const
@@ -266,6 +371,21 @@ inline void spi::clear_overrun_flag() const
 inline void spi::clear_ti_frame_format_error_flag() const
 {
     UNUSED_CAST_VOID(REGISTER_READ(module->instance->STATUS_REG));
+}
+
+inline void spi::clear_crc_error() const
+{
+    module->instance->STATUS_REG = (uint16_t)(SPI_SR_BIT_CRC_ERROR);
+}
+
+inline void spi::enable_dma(dma_handle_t* arg_dma_module)
+{
+    arg_dma_module->instance->STREAM_CONFIG_REG |= SPI_DMA_CONFIG_REG_BIT_ENABLE;
+}
+
+inline void spi::disable_dma(dma_handle_t* arg_dma_module)
+{
+    arg_dma_module->instance->STREAM_CONFIG_REG &= (~SPI_DMA_CONFIG_REG_BIT_ENABLE);
 }
 
 #endif //MAIN_CONTROLLER_HAL_SPI_H

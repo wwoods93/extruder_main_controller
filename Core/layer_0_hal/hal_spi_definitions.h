@@ -30,8 +30,6 @@
 /* meta structure includes */
 
 
-static constexpr uint32_t SPI_CR1_CRC_DISABLE                                           = 0x00000000U;
-
 // spi cr1 definitions
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_PHASE_POSITION                              = 0U;
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_PHASE_MASK                                  = 0x1UL << SPI_CR1_BIT_CLOCK_PHASE_POSITION;
@@ -122,7 +120,6 @@ static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_POSITION 
 static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_MASK             = 0x1UL << SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_POSITION;
 static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE                  = SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_MASK;
 
-
 static constexpr uint32_t SPI_CR2_RX_BUFFER_DMA_ENABLE                                  = SPI_CR2_BIT_RX_BUFFER_DMA_ENABLE;
 static constexpr uint32_t SPI_CR2_TX_BUFFER_DMA_ENABLE                                  = SPI_CR2_BIT_TX_BUFFER_DMA_ENABLE;
 static constexpr uint32_t SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE                             = SPI_CR2_BIT_CHIP_SELECT_OUTPUT_ENABLE;
@@ -178,19 +175,18 @@ static constexpr uint32_t SPI_CRC_POLYNOMIAL_REG_POSITION                       
 static constexpr uint32_t SPI_CRC_POLYNOMIAL_REG_MASK                                   = 0xFFFFUL << SPI_CRC_POLYNOMIAL_REG_POSITION;
 static constexpr uint32_t SPI_CRC_POLYNOMIAL_REG                                        = SPI_CRC_POLYNOMIAL_REG_MASK;
 
-#define STM_HAL_DMA_SxCR_ENABLE_POSITION                                                (0U)
-#define STM_HAL_DMA_SxCR_ENABLE_MASK                                                    (0x1UL << STM_HAL_DMA_SxCR_ENABLE_POSITION)
-#define STM_HAL_DMA_SxCR_ENABLE                                                         STM_HAL_DMA_SxCR_ENABLE_MASK
+static constexpr uint32_t SPI_DMA_CONFIG_REG_BIT_ENABLE_POSITION                        = 0U;
+static constexpr uint32_t SPI_DMA_CONFIG_REG_BIT_ENABLE_MASK                            = 0x1UL << SPI_DMA_CONFIG_REG_BIT_ENABLE_POSITION;
+static constexpr uint32_t SPI_DMA_CONFIG_REG_BIT_ENABLE                                 = SPI_DMA_CONFIG_REG_BIT_ENABLE_MASK;
 
-#define STM_HAL_DMA_ERROR_NONE                                                          0x00000000U    /*!< No error                               */
-#define STM_HAL_DMA_ERROR_TE                                                            0x00000001U    /*!< Transfer error                         */
-#define STM_HAL_DMA_ERROR_FE                                                            0x00000002U    /*!< FIFO error                             */
-#define STM_HAL_DMA_ERROR_DME                                                           0x00000004U    /*!< Direct Mode error                      */
-#define STM_HAL_DMA_ERROR_TIMEOUT                                                       0x00000020U    /*!< Timeout error                          */
-#define STM_HAL_DMA_ERROR_PARAM                                                         0x00000040U    /*!< Parameter error                        */
-#define SPI_DMA_ERROR_NO_TRANSFER                                                       0x00000080U    /*!< Abort requested with no Xfer ongoing   */
-#define STM_HAL_DMA_ERROR_NOT_SUPPORTED                                                 0x00000100U    /*!< Not supported mode                     */
-
+static constexpr uint32_t SPI_DMA_ERROR_NONE                                            = 0x00000000U;
+static constexpr uint32_t SPI_DMA_ERROR_TRANSFER                                        = 0x00000001U;
+static constexpr uint32_t SPI_DMA_ERROR_FIFO                                            = 0x00000002U;
+static constexpr uint32_t SPI_DMA_ERROR_DIRECT_MODE                                     = 0x00000004U;
+static constexpr uint32_t SPI_DMA_ERROR_TIMEOUT                                         = 0x00000020U;
+static constexpr uint32_t SPI_DMA_ERROR_PARAMETER                                       = 0x00000040U;
+static constexpr uint32_t SPI_DMA_ERROR_NO_TRANSFER                                     = 0x00000080U;
+static constexpr uint32_t SPI_DMA_ERROR_NOT_SUPPORTED                                   = 0x00000100U;
 
 static constexpr uint32_t SPI_CONFIG_MODE_PERIPHERAL                                    = (0x00000000U);
 static constexpr uint32_t SPI_CONFIG_MODE_CONTROLLER                                    = (SPI_CR1_BIT_CONTROLLER_MODE | SPI_CR1_BIT_INTERNAL_CHIP_SELECT);
@@ -223,6 +219,7 @@ static constexpr uint32_t SPI_CONFIG_TX_BUFFER_EMPTY_INTERRUPT_ENABLE           
 static constexpr uint32_t SPI_CONFIG_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE               = SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE;
 static constexpr uint32_t SPI_CONFIG_ERROR_INTERRUPT_ENABLE                             = SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE;
 
+
 static constexpr uint8_t  SPI_ERROR_NONE                                                = (0x00000000U);
 static constexpr uint8_t  SPI_ERROR_MODE_FAULT                                          = (0x00000001U);
 static constexpr uint8_t  SPI_ERROR_DURING_CRC_CALCULATION                              = (0x00000002U);
@@ -237,10 +234,10 @@ static constexpr uint8_t  SPI_PROCEDURE_ERROR_NONE                              
 static constexpr uint8_t  SPI_PROCEDURE_STATE_BUS_ERROR                                 = 1U;
 static constexpr uint8_t  SPI_PROCEDURE_STATE_DATA_ERROR                                = 2U;
 
-static constexpr uint8_t SPI_INIT_PROTOCOL_ERROR                                        = 0U;
-static constexpr uint8_t SPI_INIT_REGISTER_CALLBACKS_ERROR                              = 1U;
-static constexpr uint8_t SPI_INIT_DATA_STRUCTURES_ERROR                                 = 2U;
-static constexpr uint8_t SPI_INIT_RESET_CHIP_SELECTS_ERROR                              = 3U;
+static constexpr uint8_t  SPI_INIT_PROTOCOL_ERROR                                       = 0U;
+static constexpr uint8_t  SPI_INIT_REGISTER_CALLBACKS_ERROR                             = 1U;
+static constexpr uint8_t  SPI_INIT_DATA_STRUCTURES_ERROR                                = 2U;
+static constexpr uint8_t  SPI_INIT_RESET_CHIP_SELECTS_ERROR                             = 3U;
 
 static constexpr uint32_t SPI_DEFAULT_TIMEOUT_100_US                                    = 100U;
 static constexpr uint32_t SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US                     = 1000U;
@@ -249,45 +246,32 @@ static constexpr uint32_t SPI_TI_MODE_DISABLE                                   
 static constexpr uint32_t SPI_CRC_CALCULATION_DISABLE                                   = (0x00000000U);
 
 static constexpr uint16_t SPI_CRC_POLYNOMIAL_MIN                                        = (0x0001U);
-static constexpr uint32_t SPI_CRC_POLYNOMIAL_MAX                                        = (0xFFFFU);
+static constexpr uint16_t SPI_CRC_POLYNOMIAL_MAX                                        = (0xFFFFU);
 
 static constexpr uint32_t SPI_REGISTER_CALLBACK_COUNT                                   = 10U;
 static constexpr uint32_t SPI_REGISTER_CALLBACK_MIN_ID                                  = 0U;
 static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                                  = 9U;
 
-static constexpr uint8_t ACTIVE_LOW                                                     = 0U;
-static constexpr uint8_t CHIP_SELECT_LOGIC_LEVEL                                        = ACTIVE_LOW;
-static constexpr uint8_t CHIP_SELECT_SET                                                = CHIP_SELECT_LOGIC_LEVEL;
-static constexpr uint8_t CHIP_SELECT_RESET                                              = !CHIP_SELECT_LOGIC_LEVEL;
+static constexpr uint8_t  ACTIVE_LOW                                                    = 0U;
+static constexpr uint8_t  CHIP_SELECT_LOGIC_LEVEL                                       = ACTIVE_LOW;
+static constexpr uint8_t  CHIP_SELECT_SET                                               = CHIP_SELECT_LOGIC_LEVEL;
+static constexpr uint8_t  CHIP_SELECT_RESET                                             = !CHIP_SELECT_LOGIC_LEVEL;
 
-static constexpr uint8_t SPI_TRANSACTION_NOT_IN_PROGRESS                                = 0U;
-static constexpr uint8_t SPI_TRANSACTION_IN_PROGRESS                                    = 1U;
-static constexpr uint8_t SPI_TRANSACTION_COMPLETE                                       = 2U;
+static constexpr uint8_t  SPI_TRANSACTION_NOT_IN_PROGRESS                               = 0U;
+static constexpr uint8_t  SPI_TRANSACTION_IN_PROGRESS                                   = 1U;
+static constexpr uint8_t  SPI_TRANSACTION_COMPLETE                                      = 2U;
 
-static constexpr uint8_t SPI_BYTE_COUNT_MAX                                             = 8U;
+static constexpr uint8_t  SPI_BYTE_COUNT_MAX                                            = 8U;
 
-static constexpr uint8_t CHANNEL_0                                                      = 0U;
-static constexpr uint8_t CHANNEL_1                                                      = 1U;
-static constexpr uint8_t CHANNEL_2                                                      = 2U;
-static constexpr uint8_t CHANNEL_3                                                      = 3U;
-static constexpr uint8_t CHANNEL_4                                                      = 4U;
-static constexpr uint8_t CHANNEL_5                                                      = 5U;
-static constexpr uint8_t CHANNEL_6                                                      = 6U;
-static constexpr uint8_t CHANNEL_7                                                      = 7U;
+static constexpr uint8_t  CHANNEL_0                                                     = 0U;
+static constexpr uint8_t  CHANNEL_1                                                     = 1U;
+static constexpr uint8_t  CHANNEL_2                                                     = 2U;
+static constexpr uint8_t  CHANNEL_3                                                     = 3U;
+static constexpr uint8_t  CHANNEL_4                                                     = 4U;
+static constexpr uint8_t  CHANNEL_5                                                     = 5U;
+static constexpr uint8_t  CHANNEL_6                                                     = 6U;
+static constexpr uint8_t  CHANNEL_7                                                     = 7U;
 
-static constexpr uint8_t SPI_USER_CHANNELS_MAX                                          = 8U;
-
-
-
-
-
-
-
-
-
-
-
-
-
+static constexpr uint8_t  SPI_USER_CHANNELS_MAX                                         = 8U;
 
 #endif //MAIN_CONTROLLER_HAL_SPI_DEFINITIONS_H

@@ -30,23 +30,12 @@
 /* meta structure includes */
 
 
-#define REGISTER_SET_BIT(REG, BIT)          ((REG) |=  (BIT))
-#define REGISTER_CLEAR_BIT(REG, BIT)        ((REG) &= ~(BIT))
 #define REGISTER_READ(REG)                  ((REG))
 #define REGISTER_CHECK_SET_BIT(REG, BIT)    ((((REG) & (BIT)) == (BIT)) ? BIT_SET : BIT_CLEAR)
 #define UNUSED_CAST_VOID(X)                 (void) X
 
 //void assert_failed(uint8_t *file, uint32_t line);
 //#define ASSERT_PARAM(expr) ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
-
-#define STM_HAL_LOCK_MODULE(__HANDLE__)                                                                         \
-                                do                                                                              \
-                                {                                                                               \
-                                    if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return HAL_STATUS_BUSY; }     \
-                                    else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                            \
-                                } while (0U)                                                                    \
-
-#define STM_HAL_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
 
 /*************************************** spi control register 1 definitions *******************************************/
 
@@ -132,7 +121,7 @@ typedef struct
 /******************************************************** dma *********************************************************/
 typedef struct
 {
-    volatile uint32_t CONFIG_REG;
+    volatile uint32_t STREAM_CONFIG_REG;
     volatile uint32_t DATA_REG_NUMBER;
     volatile uint32_t PERIPHERAL_ADDRESS_REG;
     volatile uint32_t MEM_0_ADDRESS_REG;
@@ -182,7 +171,7 @@ typedef struct _dma_handle_t
     volatile uint32_t           error_code;
     uint32_t                    stream_base_address;
     uint32_t                    stream_index;
-}dma_handle_t;
+} dma_handle_t;
 /**********************************************************************************************************************/
 
 #define HAL_STM_I2C_7_BIT_ADDRESS_MODE         0x00004000U

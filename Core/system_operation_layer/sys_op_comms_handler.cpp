@@ -242,7 +242,7 @@ namespace sys_op::comms_handler
 
                     if (common_array_accessed && packet_valid)
                     {
-                        hal::spi_2.transmit(channel_id, channel.packet_size, channel.tx_size, packet.bytes);
+                        hal::spi_2.create_packet_and_add_to_send_buffer(channel_id, channel.packet_size, channel.tx_size, packet.bytes);
                         common_array_accessed = false;
                         packet_valid = false;
                     }

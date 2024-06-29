@@ -241,6 +241,7 @@ static constexpr uint8_t  SPI_INIT_RESET_CHIP_SELECTS_ERROR                     
 
 static constexpr uint32_t SPI_DEFAULT_TIMEOUT_100_US                                    = 100U;
 static constexpr uint32_t SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US                     = 1000U;
+static constexpr uint32_t SPI_MAX_TIMEOUT                                               = (0xFFFFFFFFU);
 
 static constexpr uint32_t SPI_TI_MODE_DISABLE                                           = (0x00000000U);
 static constexpr uint32_t SPI_CRC_CALCULATION_DISABLE                                   = (0x00000000U);

@@ -40,33 +40,34 @@ class spi : public resource
 
         typedef enum
         {
+            PROCEDURE_STATUS_OK                 = 0x00U,
+            PROCEDURE_STATUS_ERROR              = 0x01U,
+            PROCEDURE_STATUS_BUSY               = 0x02U,
+            PROCEDURE_STATUS_TIMEOUT            = 0x03U,
+            PROCEDURE_STATUS_DATA_ERROR         = 0x04U,
+            PROCEDURE_STATUS_BUS_ERROR          = 0x05U,
+        } procedure_status_t;
+
+        typedef enum
+        {
+            MODULE_STATUS_RESET                     = 0x00U,
+            MODULE_STATUS_READY                     = 0x01U,
+            MODULE_STATUS_BUSY                      = 0x02U,
+            MODULE_STATUS_BUSY_TX                   = 0x03U,
+            MODULE_STATUS_BUSY_RX                   = 0x04U,
+            MODULE_STATUS_BUSY_TX_RX                = 0x05U,
+            MODULE_STATUS_ERROR                     = 0x06U,
+            MODULE_STATUS_ABORT                     = 0x07U,
+        } module_status_t;
+
+        typedef enum
+        {
             DATA_REG_ID                         = 0x00U,
             STATUS_REG_ID                       = 0x01U,
             CONTROL_REG_1_ID                    = 0x02U,
             CONTROL_REG_2_ID                    = 0x03U,
             ERROR_CODE_BIT_FIELD_ID             = 0x04U,
-
         } register_id_t;
-
-        typedef enum
-        {
-            PROCEDURE_STATUS_OK                 = 0x00U,
-            PROCEDURE_STATUS_ERROR              = 0x01U,
-            PROCEDURE_STATUS_BUSY               = 0x02U,
-            PROCEDURE_STATUS_TIMEOUT            = 0x03U,
-        } procedure_status_t;
-
-        typedef enum
-        {
-            SPI_STATE_RESET                     = 0x00U,
-            SPI_STATE_READY                     = 0x01U,
-            SPI_STATE_BUSY                      = 0x02U,
-            SPI_STATE_BUSY_TX                   = 0x03U,
-            SPI_STATE_BUSY_RX                   = 0x04U,
-            SPI_STATE_BUSY_TX_RX                = 0x05U,
-            SPI_STATE_ERROR                     = 0x06U,
-            SPI_STATE_ABORT                     = 0x07U,
-        } comms_state_t;
 
         typedef enum
         {
@@ -135,7 +136,7 @@ class spi : public resource
             dma_handle_t        *tx_dma_handle;
             dma_handle_t        *rx_dma_handle;
             hal_lock_t          lock;
-            volatile comms_state_t    state;
+            volatile module_status_t    state;
             volatile uint32_t   error_code;
             void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *spi_handle);
 
@@ -169,6 +170,7 @@ class spi : public resource
         channel_t       active_channel;
         packet_t        active_packet;
         uint8_t         use_crc = 0;
+        uint8_t         chip_select_set = 0;
 
         std::queue<packet_t> send_buffer;
         std::queue<packet_t> return_buffer_0;
@@ -181,10 +183,11 @@ class spi : public resource
         std::queue<packet_t> return_buffer_7;
 
         spi();
+
         void initialize(handle_t* arg_module, hal_spi_t* arg_instance, uint8_t arg_use_crc, callback_id_t arg_complete_callback_id, spi_callback_ptr_t arg_complete_callback_ptr, callback_id_t arg_error_callback_id, spi_callback_ptr_t arg_error_callback_ptr);
-        spi::procedure_status_t create_channel(id_number_t& arg_channel_id, uint8_t arg_packet_size, uint8_t arg_tx_size, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin);
+        procedure_status_t create_channel(id_number_t& arg_channel_id, uint8_t arg_packet_size, uint8_t arg_tx_size, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin);
         void get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id);
-        procedure_status_t transmit(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_size, const uint8_t* arg_tx_bytes);
+        procedure_status_t create_packet_and_add_to_send_buffer(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_size, const uint8_t* arg_tx_bytes);
         void process_send_buffer();
         uint8_t process_return_buffer(id_number_t arg_channel, uint8_t (&arg_rx_array)[SPI_BYTE_COUNT_MAX]);
         friend void hal_callbacks_assert_spi_chip_select(spi::handle_t *arg_module);
@@ -197,7 +200,7 @@ class spi : public resource
         friend void spi_rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void spi_tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void spi_rx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend spi::procedure_status_t dma_abort_interrupt(spi* arg_object, dma_handle_t *arg_dma_handle);
+        friend procedure_status_t dma_abort_interrupt(spi* arg_object, dma_handle_t *arg_dma_handle);
         friend void dma_abort_on_error(dma_handle_t *arg_dma_handle);
         void spi_irq_handler();
 
@@ -208,8 +211,8 @@ class spi : public resource
         procedure_status_t initialize_send_buffer();
         void initialize_return_buffer();
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_rx_data_ptr, uint8_t arg_tx_index);
-        void assert_chip_select() const;
-        void deassert_chip_select() const;
+        void assert_chip_select();
+        void deassert_chip_select();
         id_number_t assign_next_available_channel_id();
         void send_buffer_push(packet_t& arg_packet);
         void send_buffer_pop();
@@ -230,9 +233,9 @@ class spi : public resource
         void abort_rx_isr();
         [[nodiscard]] procedure_status_t lock_module() const;
         void unlock_module() const;
-        void set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const;
+        void set_transaction_parameters_for_interrupt_tx_rx(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const;
         void set_rx_and_tx_interrupt_service_routines() const;
-        [[nodiscard]] comms_state_t get_module_communication_state() const;
+        [[nodiscard]] module_status_t get_module_communication_state() const;
         [[nodiscard]] uint32_t get_module_operating_mode() const;
         void verify_communication_direction(uint32_t arg_intended_direction) const;
         [[nodiscard]] procedure_status_t wait_for_status_register_bit(uint32_t arg_bit, bit_status_t arg_bit_status, uint32_t arg_timeout) const;
@@ -244,7 +247,7 @@ class spi : public resource
         void disable_module() const;
         void set_error_bit(uint32_t arg_bit) const;
         void enable_interrupts(uint32_t arg_interrupts) const;
-        bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
+        [[nodiscard]] bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
         void disable_interrupts(uint32_t arg_interrupts) const;
         void reset_enabled_crc() const;
         void clear_mode_fault_flag() const;
@@ -253,6 +256,7 @@ class spi : public resource
         void clear_crc_error() const;
         static void enable_dma(dma_handle_t* arg_dma_module);
         static void disable_dma(dma_handle_t* arg_dma_module);
+
 };
 
 
@@ -352,8 +356,6 @@ inline void spi::disable_interrupts(uint32_t arg_interrupts) const
 {
     module->instance->CONTROL_REG_2 &= (~arg_interrupts);
 }
-
-
 
 inline void spi::clear_mode_fault_flag() const
 {

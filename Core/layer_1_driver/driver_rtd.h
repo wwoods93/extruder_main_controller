@@ -166,8 +166,8 @@ class rtd : public user
         };
 
 
-        id_number_t user_id;
-        id_number_t channel_id;
+        id_number_t user_id{};
+        id_number_t channel_id{};
         double rtd_resistance_scaled_and_rounded{};
         float temperature_celsius{};
         sensor_state_t sensor_state = SENSOR_INITIALIZE;
@@ -176,8 +176,12 @@ class rtd : public user
         uint8_t setup_command_requested = false;
         uint8_t read_command_requested = false;
         uint32_t os_kernel_frequency = 0;
-
-
+        uint8_t initialized = 0U;
+        uint8_t request_readings = 0U;
+        uint8_t send_new_request = 0U;
+        uint8_t tx_data[4] = { MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE };
+        uint8_t complete_tx[6] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE };
+            uint8_t sensor_set_up = 0U;
 
         rtd();
 
@@ -191,6 +195,9 @@ class rtd : public user
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
         void initialize(read_rate_t _read_rate_hz);
+        void start_read_requests();
+        uint8_t send_request_if_flag_set(common_packet_t& _packet);
+        void clear_send_new_request_flag();
         void pass_available_sensor_command_to_buffer(common_packet_t& _packet);
         void handle_sensor_state();
         void rtd_begin() const;
@@ -202,7 +209,7 @@ class rtd : public user
         [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);
-        void configure_rtd(user_config_t& _user_config);
+//        void configure_rtd(user_config_t& _user_config);
 
     private:
 };

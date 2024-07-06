@@ -29,6 +29,7 @@ typedef struct
     uint8_t status;
     id_number_t channel_id;
     uint8_t bytes[TRANSACTION_BYTE_COUNT_MAX];
+    uint8_t tx_size;
 } common_packet_t;
 
 
@@ -41,7 +42,7 @@ namespace rtosal
 
 
     void initializae_spi_common_packet_array();
-    void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes);
+    void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes, uint8_t arg_tx_size);
     uint8_t add_packet_to_common_packet_array(common_packet_t& _packet);
     uint8_t remove_packet_from_common_packet_array(common_packet_t& _packet);
     void increment_packet_add_index();

@@ -94,6 +94,7 @@ class spi : public resource
             id_number_t     channel_id;
             uint8_t         tx_bytes[SPI_BYTE_COUNT_MAX];
             uint8_t         rx_bytes[SPI_BYTE_COUNT_MAX];
+            uint8_t         tx_size;
         } packet_t;
 
         typedef struct

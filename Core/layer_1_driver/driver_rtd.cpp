@@ -70,15 +70,49 @@ void rtd::initialize(read_rate_t _read_rate_hz)
             break;
     }
 
+    initialized = 1U;
 //    std::string rtd_name = "RTD ZONE 1";
 //    user_id = register_new_user_to_user_manifest(USER_TYPE_RTD, rtd_name);
+}
+
+void rtd::start_read_requests()
+{
+    request_readings = 1U;
+}
+
+uint8_t rtd::send_request_if_flag_set(common_packet_t& _packet)
+{
+    uint8_t new_request = 0U;
+    if (send_new_request == 1U)
+    {
+        if (sensor_set_up == 0U)
+        {
+            uint8_t setup_tx[2] = {(CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK), RTD_CONFIG_REG_BYTE };
+            rtosal::build_common_packet(_packet, 0, setup_tx, 2);
+            sensor_set_up = 1U;
+        }
+        else
+        {
+            rtosal::build_common_packet(_packet, 0, tx_data, 2);
+            sensor_set_up = 0U;
+        }
+//        rtosal::build_common_packet(_packet, 0, complete_tx, 6);
+
+        new_request = 1U;
+    }
+    return new_request;
+}
+
+void rtd::clear_send_new_request_flag()
+{
+    send_new_request = 0U;
 }
 
 void rtd::pass_available_sensor_command_to_buffer(common_packet_t& _packet)
 {
     if (setup_command_requested)
     {
-        memset(&_packet, '\0', sizeof(common_packet_t));
+//        rtosal::build_common_packet(_packet, 0, tx_data);
 
     }
     else if (read_command_requested)
@@ -93,7 +127,7 @@ void rtd::handle_sensor_state()
     {
         case SENSOR_INITIALIZE:
         {
-            if (user_id != ID_INVALID)
+            if (initialized == 1U)
             {
                 sensor_state = SENSOR_IDLE;
             }
@@ -105,9 +139,12 @@ void rtd::handle_sensor_state()
         }
         case SENSOR_IDLE:
         {
-            if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
+            if (request_readings == 1U)
             {
-                setup_command_requested = true;
+                if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
+                {
+                    send_new_request = 1U;
+                }
             }
             break;
         }
@@ -188,7 +225,7 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
     uint16_t rtd_reading = 0;
 //    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
 //    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
-    uint8_t tx_data[4] = { MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE };
+
 
 
 
@@ -286,12 +323,13 @@ float rtd::rtd_resistance_to_temperature_celsius(uint32_t rtd_resistance)
     return (float)(temperature_celsius_integer_component + (float)temperature_celsius_float_component / 100.0);
 }
 
-rtd::rtd() : user()
+rtd::rtd()
 {
+    user_id = 0;
 
 }
 
-void rtd::configure_rtd(user_config_t& _user_config)
-{
-
-}
+//void rtd::configure_rtd(user_config_t& _user_config)
+//{
+//
+//}

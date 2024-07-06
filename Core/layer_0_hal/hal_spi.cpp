@@ -417,6 +417,7 @@ spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(id_number_t ar
 
     packet.channel_id = arg_channel_id;
     memcpy(&packet.tx_bytes, arg_tx_bytes, sizeof(packet.tx_bytes));
+    packet.tx_size = arg_tx_size;
 
     send_buffer_push(packet);
 

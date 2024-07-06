@@ -25,8 +25,8 @@
 namespace driver
 {
     rtd rtd_zone_0;
-    rtd rtd_zone_1;
-    rtd rtd_zone_2;
+//    rtd rtd_zone_1;
+//    rtd rtd_zone_2;
 }
 
 namespace sys_op::extrusion
@@ -62,6 +62,8 @@ namespace sys_op::extrusion
             {
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
 
+                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ);
+                driver::rtd_zone_0.start_read_requests();
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = rtosal::get_rtos_kernel_tick_frequency() * 2;
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
@@ -85,17 +87,21 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_RUN:
             {
+
+                driver::rtd_zone_0.handle_sensor_state();
                 if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 50U /*kernel_tick_frequency_hz*/)
                 {
                     common_packet_t packet;
-                    rtosal::build_common_packet(packet, 0, tx);
+//                    rtosal::build_common_packet(packet, 0, tx);
 
-                    if (osMessageQueuePut(spi_tx_queue_handle, &packet, 0, 50U) == osOK)
+                    if (driver::rtd_zone_0.send_request_if_flag_set(packet))
                     {
-                        packet_added = true;
+                        if (osMessageQueuePut(spi_tx_queue_handle, &packet, 0, 50U) == osOK)
+                        {
+                            packet_added = true;
+                        }
+                        driver::rtd_zone_0.clear_send_new_request_flag();
                     }
-
-
 
 //                    if (osMutexAcquire(extrusion_process_spi_tx_data_buffer_mutex, 10U) == osOK)
 //                    {

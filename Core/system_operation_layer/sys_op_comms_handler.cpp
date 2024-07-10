@@ -169,33 +169,27 @@ namespace sys_op::comms_handler
             }
             case COMMS_HANDLER_STATE_RUN:
             {
+//                    if (uart_counter > 50)
+//                    {
+//                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
+//                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
+//                        uart_counter = 0;
+//
+//                    }
+//                    ++uart_counter;
 
-//                if (osKernelGetTickCount() - comms_handler_iteration_tick > 100U/*rtos_kernel_tick_frequency_hz*/)
-//                {
-                    if (uart_counter > 50)
-                    {
-                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
-                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
-                        uart_counter = 0;
+                if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
+                {
+                    common_array_accessed = true;
+                }
 
-                    }
+                if (common_array_accessed)
+                {
+                    hal::spi_2.create_packet_and_add_to_send_buffer(0, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
+                    common_array_accessed = false;
+                }
 
-                    ++uart_counter;
-
-                    if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50U) == osOK)
-                    {
-                        common_array_accessed = true;
-                    }
-
-                    if (common_array_accessed)
-                    {
-                        hal::spi_2.create_packet_and_add_to_send_buffer(0, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
-                        common_array_accessed = false;
-                    }
-
-                    HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
-                    comms_handler_iteration_tick = osKernelGetTickCount();
-//                }
+                HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
                 hal::spi_2.process_send_buffer();
                 packet_added = 0U;
@@ -205,7 +199,7 @@ namespace sys_op::comms_handler
                 if (buffer_accessed)
                 {
                     rtosal::build_common_packet(rx_common_packet, 0, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
-                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 50U) == osOK)
+                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
                     {
                         packet_added = 1U;
                     }

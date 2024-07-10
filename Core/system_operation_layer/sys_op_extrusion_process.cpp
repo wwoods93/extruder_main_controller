@@ -42,6 +42,7 @@ namespace sys_op::extrusion
     static uint8_t rx_buffer_accessed = 0U;
     static uint16_t success_counter = 0;
 
+    common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
 
 
@@ -90,37 +91,28 @@ namespace sys_op::extrusion
             case EXTRUSION_PROCESS_STATE_RUN:
             {
 
-                driver::rtd_zone_0.handle_sensor_state();
-                if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 75U /*kernel_tick_frequency_hz*/)
+                if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 5U /*kernel_tick_frequency_hz*/)
                 {
-                    common_packet_t packet;
-//                    rtosal::build_common_packet(packet, 0, tx);
-
-                    if (driver::rtd_zone_0.send_request_if_flag_set(packet))
-                    {
-                        if (osMessageQueuePut(spi_tx_queue_handle, &packet, 0, 50U) == osOK)
-                        {
-                            packet_added = true;
-                        }
-                    }
-
-                    driver::rtd_zone_0.clear_send_new_request_flag();
-
-
-                    if (packet_added)
-                    {
-                        ++success_counter;
-                        packet_added = false;
-                    }
+                    driver::rtd_zone_0.handle_sensor_state();
                     extrusion_process_iteration_tick = osKernelGetTickCount();
                 }
 
+                if (driver::rtd_zone_0.send_request_if_flag_set(tx_common_packet))
+                {
+                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    driver::rtd_zone_0.clear_send_new_request_flag();
+                }
+
                 rx_buffer_accessed = 0U;
-                if (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 200U) == osOK)
+                if (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 50U) == osOK)
                 {
                     driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
                     rx_buffer_accessed = 1U;
                 }
+
 
                 break;
             }

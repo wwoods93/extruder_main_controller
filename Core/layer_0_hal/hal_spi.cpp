@@ -1522,21 +1522,21 @@ void spi::process_send_buffer()
 {
     if (!send_buffer.empty())
     {
-        switch (send_state)
-        {
-            case SPI_TRANSACTION_NOT_IN_PROGRESS:
-            {
+//        switch (send_state)
+//        {
+//            case SPI_TRANSACTION_NOT_IN_PROGRESS:
+//            {
                 set_active_packet_from_send_buffer();
 
                 spi_module_handle->chip_select.port = active_packet.chip_select.port;
                 spi_module_handle->chip_select.pin = active_packet.chip_select.pin;
 
-                send_state = SPI_TRANSACTION_IN_PROGRESS;
+//                send_state = SPI_TRANSACTION_IN_PROGRESS;
 
-                break;
-            }
-            case SPI_TRANSACTION_IN_PROGRESS:
-            {
+//                break;
+//            }
+//            case SPI_TRANSACTION_IN_PROGRESS:
+//            {
                 uint8_t tx_index = 0;
                 uint8_t byte_count_of_current_tx = 0;
                 memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
@@ -1554,21 +1554,21 @@ void spi::process_send_buffer()
                     }
                 }
 
-                send_state = SPI_TRANSACTION_COMPLETE;
-                break;
-            }
-            case SPI_TRANSACTION_COMPLETE:
-            {
+//                send_state = SPI_TRANSACTION_COMPLETE;
+//                break;
+//            }
+//            case SPI_TRANSACTION_COMPLETE:
+//            {
                 send_buffer_pop();
                 push_active_packet_to_return_buffer();
                 reset_active_packet();
-                send_state = SPI_TRANSACTION_NOT_IN_PROGRESS;
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
+//                send_state = SPI_TRANSACTION_NOT_IN_PROGRESS;
+//                break;
+//            }
+//            default:
+//            {
+//                break;
+//            }
+//        }
     }
 }

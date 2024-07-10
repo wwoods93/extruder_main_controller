@@ -105,26 +105,26 @@ void start_initialization_task(void *argument)
 void start_comms_handler_task(void *argument)
 {
 
-    static unsigned long last_ten_high_water_marks[10];
-    static unsigned long highest = 0;
-    static uint8_t count = 0;
+//    static unsigned long last_ten_high_water_marks[10];
+//    static unsigned long highest = 0;
+//    static uint8_t count = 0;
 
     while (true)
     {
         sys_op::comms_handler::task_state_machine();
-        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
-        last_ten_high_water_marks[count] = high_water_mark;
-        count++;
-        if (count >= 10)
-        {
-            highest = last_ten_high_water_marks[0];
-            for (uint8_t i = 1; i < 10; ++i)
-            {
-                if (last_ten_high_water_marks[i] > highest)
-                    highest = last_ten_high_water_marks[i];
-            }
-            count = 0;
-        }
+//        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
+//        last_ten_high_water_marks[count] = high_water_mark;
+//        count++;
+//        if (count >= 10)
+//        {
+//            highest = last_ten_high_water_marks[0];
+//            for (uint8_t i = 1; i < 10; ++i)
+//            {
+//                if (last_ten_high_water_marks[i] > highest)
+//                    highest = last_ten_high_water_marks[i];
+//            }
+//            count = 0;
+//        }
     }
 }
 
@@ -138,26 +138,26 @@ void start_preparation_process_task(void *argument)
 
 void start_extrusion_process_task(void *argument)
 {
-    static unsigned long last_ten_high_water_marks[10];
-    static unsigned long highest = 0;
-    static uint8_t count = 0;
+//    static unsigned long last_ten_high_water_marks[10];
+//    static unsigned long highest = 0;
+//    static uint8_t count = 0;
 
     while (true)
     {
         sys_op::extrusion::task_state_machine();
-        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
-        last_ten_high_water_marks[count] = high_water_mark;
-        count++;
-        if (count >= 10)
-        {
-            highest = last_ten_high_water_marks[0];
-            for (uint8_t i = 1; i < 10; ++i)
-            {
-                if (last_ten_high_water_marks[i] < highest)
-                    highest = last_ten_high_water_marks[i];
-            }
-            count = 0;
-        }
+//        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
+//        last_ten_high_water_marks[count] = high_water_mark;
+//        count++;
+//        if (count >= 10)
+//        {
+//            highest = last_ten_high_water_marks[0];
+//            for (uint8_t i = 1; i < 10; ++i)
+//            {
+//                if (last_ten_high_water_marks[i] < highest)
+//                    highest = last_ten_high_water_marks[i];
+//            }
+//            count = 0;
+//        }
     }
 }
 

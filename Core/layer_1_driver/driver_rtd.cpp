@@ -86,7 +86,6 @@ uint8_t rtd::send_request_if_flag_set(common_packet_t& _packet)
     memset(&_packet, '\0', sizeof(_packet));
     if (send_new_request == 1U)
     {
-
         rtosal::build_common_packet(_packet, 0, complete_tx, bytes_per_tx, 1, 1);
 
         new_request = 1U;
@@ -130,13 +129,8 @@ void rtd::handle_sensor_state()
         }
         case SENSOR_IDLE:
         {
-//            if (request_readings == 1U)
-//            {
-//                if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
-//                {
-                    send_new_request = 1U;
-//                }
-//            }
+            send_new_request = 1U;
+
             break;
         }
         case SENSOR_SETUP_COMMAND_SENT:

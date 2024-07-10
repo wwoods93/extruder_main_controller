@@ -48,7 +48,7 @@ i2c::handle_t i2c_2_handle;
 
 void SPI2_IRQHandler()
 {
-    hal::spi_object_ptr()->spi_irq_handler();
+    spi_irq_handler(hal::spi_object_ptr());
 }
 
 namespace driver
@@ -115,9 +115,10 @@ namespace sys_op::comms_handler
     static uint8_t buffer_accessed;
     static uint8_t common_array_accessed;
 
-    static spi::channel_t channel;
-    id_number_t _channel_id = ID_INVALID;
+//    static spi::channel_t channel;
+    id_number_t rtd_0_channel_id = ID_INVALID;
     common_packet_t packet;
+    uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
 
 
     void task_intitialize()
@@ -128,12 +129,17 @@ namespace sys_op::comms_handler
     void task_state_machine()
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
-        static uint8_t counter = 0;
+
+        uint8_t rtd_config_reg = 0x00 | 0x80;
+        uint8_t rtd_config_byte = 0xD3;
+        uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
+        uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
+
+        uint32_t rtd_reading_count = 0;
+
         static uint8_t uart_counter = 0;
-        static uint8_t packet_valid = false;
-        static id_number_t channel_id;
-        uint8_t tx_d[8] = { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F };
-        uint8_t rx_d[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
+        static uint32_t buffer_access_counter = 0;
+
 
         switch (comms_handler_state)
         {
@@ -144,68 +150,16 @@ namespace sys_op::comms_handler
                 initialization_queue_handle         = get_initialization_task_queue_handle();
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
+                hal::spi_2.configure_module(&spi_2_handle);
+                hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
+                hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
+                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
                 comms_handler_iteration_tick = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
                 buffer_accessed = false;
                 common_array_accessed = false;
 
-//                comms_handler_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
-//                comms_handler_task_spi_tx_from_extrusion_queue_handle = get_extrusion_task_spi_tx_queue_handle();
-//                initialize_system_manifests();
-//                register_new_device_to_device_manifest(DEVICE_TYPE_RTD_SENSOR, "arduino");
-                hal::spi_2.initialize(&spi_2_handle, SPI_2, 0U, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback, spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_Error_Callback);
-                device_config_t device;
-                for (uint8_t index = 0; index < meta_structure::get_device_manifest_size(); ++index)
-                {
-                    memset(&device, '\0', sizeof(device_config_t));
-                    meta_structure::get_device_from_device_manifest(device, index);
-                    if (device.device_id != ID_INVALID)
-                    {
-                        switch (device.device_resource_type)
-                        {
-                            case RESOURCE_TYPE_ADC:
-                            {
-
-                                break;
-                            }
-                            case RESOURCE_TYPE_CAN:
-                            {
-
-                                break;
-                            }
-                            case RESOURCE_TYPE_I2C:
-                            {
-
-                                break;
-                            }
-                            case RESOURCE_TYPE_SPI:
-                            {
-
-                                hal::spi_2.create_channel(_channel_id, device.packet_size, device.tx_size,
-                                                          device.device_port, device.device_pin);
-                                meta_structure::set_channel_id_for_device_in_manifest(_channel_id, index);
-                                break;
-                            }
-                            case RESOURCE_TYPE_PWM:
-                            {
-
-                                break;
-                            }
-                            case RESOURCE_TYPE_UART:
-                            {
-
-                                break;
-                            }
-                            default:
-                                break;
-                        }
-                    }
-                }
-//                hal::spi_2.create_channel(channel_id, 8, 2, PORT_B, GPIO_PIN_14);
-//                char name_of_rtd_0[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
-                _channel_id = meta_structure::get_channel_id_by_device_name(rtd_0_name);
-                hal::spi_2.get_channel_by_channel_id(channel, _channel_id);
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
@@ -213,38 +167,27 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-                if (osKernelGetTickCount() - comms_handler_iteration_tick > 25U/*rtos_kernel_tick_frequency_hz*/)
+                if (osKernelGetTickCount() - comms_handler_iteration_tick > 100U/*rtos_kernel_tick_frequency_hz*/)
                 {
-                    if (uart_counter > 20)
+                    if (uart_counter > 50)
                     {
-                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t*)user_data,strlen(user_data)); //Transmit data in interrupt mode
+                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
                         HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
                         uart_counter = 0;
-                    }
-                    ++uart_counter;
 
+                    }
+
+                    ++uart_counter;
 
                     if (osMessageQueueGet( spi_tx_queue_handle, &packet, nullptr, 50U) == osOK)
                     {
                         common_array_accessed = true;
                     }
 
-                    if (packet.status == 0xFF) // need XOR checksum or something
+                    if (common_array_accessed)
                     {
-                        packet_valid = true;
-                    }
-//                    if (osMutexAcquire(comms_handler_spi_tx_data_buffer_mutex, 50U) == osOK)
-//                    {
-//                        common_array_accessed = rtos_al::remove_packet_from_common_packet_array(packet);
-//                        osMutexRelease(comms_handler_spi_tx_data_buffer_mutex);
-//                    }
-//                    rtos_al::increment_packet_remove_index();
-
-                    if (common_array_accessed && packet_valid)
-                    {
-                        hal::spi_2.create_packet_and_add_to_send_buffer(channel_id, channel.packet_size, packet.tx_size, packet.bytes);
+                        hal::spi_2.create_packet_and_add_to_send_buffer(0, packet.total_byte_count, packet.tx_byte_count, packet.bytes, packet.bytes_per_tx);
                         common_array_accessed = false;
-                        packet_valid = false;
                     }
 
                     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
@@ -252,10 +195,14 @@ namespace sys_op::comms_handler
                 }
 
                 hal::spi_2.process_send_buffer();
-                buffer_accessed = hal::spi_2.process_return_buffer(channel_id, rx_d);
+                buffer_accessed = hal::spi_2.process_return_buffer(0, rx_d);
+                if (rx_d[0] != 0 || rx_d[1] != 0 || rx_d[2] != 0 || rx_d[3] != 0)
+                {
+                    uart_counter++;
+                }
                 if (buffer_accessed)
                 {
-                    counter++;
+                    buffer_access_counter++;
                     buffer_accessed = false;
                 }
 

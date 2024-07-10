@@ -28,7 +28,7 @@ namespace sys_op::initialization
     osEventFlagsId_t initialization_event_flags_handle = nullptr;
     osMessageQueueId_t initialization_messaging_queue_handle = nullptr;
 
-    resource_config_t   SPI_0;
+    resource_config_t   RESOURCE_SPI_2;
     resource_config_t   I2C_0;
 
     device_config_t     RTD_0;
@@ -71,19 +71,19 @@ namespace sys_op::initialization
                 initialization_event_flags_handle = get_initialization_task_queue_handle();
                 initialization_messaging_queue_handle = get_initialization_task_queue_handle();
 
-                meta_structure::initialize_system_manifests();
-                meta_structure::create_resource_config(SPI_0, spi_0_name, RESOURCE_TYPE_SPI);
-                meta_structure::create_resource_config(I2C_0, i2c_0_name, RESOURCE_TYPE_I2C);
-                id_number_t rtd_0_id = meta_structure::create_device_config(RTD_0, rtd_0_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_B, GPIO_PIN_14);
-                id_number_t rtd_1_id = meta_structure::create_device_config(RTD_1, rtd_1_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
-                id_number_t rtd_2_id = meta_structure::create_device_config(RTD_2, rtd_2_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
-                id_number_t dcm_0_id = meta_structure::create_device_config(DCM_0, dcm_0_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_0_ADDRESS, PORT_NULL, PIN_NULL);
-                id_number_t dcm_1_id = meta_structure::create_device_config(DCM_1, dcm_1_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_1_ADDRESS, PORT_NULL, PIN_NULL);
-                meta_structure::create_user_config(RTD_DRIVER_0, rtd_driver_0_name, USER_TYPE_RTD, 1U, rtd_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
-                meta_structure::create_user_config(RTD_DRIVER_1, rtd_driver_1_name, USER_TYPE_RTD, 1U, rtd_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
-                meta_structure::create_user_config(RTD_DRIVER_2, rtd_driver_2_name, USER_TYPE_RTD, 1U, rtd_2_id, ID_INVALID, ID_INVALID, ID_INVALID);
-                meta_structure::create_user_config(DCM_DRIVER_0, dcm_driver_0_name, USER_TYPE_DCM, 2U, dcm_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
-                meta_structure::create_user_config(DCM_DRIVER_1, dcm_driver_1_name, USER_TYPE_DCM, 1U, dcm_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                meta_structure::initialize_system_manifests();
+//                meta_structure::create_resource_config(RESOURCE_SPI_2, spi_0_name, RESOURCE_TYPE_SPI);
+//                meta_structure::create_resource_config(I2C_0, i2c_0_name, RESOURCE_TYPE_I2C);
+//                id_number_t rtd_0_id = meta_structure::create_device_config(RTD_0, rtd_0_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_B, GPIO_PIN_14);
+//                id_number_t rtd_1_id = meta_structure::create_device_config(RTD_1, rtd_1_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
+//                id_number_t rtd_2_id = meta_structure::create_device_config(RTD_2, rtd_2_name, DEVICE_TYPE_RTD, RESOURCE_TYPE_SPI, 4U, 2U, ADDRESS_NULL_8_BIT, PORT_NULL, PIN_NULL);
+//                id_number_t dcm_0_id = meta_structure::create_device_config(DCM_0, dcm_0_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_0_ADDRESS, PORT_NULL, PIN_NULL);
+//                id_number_t dcm_1_id = meta_structure::create_device_config(DCM_1, dcm_1_name, DEVICE_TYPE_DCM, RESOURCE_TYPE_I2C, 3U, 3U, DCM_1_ADDRESS, PORT_NULL, PIN_NULL);
+//                meta_structure::create_user_config(RTD_DRIVER_0, rtd_driver_0_name, USER_TYPE_RTD, 1U, rtd_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                meta_structure::create_user_config(RTD_DRIVER_1, rtd_driver_1_name, USER_TYPE_RTD, 1U, rtd_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                meta_structure::create_user_config(RTD_DRIVER_2, rtd_driver_2_name, USER_TYPE_RTD, 1U, rtd_2_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                meta_structure::create_user_config(DCM_DRIVER_0, dcm_driver_0_name, USER_TYPE_DCM, 2U, dcm_0_id, ID_INVALID, ID_INVALID, ID_INVALID);
+//                meta_structure::create_user_config(DCM_DRIVER_1, dcm_driver_1_name, USER_TYPE_DCM, 1U, dcm_1_id, ID_INVALID, ID_INVALID, ID_INVALID);
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG);
                 initialization_state = INITIALIZATION_TASK_STATE_RUN;
                 break;

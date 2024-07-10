@@ -75,13 +75,15 @@ namespace rtosal
         }
     }
 
-    void build_common_packet(common_packet_t& _packet, id_number_t _channel_id, uint8_t* _bytes, uint8_t arg_tx_size)
+    void build_common_packet(common_packet_t& arg_packet, id_number_t arg_channel_id, uint8_t (&arg_bytes)[8], uint8_t (&arg_bytes_per_tx)[8], uint8_t arg_total_byte_count, uint8_t arg_tx_byte_count)
     {
-        memset(&_packet, '\0', sizeof(common_packet_t));
-        _packet.status = 0xFF; // packet active
-        _packet.channel_id = _channel_id;
-        memcpy(&_packet.bytes, _bytes, sizeof(_packet.bytes));
-        _packet.tx_size = arg_tx_size;
+        memset(&arg_packet, '\0', sizeof(common_packet_t));
+        arg_packet.status = 0xFF; // packet active
+        arg_packet.channel_id = arg_channel_id;
+        memcpy(&arg_packet.bytes_per_tx, arg_bytes_per_tx, sizeof(arg_packet.bytes_per_tx));
+        memcpy(&arg_packet.bytes, arg_bytes, sizeof(arg_packet.bytes));
+        arg_packet.total_byte_count = arg_total_byte_count;
+        arg_packet.tx_byte_count = arg_tx_byte_count;
     }
 
     uint8_t add_packet_to_common_packet_array(common_packet_t& _packet)

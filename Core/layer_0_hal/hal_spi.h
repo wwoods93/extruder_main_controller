@@ -13,61 +13,45 @@
 #ifndef MAIN_CONTROLLER_HAL_SPI_H
 #define MAIN_CONTROLLER_HAL_SPI_H
 
-/* c/c++ includes */
 #include <vector>
 #include <queue>
-/* stm32 includes */
 #include "stm32f4xx.h"
-/* third-party includes */
-#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
-/* hal includes */
-#include "hal_spi_definitions.h"
 #include "hal_general.h"
-/* driver includes */
-
-/* rtos abstraction includes */
-#include "../layer_2_rtosal/rtosal_spi_shared_resources.h"
-/* sys op includes */
-
-/* meta structure includes */
 #include "../meta_structure/meta_structure_system_manager.h"
-#include "../meta_structure/meta_structure_resource.h"
 
-
-class spi : public resource
+class spi
 {
     public:
 
+#define SPI_USE_REGISTER_CALLBACKS      1U
+#define SPI_USE_CRC                     0U
+#define TX_SIZE_MAX                     8U
+#define CHIP_SELECT_1                   0U
+#define CHIP_SELECT_2                   1U
+#define CHIP_SELECT_3                   2U
+#define SPI_BYTES_MAX                   255U
+#define SPI_BUFFER_MAX                  255U
+
+        /* type definitions */
         typedef enum
         {
-            PROCEDURE_STATUS_OK                 = 0x00U,
-            PROCEDURE_STATUS_ERROR              = 0x01U,
-            PROCEDURE_STATUS_BUSY               = 0x02U,
-            PROCEDURE_STATUS_TIMEOUT            = 0x03U,
-            PROCEDURE_STATUS_DATA_ERROR         = 0x04U,
-            PROCEDURE_STATUS_BUS_ERROR          = 0x05U,
-        } procedure_status_t;
+            SPI_STATUS_OK                       = 0x00U,
+            SPI_STATUS_ERROR                    = 0x01U,
+            SPI_STATUS_BUSY                     = 0x02U,
+            SPI_STATUS_TIMEOUT                  = 0x03U
+        } status_t;
 
         typedef enum
         {
-            MODULE_STATUS_RESET                     = 0x00U,
-            MODULE_STATUS_READY                     = 0x01U,
-            MODULE_STATUS_BUSY                      = 0x02U,
-            MODULE_STATUS_BUSY_TX                   = 0x03U,
-            MODULE_STATUS_BUSY_RX                   = 0x04U,
-            MODULE_STATUS_BUSY_TX_RX                = 0x05U,
-            MODULE_STATUS_ERROR                     = 0x06U,
-            MODULE_STATUS_ABORT                     = 0x07U,
-        } module_status_t;
-
-        typedef enum
-        {
-            DATA_REG_ID                         = 0x00U,
-            STATUS_REG_ID                       = 0x01U,
-            CONTROL_REG_1_ID                    = 0x02U,
-            CONTROL_REG_2_ID                    = 0x03U,
-            ERROR_CODE_BIT_FIELD_ID             = 0x04U,
-        } register_id_t;
+            SPI_STATE_RESET                     = 0x00U,
+            SPI_STATE_READY                     = 0x01U,
+            SPI_STATE_BUSY                      = 0x02U,
+            SPI_STATE_BUSY_TX                   = 0x03U,
+            SPI_STATE_BUSY_RX                   = 0x04U,
+            SPI_STATE_BUSY_TX_RX                = 0x05U,
+            SPI_STATE_ERROR                     = 0x06U,
+            SPI_STATE_ABORT                     = 0x07U
+        } state_t;
 
         typedef enum
         {
@@ -83,6 +67,166 @@ class spi : public resource
             SPI_MSP_DEINIT_CALLBACK_ID          = 0x09U
         } callback_id_t;
 
+        /* constants */
+        static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE                    = 0U;
+        static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR               = 1U;
+        static constexpr uint8_t    SPI_PROCEDURE_STATE_DATA_ERROR              = 2U;
+
+        static constexpr uint32_t   SPI_CR1_MODE_CONTROLLER                     = STM_HAL_SPI_CR1_CONTROLLER;
+        static constexpr uint32_t   SPI_CR1_INTERNAL_CHIP_SELECT                = STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT;
+        static constexpr uint32_t   SPI_CR1_RECEIVE_ONLY                        = STM_HAL_SPI_CR1_RECEIVE_ONLY;
+        static constexpr uint32_t   SPI_CR1_BIDIRECTIONAL_MODE                  = STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE;
+        static constexpr uint32_t   SPI_CR1_DATA_FRAME_FORMAT                   = STM_HAL_SPI_CR1_DATA_FRAME_FORMAT;
+        static constexpr uint32_t   SPI_CR1_CLOCK_POLARITY                      = STM_HAL_SPI_CR1_CLOCK_POLARITY;
+        static constexpr uint32_t   SPI_CR1_CLOCK_PHASE                         = STM_HAL_SPI_CR1_CLOCK_PHASE;
+        static constexpr uint32_t   SPI_CR1_SOFTWARE_CHIP_SELECT                = STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT;
+        static constexpr uint32_t   SPI_CR1_BAUD_RATE_CONTROL_MASK              = STM_HAL_SPI_CR1_BAUD_RATE;
+        static constexpr uint32_t   SPI_CR1_LSB_FIRST                           = STM_HAL_SPI_CR1_LSB_FIRST;
+        static constexpr uint32_t   SPI_CR1_CRC_ENABLE                          = STM_HAL_SPI_CR1_CRC_ENABLE;
+
+        static constexpr uint32_t   SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE           = STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE;
+        static constexpr uint32_t   SPI_CR2_FRAME_FORMAT                        = STM_HAL_SPI_CR2_FRAME_FORMAT;
+        static constexpr uint32_t   SPI_CR2_RX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE;
+        static constexpr uint32_t   SPI_CR2_TX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE;
+
+#if (SPI_USE_REGISTER_CALLBACKS == 1U)
+        static constexpr uint8_t    SPI_ERROR_NONE                          = (0x00000000U);
+        static constexpr uint8_t    SPI_ERROR_MODE_FAULT                    = (0x00000001U);
+        static constexpr uint8_t    SPI_ERROR_DURING_CRC_CALCULATION        = (0x00000002U);
+        static constexpr uint8_t    SPI_ERROR_OVERRUN                       = (0x00000004U);
+        static constexpr uint8_t    SPI_ERROR_TI_MODE_FRAME_FORMAT          = (0x00000008U);
+        static constexpr uint8_t    SPI_ERROR_DMA_TRANSFER                  = (0x00000010U);
+        static constexpr uint8_t    SPI_ERROR_WAITING_FOR_FLAG              = (0x00000020U);
+        static constexpr uint8_t    SPI_ERROR_DURING_ABORT                  = (0x00000040U);
+        static constexpr uint8_t    SPI_ERROR_CALLBACK_INVALID              = (0x00000080U);
+#endif
+        static constexpr uint32_t   SPI_FLAG_RX_BUFFER_NOT_EMPTY                = STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY;
+        static constexpr uint32_t   SPI_FLAG_TX_BUFFER_EMPTY                    = STM_HAL_SPI_SR_TX_BUFFER_EMPTY;
+        static constexpr uint32_t   SPI_FLAG_BUSY                               = STM_HAL_SPI_SR_BUSY;
+        static constexpr uint32_t   SPI_FLAG_CRC_ERROR                          = STM_HAL_SPI_SR_CRC_ERROR;
+        static constexpr uint32_t   SPI_FLAG_MODE_FAULT                         = STM_HAL_SPI_SR_MODE_FAULT;
+        static constexpr uint32_t   SPI_FLAG_OVERRUN                            = STM_HAL_SPI_SR_OVERRUN;
+        static constexpr uint32_t   SPI_FLAG_TI_MODE_FRAME_FORMAT_ERROR         = STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR;
+        static constexpr uint32_t   SPI_FLAG_BIT_MASK                           = (STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY
+                                                                                   | STM_HAL_SPI_SR_TX_BUFFER_EMPTY
+                                                                                   | STM_HAL_SPI_SR_BUSY | STM_HAL_SPI_SR_CRC_ERROR \
+                                                                                    | STM_HAL_SPI_SR_MODE_FAULT | STM_HAL_SPI_SR_OVERRUN
+                                                                                   | STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR);
+        static constexpr uint32_t   SPI_MODE_PERIPHERAL                         = (0x00000000U);
+        static constexpr uint32_t   SPI_MODE_CONTROLLER                         = (STM_HAL_SPI_CR1_CONTROLLER | STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT);
+        static constexpr uint32_t   SPI_DIRECTION_2_LINE                        = (0x00000000U);
+        static constexpr uint32_t   SPI_DIRECTION_2_LINE_RX_ONLY                = STM_HAL_SPI_CR1_RECEIVE_ONLY;
+        static constexpr uint32_t   SPI_DIRECTION_1_LINE                        = STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE;
+        static constexpr uint32_t   SPI_DATA_SIZE_8_BIT                         = (0x00000000U);
+        static constexpr uint32_t   SPI_DATA_SIZE_16_BIT                        = STM_HAL_SPI_CR1_DATA_FRAME_FORMAT;
+        static constexpr uint32_t   SPI_DATA_MSB_FIRST                          = (0x00000000U);
+        static constexpr uint32_t   SPI_DATA_LSB_FIRST                          = STM_HAL_SPI_CR1_LSB_FIRST;
+        static constexpr uint32_t   SPI_CLOCK_POLARITY_LOW                      = (0x00000000U);
+        static constexpr uint32_t   SPI_CLOCK_POLARITY_HIGH                     = STM_HAL_SPI_CR1_CLOCK_POLARITY;
+        static constexpr uint32_t   SPI_CLOCK_PHASE_LEADING_EDGE                = (0x00000000U);
+        static constexpr uint32_t   SPI_CLOCK_PHASE_TRAILING_EDGE               = STM_HAL_SPI_CR1_CLOCK_PHASE;
+        static constexpr uint32_t   SPI_CHIP_SELECT_SOFTWARE                    = STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT;
+        static constexpr uint32_t   SPI_CHIP_SELECT_HARDWARE_INPUT              = (0x00000000U);
+        static constexpr uint32_t   SPI_CHIP_SELECT_HARDWARE_OUTPUT             = (STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE << 16U);
+
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_2                   = (0x00000000U);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_4                   = (STM_HAL_SPI_CR1_BAUD_RATE_0);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_8                   = (STM_HAL_SPI_CR1_BAUD_RATE_1);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_16                  = (STM_HAL_SPI_CR1_BAUD_RATE_1 | STM_HAL_SPI_CR1_BAUD_RATE_0);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_32                  = (STM_HAL_SPI_CR1_BAUD_RATE_2);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_64                  = (STM_HAL_SPI_CR1_BAUD_RATE_2 | STM_HAL_SPI_CR1_BAUD_RATE_0);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_128                 = (STM_HAL_SPI_CR1_BAUD_RATE_2 | STM_HAL_SPI_CR1_BAUD_RATE_1);
+        static constexpr uint32_t   SPI_BAUD_RATE_PRESCALER_256                 = (STM_HAL_SPI_CR1_BAUD_RATE_2 | STM_HAL_SPI_CR1_BAUD_RATE_1 | STM_HAL_SPI_CR1_BAUD_RATE_0);
+
+        static constexpr uint32_t   SPI_TI_MODE_DISABLE                         = (0x00000000U);
+        static constexpr uint32_t   SPI_TI_MODE_ENABLE                          = STM_HAL_SPI_CR2_FRAME_FORMAT;
+        static constexpr uint32_t   SPI_TX_BUFFER_EMPTY_INTERRUPT_ENABLE        = STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE;
+        static constexpr uint32_t   SPI_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE    = STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE;
+        static constexpr uint32_t   SPI_ERROR_INTERRUPT_ENABLE                  = STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE;
+        static constexpr uint32_t   SPI_DEFAULT_TIMEOUT_100_US                  = 100U;
+        static constexpr uint32_t   SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US   = 1000U;
+        static constexpr uint32_t   SPI_CRC_CALCULATION_DISABLE                 = (0x00000000U);
+        static constexpr uint32_t   SPI_CRC_CALCULATION_ENABLE                  = STM_HAL_SPI_CR1_CRC_ENABLE;
+        static constexpr uint32_t   SPI_I2S_MODE_SELECT                         = STM_HAL_SPI_I2S_MODE_SELECT;
+
+        /* macros */
+#if (USE_RTOS == 1U)
+#error "USE_RTOS should be 0 in the current HAL release"
+#else
+#define SPI_LOCK_MODULE(__HANDLE__)                                                                             \
+                do {                                                                                                        \
+                    if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return SPI_STATUS_BUSY; }                                 \
+                    else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                                                        \
+                }   while (0U)
+#define SPI_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
+#endif
+
+#define STM_HAL_DMA_ENABLE(__HANDLE__)                      ((__HANDLE__)->instance->CONFIG_REG |=  STM_HAL_DMA_SxCR_ENABLE)
+#define STM_HAL_DMA_DISABLE(__HANDLE__)                     ((__HANDLE__)->instance->CONFIG_REG &=  ~STM_HAL_DMA_SxCR_ENABLE)
+#define SPI_ENABLE_MODULE(__HANDLE__)                       STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SPI_ENABLE)
+#define SPI_DISABLE_MODULE(__HANDLE__)                      STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SPI_ENABLE)
+#define SPI_ENABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)    STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
+#define SPI_DISABLE_INTERRUPTS(__HANDLE__, __INTERRUPT__)   STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_2, (__INTERRUPT__))
+#define SPI_GET_FLAG_STATUS(__HANDLE__, __FLAG__)          ((((__HANDLE__)->instance->STATUS_REG) & (__FLAG__)) == (__FLAG__))
+#define SPI_CHECK_FLAG_STATUS(__SR__, __FLAG__)            ((((__SR__) & ((__FLAG__) & SPI_FLAG_MASK)) == ((__FLAG__) & SPI_FLAG_MASK)) ? FLAG_SET : FLAG_RESET)
+#define SPI_VERIFY_DIRECTION_2_LINE(__MODE__)                ((__MODE__) == SPI_DIRECTION_2_LINE)
+#define SPI_VERIFY_DIRECTION_2_LINE_RX_ONLY(__MODE__)        ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)
+#define SPI_VERIFY_DIRECTION_1_LINE(__MODE__)                ((__MODE__) == SPI_DIRECTION_1_LINE)
+#define SPI_VERIFY_VALID_INSTANCE(INSTANCE)                 (((INSTANCE) == SPI_1) || ((INSTANCE) == SPI_2)   ||    \
+                                                                     ((INSTANCE) == SPI_3) || ((INSTANCE) == SPI_4))
+#define SPI_VERIFY_MODE(__MODE__)                           (((__MODE__) == SPI_MODE_PERIPHERAL)              ||    \
+                                                                     ((__MODE__) == SPI_MODE_CONTROLLER))
+
+#define SPI_CHECK_INTERRUPT_SOURCE(__CR2__, __INTERRUPT__) ((((__CR2__) & (__INTERRUPT__)) ==                       \
+                                                                      (__INTERRUPT__)) ? FLAG_SET : FLAG_RESET)
+#define SPI_VERIFY_DIRECTION(__MODE__)                      (((__MODE__) == SPI_DIRECTION_2_LINE)             ||    \
+                                                                     ((__MODE__) == SPI_DIRECTION_2_LINE_RX_ONLY)     ||    \
+                                                                     ((__MODE__) == SPI_DIRECTION_1_LINE))
+#define SPI_VERIFY_DATA_SIZE(__DATASIZE__)                  (((__DATASIZE__) == SPI_DATA_SIZE_16_BIT)         ||    \
+                                                                     ((__DATASIZE__) == SPI_DATA_SIZE_8_BIT))
+#define SPI_VERIFY_CHIP_SELECT_MODE(__NSS__)                (((__NSS__) == SPI_CHIP_SELECT_SOFTWARE)          ||    \
+                                                                     ((__NSS__) == SPI_CHIP_SELECT_HARDWARE_INPUT)    ||    \
+                                                                     ((__NSS__) == SPI_CHIP_SELECT_HARDWARE_OUTPUT))
+#define SPI_VERIFY_BAUD_RATE_PRESCALER(__PRESCALER__)       (((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_2)   ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_4)   ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_8)   ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_16)  ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_32)  ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_64)  ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_128) ||    \
+                                                                     ((__PRESCALER__) == SPI_BAUD_RATE_PRESCALER_256))
+#define SPI_VERIFY_FIRST_BIT_SETTING(__BIT__)               (((__BIT__) == SPI_DATA_MSB_FIRST)   || \
+                                                                     ((__BIT__) == SPI_DATA_LSB_FIRST))
+#define SPI_VERIFY_TI_MODE(__MODE__)                        (((__MODE__) == SPI_TI_MODE_DISABLE) || \
+                                                                     ((__MODE__) == SPI_TI_MODE_ENABLE))
+#define SPI_VERIFY_CLOCK_POLARITY(__CPOL__)                 (((__CPOL__) == SPI_POLARITY_LOW)    || \
+                                                                     ((__CPOL__) == SPI_POLARITY_HIGH))
+#define SPI_VERIFY_CLOCK_PHASE(__CPHA__)                    (((__CPHA__) == SPI_PHASE_1EDGE)     || \
+                                                                     ((__CPHA__) == SPI_PHASE_2EDGE))
+#define SPI_CLEAR_OVERRUN_FLAG(__HANDLE__)                                                      \
+            do {                                                                                        \
+                __IO uint32_t tmpreg_ovr = 0x00U;                                                       \
+                tmpreg_ovr = (__HANDLE__)->instance->DATA_REG;                                          \
+                tmpreg_ovr = (__HANDLE__)->instance->STATUS_REG;                                        \
+                STM_HAL_UNUSED(tmpreg_ovr);                                                             \
+            }   while (0U)
+#define SPI_CLEAR_MODE_FAULT_FLAG(__HANDLE__)                                                   \
+            do {                                                                                        \
+                __IO uint32_t tmpreg_modf = 0x00U;                                                      \
+                tmpreg_modf = (__HANDLE__)->instance->STATUS_REG;                                       \
+                STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_SPI_ENABLE);   \
+                STM_HAL_UNUSED(tmpreg_modf);                                                            \
+            }   while (0U)
+#define HAL_SPI_CLEAR_FORMAT_ERROR_FLAG(__HANDLE__)                                             \
+            do {                                                                                        \
+                __IO uint32_t tmpreg_fre = 0x00U;                                                       \
+                tmpreg_fre = (__HANDLE__)->instance->STATUS_REG;                                        \
+                STM_HAL_UNUSED(tmpreg_fre);                                                             \
+            }   while (0U)
+#define SPI_RESET_CRC_CALCULATION(__HANDLE__)                                                   \
+            do { STM_HAL_CLEAR_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_CRC_ENABLE);  \
+            STM_HAL_SET_BIT((__HANDLE__)->instance->CONTROL_REG_1, STM_HAL_SPI_CR1_CRC_ENABLE); } while(0U)
+
         typedef struct
         {
             GPIO_TypeDef*   port;
@@ -92,18 +236,30 @@ class spi : public resource
         typedef struct
         {
             id_number_t     channel_id;
-            uint8_t         tx_bytes[SPI_BYTE_COUNT_MAX];
-            uint8_t         rx_bytes[SPI_BYTE_COUNT_MAX];
-            uint8_t         tx_size;
+            id_number_t     packet_id;
+            uint8_t         total_byte_count;
+            uint8_t         tx_byte_count;
+            uint8_t         bytes_per_tx[TX_SIZE_MAX];
+            uint8_t         tx_bytes[TX_SIZE_MAX];
+            uint8_t         rx_bytes[TX_SIZE_MAX];
+            chip_select_t   chip_select;
         } packet_t;
 
         typedef struct
         {
             id_number_t     channel_id;
-            uint8_t         packet_size;
-            uint8_t         tx_size;
             chip_select_t   chip_select;
         } channel_t;
+
+        /* structures */
+//        typedef struct
+//        {
+//            uint8_t packet_id;
+//            uint8_t chip_select;
+//            uint8_t tx_size;
+//            std::vector<uint8_t> tx_bytes;
+//            std::vector<uint8_t> rx_bytes;
+//        } packet_t;
 
         typedef struct
         {
@@ -120,57 +276,56 @@ class spi : public resource
             uint32_t crc_polynomial;
         } init_t;
 
+//        typedef struct
+//        {
+//            GPIO_TypeDef* chip_select_port;
+//            uint16_t chip_select_pin;
+//            // clock setting
+//            // anything else
+//
+//        } peripheral_device_t;
+
         typedef struct _handle_t
         {
-            hal_spi_t           *instance;
-            chip_select_t       chip_select;
-            init_t              init;
-            uint8_t             *tx_buffer_ptr;
-            uint16_t            tx_transfer_size;
-            volatile uint16_t   tx_transfer_counter;
-            uint8_t             *rx_buffer_ptr;
-            uint8_t             rx_array[SPI_BYTE_COUNT_MAX];
-            uint16_t            rx_transfer_size;
-            volatile uint16_t   rx_transfer_counter;
-            void                (*rx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
-            void                (*tx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
-            dma_handle_t        *tx_dma_handle;
-            dma_handle_t        *rx_dma_handle;
-            hal_lock_t          lock;
-            volatile module_status_t    state;
-            volatile uint32_t   error_code;
-            void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *spi_handle);
+            hal_spi_t                   *instance;
+            chip_select_t               chip_select;
+            init_t                      init;
+            uint8_t                     *tx_buffer_ptr;
+            uint16_t                    tx_transfer_size;
+            volatile uint16_t           tx_transfer_counter;
+            uint8_t                     *rx_buffer_ptr;
+            uint16_t                    rx_transfer_size;
+            volatile uint16_t           rx_transfer_counter;
+            void                        (*rx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
+            void                        (*tx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
+            dma_handle_t                *tx_dma_handle;
+            dma_handle_t                *rx_dma_handle;
+            hal_lock_t                  lock;
+            volatile state_t            state;
+            volatile uint32_t           error_code;
+            GPIO_TypeDef* chip_select_port;
+            uint16_t chip_select_pin;
 
+#if (SPI_USE_REGISTER_CALLBACKS == 1U)
+            void (* TxCpltCallback)             (struct _handle_t *spi_handle);
+            void (* RxCpltCallback)             (struct _handle_t *spi_handle);
+            void (* TxRxCpltCallback)           (struct _handle_t *spi_handle);
+            void (* TxHalfCpltCallback)         (struct _handle_t *spi_handle);
+            void (* RxHalfCpltCallback)         (struct _handle_t *spi_handle);
+            void (* TxRxHalfCpltCallback)       (struct _handle_t *spi_handle);
+            void (* ErrorCallback)              (struct _handle_t *spi_handle);
+            void (* AbortCpltCallback)          (struct _handle_t *spi_handle);
+            void (* MspInitCallback)            (struct _handle_t *spi_handle);
+            void (* MspDeInitCallback)          (struct _handle_t *spi_handle);
+#endif
         } handle_t;
 
-        typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
-
-        struct
-        {
-            channel_t channel_0;
-            channel_t channel_1;
-            channel_t channel_2;
-            channel_t channel_3;
-            channel_t channel_4;
-            channel_t channel_5;
-            channel_t channel_6;
-            channel_t channel_7;
-        } user_list;
-
-        static constexpr uint8_t SIZE_OF_CHIP_SELECT_T = sizeof(chip_select_t);
-        static constexpr uint8_t SIZE_OF_PACKET_T = sizeof(packet_t);
-        static constexpr uint8_t SIZE_OF_CHANNEL_T = sizeof(channel_t);
-        static constexpr uint8_t SIZE_OF_INIT_T = sizeof(init_t);
-        static constexpr uint8_t SIZE_OF_HANDLE_T = sizeof(handle_t);
-
-        static constexpr uint8_t SIZE_OF_USER_LIST = sizeof(user_list);
-
-        handle_t*       module;
-        id_number_t     next_available_user_channel_id = 0;
-        uint8_t         send_state = 0;
-        channel_t       active_channel;
+        /* public member variables */
+        handle_t* spi_module_handle;
+        uint8_t rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
+        id_number_t     next_available_channel_id = 0;
         packet_t        active_packet;
-        uint8_t         use_crc = 0;
+        uint8_t         send_state = 0;
         uint8_t         chip_select_set = 0;
 
         std::queue<packet_t> send_buffer;
@@ -183,212 +338,91 @@ class spi : public resource
         std::queue<packet_t> return_buffer_6;
         std::queue<packet_t> return_buffer_7;
 
-        spi();
+        struct
+        {
+            channel_t channel_0;
+            channel_t channel_1;
+            channel_t channel_2;
+            channel_t channel_3;
+            channel_t channel_4;
+            channel_t channel_5;
+            channel_t channel_6;
+            channel_t channel_7;
+        } channel_list;
 
-        void initialize(handle_t* arg_module, hal_spi_t* arg_instance, uint8_t arg_use_crc, callback_id_t arg_complete_callback_id, spi_callback_ptr_t arg_complete_callback_ptr, callback_id_t arg_error_callback_id, spi_callback_ptr_t arg_error_callback_ptr);
-        procedure_status_t create_channel(id_number_t& arg_channel_id, uint8_t arg_packet_size, uint8_t arg_tx_size, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin);
-        void get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id);
-        procedure_status_t create_packet_and_add_to_send_buffer(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_size, const uint8_t* arg_tx_bytes);
-        void process_send_buffer();
-        uint8_t process_return_buffer(id_number_t arg_channel, uint8_t (&arg_rx_array)[SPI_BYTE_COUNT_MAX]);
-        friend void hal_callbacks_assert_spi_chip_select(spi::handle_t *arg_module);
-        friend void hal_callbacks_deassert_spi_chip_select(spi::handle_t *arg_module);
-        friend void spi_rx_2_line_8_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_rx_2_line_16_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_rx_1_line_8_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_rx_1_line_16_bit_isr_with_crc(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend void spi_rx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
-        friend procedure_status_t dma_abort_interrupt(spi* arg_object, dma_handle_t *arg_dma_handle);
-        friend void dma_abort_on_error(dma_handle_t *arg_dma_handle);
-        void spi_irq_handler();
 
-    private:
+        /* public member functions */
+        void configure_module(handle_t* spi_handle);
+        void initialize_spi_buffer();
+        status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin);
+//        status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
+//        void shift_buffer_contents_to_front();
+//        void process_spi_buffer();
+#if (SPI_USE_REGISTER_CALLBACKS == 1U)
+        typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
+        status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback);
+        status_t spi_unregister_callback(callback_id_t callback_id);
+#endif
+        /* interrupt service routines */
+        friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        /* friend functions */
+        friend spi::handle_t* get_spi_handle(spi* spi_object);
+        friend spi::status_t dma_abort_interrupt(dma_handle_t *dma_handle);
+        friend void dma_abort_on_error(dma_handle_t *dma_handle);
+        friend void spi_irq_handler(spi* spi_object);
+        /* spi callback prototypes */
+        friend void HAL_SPI_TxCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_RxCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_TxRxCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_TxHalfCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_RxHalfCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_TxRxHalfCpltCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_ErrorCallback(spi::handle_t *spi_handle);
+        friend void HAL_SPI_AbortCpltCallback(spi::handle_t *spi_handle);
 
-        procedure_status_t initialize_protocol(handle_t* arg_module, hal_spi_t* arg_resource_instance);
-        procedure_status_t initialize_active_packet();
-        procedure_status_t initialize_send_buffer();
-        void initialize_return_buffer();
-        procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_rx_data_ptr, uint8_t arg_tx_index);
-        void assert_chip_select();
-        void deassert_chip_select();
+        void transmit_and_get_result(uint8_t packet_size, uint8_t* tx_data);
+        status_t create_channel(id_number_t& arg_channel_id, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin);
         id_number_t assign_next_available_channel_id();
+        spi::status_t create_packet_and_add_to_send_buffer(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_tx)[8]);
+        void get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id);
         void send_buffer_push(packet_t& arg_packet);
         void send_buffer_pop();
         void send_buffer_get_front(packet_t& arg_packet);
         void set_active_packet_from_send_buffer();
         void push_active_packet_to_return_buffer();
-        procedure_status_t reset_active_packet();
-        void reset_active_channel();
-        [[nodiscard]] uint8_t calculate_number_of_transmissions_for_active_packet() const;
-        procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
-        [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
-        void close_tx_rx_isr();
-        void close_tx_isr();
-        void close_rx_isr();
-        procedure_status_t end_rx_transaction(uint32_t arg_timeout);
-        procedure_status_t end_tx_rx_transaction(uint32_t arg_timeout);
-        void abort_tx_isr();
-        void abort_rx_isr();
-        [[nodiscard]] procedure_status_t lock_module() const;
-        void unlock_module() const;
-        void set_transaction_parameters_for_interrupt_tx_rx(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const;
+        status_t reset_active_packet();
+        uint8_t process_return_buffer(id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
+        spi::status_t spi_transmit_receive_interrupt_from_buffer(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t arg_tx_index);
+        void transmit_and_get_result_from_buffer(uint8_t arg_tx_size, uint8_t* arg_tx_data, uint8_t arg_tx_index);
+        void process_send_buffer();
+
+    private:
+        /* private objects */
+        uint8_t packet_id_counter = 0;
+        std::vector<packet_t*> spi_buffer;
+        uint8_t head = 0;
+        uint8_t tail = 0;
+        /* private member functions */
+        status_t initialize_module();
         void set_rx_and_tx_interrupt_service_routines() const;
-        [[nodiscard]] module_status_t get_module_communication_state() const;
-        [[nodiscard]] uint32_t get_module_operating_mode() const;
-        void verify_communication_direction(uint32_t arg_intended_direction) const;
-        [[nodiscard]] procedure_status_t wait_for_status_register_bit(uint32_t arg_bit, bit_status_t arg_bit_status, uint32_t arg_timeout) const;
-
-        void set_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
-        void clear_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
-        [[nodiscard]] bit_status_t get_status_register_bit(uint32_t arg_bit) const;
-        void enable_module() const;
-        void disable_module() const;
-        void set_error_bit(uint32_t arg_bit) const;
-        void enable_interrupts(uint32_t arg_interrupts) const;
-        [[nodiscard]] bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
-        void disable_interrupts(uint32_t arg_interrupts) const;
-        void reset_enabled_crc() const;
-        void clear_mode_fault_flag() const;
-        void clear_overrun_flag() const;
-        void clear_ti_frame_format_error_flag() const;
-        void clear_crc_error() const;
-        static void enable_dma(dma_handle_t* arg_dma_module);
-        static void disable_dma(dma_handle_t* arg_dma_module);
-
+        status_t lock_module() const;
+        void unlock_module() const;
+        state_t get_module_communication_state() const;
+        uint32_t get_module_operating_mode() const;
+        void verify_communication_direction(uint32_t intended_direction) const;
+        void set_transaction_parameters(uint8_t *tx_data_ptr, uint8_t *rx_data_ptr, uint16_t packet_size) const;
+        status_t wait_for_flag_until_timeout(uint32_t flag, flag_status_t flag_status, uint32_t flag_timeout, uint32_t start_time) const;
+        status_t end_rx_transaction(uint32_t flag_timeout, uint32_t start_time);
+        status_t end_rx_tx_transaction(uint32_t flag_timeout, uint32_t start_time);
+        void close_rx_tx_isr();
+        void close_rx_isr();
+        void close_tx_isr();
+        void abort_rx_isr();
+        void abort_tx_isr();
+        void reset_enabled_crc();
 };
-
-
-inline void spi::set_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const
-{
-    switch(arg_register)
-    {
-        case CONTROL_REG_1_ID:
-        {
-            module->instance->CONTROL_REG_1 |= arg_bit;
-            break;
-        }
-        case CONTROL_REG_2_ID:
-        {
-            module->instance->CONTROL_REG_2 |= arg_bit;
-            break;
-        }
-        case ERROR_CODE_BIT_FIELD_ID:
-        {
-
-        }
-        default:
-        {
-            break;
-        }
-    }
-}
-
-inline void spi::clear_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const
-{
-    switch(arg_register)
-    {
-        case STATUS_REG_ID:
-        {
-            module->instance->STATUS_REG &= (~arg_bit);
-            break;
-        }
-        case CONTROL_REG_1_ID:
-        {
-            module->instance->CONTROL_REG_1 &= (~arg_bit);
-            break;
-        }
-        case CONTROL_REG_2_ID:
-        {
-            module->instance->CONTROL_REG_2 &= (~arg_bit);
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-}
-
-inline bit_status_t spi::get_status_register_bit(uint32_t arg_bit) const
-{
-    bit_status_t bit_status = BIT_CLEAR;
-    if ((module->instance->STATUS_REG & arg_bit & SPI_SR_BITS_MASK) == (arg_bit & SPI_SR_BITS_MASK))
-    {
-        bit_status = BIT_SET;
-    }
-    return bit_status;
-}
-
-inline void spi::enable_module() const
-{
-    module->instance->CONTROL_REG_1 |= SPI_CR1_BIT_SPI_ENABLE;
-}
-
-inline void spi::disable_module() const
-{
-    clear_bit_spi_register_32(CONTROL_REG_1_ID, SPI_CR1_BIT_SPI_ENABLE);
-}
-
-inline void spi::set_error_bit(uint32_t arg_bit) const
-{
-    module->error_code |= arg_bit;
-}
-
-inline void spi::enable_interrupts(uint32_t arg_interrupts) const
-{
-    module->instance->CONTROL_REG_2 |= arg_interrupts;
-}
-
-inline bit_status_t spi::check_interrupt_source(uint32_t arg_interrupt) const
-{
-    bit_status_t bit_status = BIT_CLEAR;
-    if ((module->instance->CONTROL_REG_2 & arg_interrupt) == arg_interrupt)
-    {
-        bit_status = BIT_SET;
-    }
-
-    return bit_status;
-}
-
-inline void spi::disable_interrupts(uint32_t arg_interrupts) const
-{
-    module->instance->CONTROL_REG_2 &= (~arg_interrupts);
-}
-
-inline void spi::clear_mode_fault_flag() const
-{
-    uint32_t register_contents = module->instance->STATUS_REG;
-    UNUSED_CAST_VOID(register_contents);
-    clear_bit_spi_register_32(CONTROL_REG_1_ID, SPI_CR1_BIT_SPI_ENABLE);
-}
-
-inline void spi::clear_overrun_flag() const
-{
-    UNUSED_CAST_VOID(REGISTER_READ(module->instance->DATA_REG));
-    UNUSED_CAST_VOID(REGISTER_READ(module->instance->STATUS_REG));
-}
-
-inline void spi::clear_ti_frame_format_error_flag() const
-{
-    UNUSED_CAST_VOID(REGISTER_READ(module->instance->STATUS_REG));
-}
-
-inline void spi::clear_crc_error() const
-{
-    module->instance->STATUS_REG = (uint16_t)(SPI_SR_BIT_CRC_ERROR);
-}
-
-inline void spi::enable_dma(dma_handle_t* arg_dma_module)
-{
-    arg_dma_module->instance->STREAM_CONFIG_REG |= SPI_DMA_CONFIG_REG_BIT_ENABLE;
-}
-
-inline void spi::disable_dma(dma_handle_t* arg_dma_module)
-{
-    arg_dma_module->instance->STREAM_CONFIG_REG &= (~SPI_DMA_CONFIG_REG_BIT_ENABLE);
-}
 
 #endif //MAIN_CONTROLLER_HAL_SPI_H

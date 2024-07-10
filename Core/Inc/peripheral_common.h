@@ -21,6 +21,7 @@
 extern "C" {
 #endif
 
+#include "../../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
 void error_handler(void);
 void Error_Handler(void);
 UART_HandleTypeDef* get_usart_2_handle(void);

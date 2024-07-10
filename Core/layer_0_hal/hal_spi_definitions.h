@@ -255,8 +255,8 @@ static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                          
 
 static constexpr uint8_t  ACTIVE_LOW                                                    = 0U;
 static constexpr uint8_t  CHIP_SELECT_LOGIC_LEVEL                                       = ACTIVE_LOW;
-static constexpr uint8_t  CHIP_SELECT_SET                                               = CHIP_SELECT_LOGIC_LEVEL;
-static constexpr uint8_t  CHIP_SELECT_RESET                                             = !CHIP_SELECT_LOGIC_LEVEL;
+static constexpr uint8_t  CHIP_SELECT_SET                                               = 0U;
+static constexpr uint8_t  CHIP_SELECT_RESET                                             = 1U;
 
 static constexpr uint8_t  SPI_TRANSACTION_NOT_IN_PROGRESS                               = 0U;
 static constexpr uint8_t  SPI_TRANSACTION_IN_PROGRESS                                   = 1U;

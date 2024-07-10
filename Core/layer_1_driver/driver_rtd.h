@@ -180,8 +180,8 @@ class rtd : public user
         uint8_t request_readings = 0U;
         uint8_t send_new_request = 0U;
         uint8_t tx_data[4] = { MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE };
-        uint8_t complete_tx[6] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE };
-            uint8_t sensor_set_up = 0U;
+        uint8_t complete_tx[8] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, 0, 0 };
+        uint8_t bytes_per_tx[8] = {2, 4, 0, 0, 0, 0, 0, 0 };
 
         rtd();
 

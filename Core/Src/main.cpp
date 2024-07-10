@@ -79,7 +79,7 @@ int main()
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
     heartbeat_taskHandle            = osThreadNew(start_heartbeat_task,             nullptr, &heartbeat_task_attributes);
 
-    rtosal::initializae_spi_common_packet_array();
+//    rtosal::initializae_spi_common_packet_array();
     osEventFlagsClear(initialization_event_flags_handle, 0xFFFFFFFF);
     osKernelStart();
     while (true);

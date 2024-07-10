@@ -83,20 +83,11 @@ void rtd::start_read_requests()
 uint8_t rtd::send_request_if_flag_set(common_packet_t& _packet)
 {
     uint8_t new_request = 0U;
+    memset(&_packet, '\0', sizeof(_packet));
     if (send_new_request == 1U)
     {
-        if (sensor_set_up == 0U)
-        {
-            uint8_t setup_tx[2] = {(CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK), RTD_CONFIG_REG_BYTE };
-            rtosal::build_common_packet(_packet, 0, setup_tx, 2);
-            sensor_set_up = 1U;
-        }
-        else
-        {
-            rtosal::build_common_packet(_packet, 0, tx_data, 2);
-            sensor_set_up = 0U;
-        }
-//        rtosal::build_common_packet(_packet, 0, complete_tx, 6);
+
+        rtosal::build_common_packet(_packet, 0, complete_tx, bytes_per_tx, 1, 1);
 
         new_request = 1U;
     }

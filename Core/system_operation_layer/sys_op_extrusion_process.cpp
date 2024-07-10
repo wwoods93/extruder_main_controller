@@ -62,11 +62,10 @@ namespace sys_op::extrusion
             {
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
 
-                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ);
-                driver::rtd_zone_0.start_read_requests();
+
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = rtosal::get_rtos_kernel_tick_frequency() * 2;
-                spi_tx_queue_handle = get_spi_tx_queue_handle();
+
 //                initialization_event_flags_handle = get_initialization_task_queue_handle();
 
 //                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
@@ -81,7 +80,9 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_CONFIGURE_USERS:
             {
-
+                spi_tx_queue_handle = get_spi_tx_queue_handle();
+                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ);
+                driver::rtd_zone_0.start_read_requests();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }
@@ -100,8 +101,9 @@ namespace sys_op::extrusion
                         {
                             packet_added = true;
                         }
-                        driver::rtd_zone_0.clear_send_new_request_flag();
                     }
+
+                    driver::rtd_zone_0.clear_send_new_request_flag();
 
 //                    if (osMutexAcquire(extrusion_process_spi_tx_data_buffer_mutex, 10U) == osOK)
 //                    {

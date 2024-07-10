@@ -130,13 +130,13 @@ void rtd::handle_sensor_state()
         }
         case SENSOR_IDLE:
         {
-            if (request_readings == 1U)
-            {
-                if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
-                {
+//            if (request_readings == 1U)
+//            {
+//                if (osKernelGetTickCount() - tick_count_at_last_sensor_read >= read_rate_os_ticks)
+//                {
                     send_new_request = 1U;
-                }
-            }
+//                }
+//            }
             break;
         }
         case SENSOR_SETUP_COMMAND_SENT:
@@ -241,6 +241,17 @@ uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
     return rtd_reading >> 1;
 }
 
+uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet)
+{
+    uint16_t rtd_reading = 0;
+    rtd_reading = arg_common_packet.bytes[3];
+    rtd_reading <<= 8;
+    rtd_reading |= arg_common_packet.bytes[5];
+    return rtd_reading >> 1;
+
+
+}
+
 
 uint16_t rtd::read_rtd() const
 {
@@ -248,12 +259,12 @@ uint16_t rtd::read_rtd() const
     return read_msb_and_lsb_registers_and_concatenate();
 }
 
-float rtd::read_rtd_and_calculate_temperature()
+float rtd::read_rtd_and_calculate_temperature(common_packet_t& arg_common_packet)
 {
     double resistance_as_double = 0;
     float calculated_temperture_celsius = 0;
 
-    rtd_resistance_scaled_and_rounded = read_rtd();
+    rtd_resistance_scaled_and_rounded = (double)get_msb_and_lsb_register_bytes_and_concatenate(arg_common_packet);
     rtd_resistance_scaled_and_rounded = ceil((double)(rtd_resistance_scaled_and_rounded * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0)) / 1000.0;
     rtd_resistance_scaled_and_rounded = ceil(rtd_resistance_scaled_and_rounded * 100);
     calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)rtd_resistance_scaled_and_rounded);

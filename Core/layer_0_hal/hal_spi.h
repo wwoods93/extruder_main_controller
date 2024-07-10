@@ -394,7 +394,7 @@ class spi
         void set_active_packet_from_send_buffer();
         void push_active_packet_to_return_buffer();
         status_t reset_active_packet();
-        uint8_t process_return_buffer(id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
+        uint8_t process_return_buffer(packet_t& packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         spi::status_t spi_transmit_receive_interrupt_from_buffer(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t arg_tx_index);
         void transmit_and_get_result_from_buffer(uint8_t arg_tx_size, uint8_t* arg_tx_data, uint8_t arg_tx_index);
         void process_send_buffer();

@@ -205,7 +205,8 @@ class rtd : public user
         [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
         [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
         [[nodiscard]] uint16_t read_rtd() const;
-        float read_rtd_and_calculate_temperature();
+        uint16_t get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet);
+        float read_rtd_and_calculate_temperature(common_packet_t& arg_common_packet);
         [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);

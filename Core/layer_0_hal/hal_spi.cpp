@@ -1339,10 +1339,9 @@ spi::status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
+uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
 {
     uint8_t buffer_accessed = 0U;
-    packet_t packet;
 
     memset(&packet, '\0', sizeof(packet_t));
 

@@ -33,12 +33,16 @@ namespace sys_op::extrusion
 {
     osEventFlagsId_t initialization_event_flags_handle = nullptr;
     osMessageQueueId_t spi_tx_queue_handle = nullptr;
+    osMessageQueueId_t spi_rx_queue_handle = nullptr;
 
     static uint32_t extrusion_process_iteration_tick;
     uint32_t kernel_tick_frequency_hz;
 
     static uint8_t packet_added = false;
+    static uint8_t rx_buffer_accessed = 0U;
     static uint16_t success_counter = 0;
+
+    common_packet_t rx_common_packet;
 
 
 //    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
@@ -62,13 +66,9 @@ namespace sys_op::extrusion
             {
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
 
-
                 extrusion_process_iteration_tick = 0;
                 kernel_tick_frequency_hz = rtosal::get_rtos_kernel_tick_frequency() * 2;
 
-//                initialization_event_flags_handle = get_initialization_task_queue_handle();
-
-//                extrusion_process_spi_tx_data_buffer_mutex = get_spi_tx_buffer_mutex();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION;
                 break;
             }
@@ -81,6 +81,7 @@ namespace sys_op::extrusion
             case EXTRUSION_PROCESS_STATE_CONFIGURE_USERS:
             {
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
+                spi_rx_queue_handle = get_spi_rx_queue_handle();
                 driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ);
                 driver::rtd_zone_0.start_read_requests();
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
@@ -90,7 +91,7 @@ namespace sys_op::extrusion
             {
 
                 driver::rtd_zone_0.handle_sensor_state();
-                if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 50U /*kernel_tick_frequency_hz*/)
+                if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 75U /*kernel_tick_frequency_hz*/)
                 {
                     common_packet_t packet;
 //                    rtosal::build_common_packet(packet, 0, tx);
@@ -105,12 +106,6 @@ namespace sys_op::extrusion
 
                     driver::rtd_zone_0.clear_send_new_request_flag();
 
-//                    if (osMutexAcquire(extrusion_process_spi_tx_data_buffer_mutex, 10U) == osOK)
-//                    {
-//                        packet_added = rtos_al::add_packet_to_common_packet_array(packet);
-//                        osMutexRelease(extrusion_process_spi_tx_data_buffer_mutex);
-//                    }
-//                    rtos_al::increment_packet_add_index();
 
                     if (packet_added)
                     {
@@ -119,6 +114,14 @@ namespace sys_op::extrusion
                     }
                     extrusion_process_iteration_tick = osKernelGetTickCount();
                 }
+
+                rx_buffer_accessed = 0U;
+                if (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 200U) == osOK)
+                {
+                    driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
+                    rx_buffer_accessed = 1U;
+                }
+
                 break;
             }
             default:

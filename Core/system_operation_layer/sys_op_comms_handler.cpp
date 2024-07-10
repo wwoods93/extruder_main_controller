@@ -108,16 +108,17 @@ namespace sys_op::comms_handler
     osEventFlagsId_t  initialization_event_flags_handle = nullptr;
     osMessageQueueId_t initialization_queue_handle = nullptr;
     osMessageQueueId_t spi_tx_queue_handle = nullptr;
+    osMessageQueueId_t spi_rx_queue_handle = nullptr;
 
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
 
-    static uint8_t buffer_accessed;
+    static volatile uint8_t buffer_accessed;
     static uint8_t common_array_accessed;
 
-//    static spi::channel_t channel;
     id_number_t rtd_0_channel_id = ID_INVALID;
-    common_packet_t packet;
+    common_packet_t tx_common_packet;
+    common_packet_t rx_common_packet;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
 
 
@@ -135,6 +136,7 @@ namespace sys_op::comms_handler
         uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
         uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
 
+        uint8_t packet_added = 0U;
         uint32_t rtd_reading_count = 0;
 
         static uint8_t uart_counter = 0;
@@ -147,6 +149,7 @@ namespace sys_op::comms_handler
             {
                 initialization_event_flags_handle   = get_initialization_event_flags_handle();
                 spi_tx_queue_handle                 = get_spi_tx_queue_handle();
+                spi_rx_queue_handle                 = get_spi_rx_queue_handle();
                 initialization_queue_handle         = get_initialization_task_queue_handle();
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
@@ -167,8 +170,8 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-                if (osKernelGetTickCount() - comms_handler_iteration_tick > 100U/*rtos_kernel_tick_frequency_hz*/)
-                {
+//                if (osKernelGetTickCount() - comms_handler_iteration_tick > 100U/*rtos_kernel_tick_frequency_hz*/)
+//                {
                     if (uart_counter > 50)
                     {
                         HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
@@ -179,33 +182,37 @@ namespace sys_op::comms_handler
 
                     ++uart_counter;
 
-                    if (osMessageQueueGet( spi_tx_queue_handle, &packet, nullptr, 50U) == osOK)
+                    if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50U) == osOK)
                     {
                         common_array_accessed = true;
                     }
 
                     if (common_array_accessed)
                     {
-                        hal::spi_2.create_packet_and_add_to_send_buffer(0, packet.total_byte_count, packet.tx_byte_count, packet.bytes, packet.bytes_per_tx);
+                        hal::spi_2.create_packet_and_add_to_send_buffer(0, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
                         common_array_accessed = false;
                     }
 
                     HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
                     comms_handler_iteration_tick = osKernelGetTickCount();
-                }
+//                }
 
                 hal::spi_2.process_send_buffer();
-                buffer_accessed = hal::spi_2.process_return_buffer(0, rx_d);
-                if (rx_d[0] != 0 || rx_d[1] != 0 || rx_d[2] != 0 || rx_d[3] != 0)
-                {
-                    uart_counter++;
-                }
+                packet_added = 0U;
+                spi::packet_t spi_rx_packet;
+                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
+
                 if (buffer_accessed)
                 {
-                    buffer_access_counter++;
-                    buffer_accessed = false;
-                }
+                    rtosal::build_common_packet(rx_common_packet, 0, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 50U) == osOK)
+                    {
+                        packet_added = 1U;
+                    }
 
+                    buffer_access_counter++;
+                    buffer_accessed = 0U;
+                }
                 break;
             }
             default:

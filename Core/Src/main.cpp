@@ -45,9 +45,9 @@ osThreadId_t spooling_process_taskHandle;
 osThreadId_t heartbeat_taskHandle;
 
 const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 512 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 128 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t heartbeat_task_attributes      = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 
@@ -138,9 +138,26 @@ void start_preparation_process_task(void *argument)
 
 void start_extrusion_process_task(void *argument)
 {
+    static unsigned long last_ten_high_water_marks[10];
+    static unsigned long highest = 0;
+    static uint8_t count = 0;
+
     while (true)
     {
         sys_op::extrusion::task_state_machine();
+        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
+        last_ten_high_water_marks[count] = high_water_mark;
+        count++;
+        if (count >= 10)
+        {
+            highest = last_ten_high_water_marks[0];
+            for (uint8_t i = 1; i < 10; ++i)
+            {
+                if (last_ten_high_water_marks[i] < highest)
+                    highest = last_ten_high_water_marks[i];
+            }
+            count = 0;
+        }
     }
 }
 

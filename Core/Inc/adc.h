@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-void MX_ADC1_Init(void);
+//void MX_ADC1_Init(void);
 
 #ifdef __cplusplus
 }

@@ -117,6 +117,8 @@ namespace sys_op::comms_handler
     static uint8_t common_array_accessed;
 
     id_number_t rtd_0_channel_id = ID_INVALID;
+    id_number_t rtd_1_channel_id = ID_INVALID;
+    id_number_t rtd_2_channel_id = ID_INVALID;
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
@@ -157,6 +159,8 @@ namespace sys_op::comms_handler
                 hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
                 hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
                 hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
+                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15);
+                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1);
                 comms_handler_iteration_tick = 0;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
@@ -169,14 +173,14 @@ namespace sys_op::comms_handler
             }
             case COMMS_HANDLER_STATE_RUN:
             {
-//                    if (uart_counter > 50)
-//                    {
-//                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
-//                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
-//                        uart_counter = 0;
-//
-//                    }
-//                    ++uart_counter;
+                    if (uart_counter > 50)
+                    {
+                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
+                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
+                        uart_counter = 0;
+
+                    }
+                    ++uart_counter;
 
                 if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
                 {
@@ -185,20 +189,23 @@ namespace sys_op::comms_handler
 
                 if (common_array_accessed)
                 {
-                    hal::spi_2.create_packet_and_add_to_send_buffer(0, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
+                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
                     common_array_accessed = false;
                 }
 
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
+                osDelay(10);
                 hal::spi_2.process_send_buffer();
                 packet_added = 0U;
                 spi::packet_t spi_rx_packet;
                 buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
+                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d);
+                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d);
 
                 if (buffer_accessed)
                 {
-                    rtosal::build_common_packet(rx_common_packet, 0, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
                     if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
                     {
                         packet_added = 1U;

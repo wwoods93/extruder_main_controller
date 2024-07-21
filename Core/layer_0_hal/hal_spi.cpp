@@ -55,6 +55,8 @@ void spi::configure_module(handle_t* spi_handle)
     spi_module_handle->init.crc_calculation = SPI_CRC_CALCULATION_DISABLE;
     spi_module_handle->init.crc_polynomial = 10;
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, (GPIO_PinState) CHIP_SELECT_RESET);
     if (initialize_module() != SPI_STATUS_OK) { Error_Handler(); }
 }
 
@@ -1011,7 +1013,7 @@ void spi::reset_enabled_crc()
 void spi::transmit_and_get_result(uint8_t packet_size, uint8_t* tx_data)
 {
     auto *rx_ptr = static_cast<uint8_t *>(malloc(packet_size * sizeof(uint8_t)));
-    spi_transmit_receive_interrupt(tx_data, rx_ptr, packet_size, (GPIO_TypeDef*)GPIOB, GPIO_PIN_14);
+    spi_transmit_receive_interrupt(tx_data, rx_ptr, packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
     while (!hal_callbacks_get_spi_rx_data_ready_flag());
     hal_callbacks_set_spi_rx_data_ready_flag(0);
     for (uint8_t i = 0; i < packet_size; ++i)

@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-void MX_QUADSPI_Init(void);
+//void MX_QUADSPI_Init(void);
 
 #ifdef __cplusplus
 }

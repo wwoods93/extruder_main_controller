@@ -161,32 +161,35 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
     i2c_controller_error_message_code = ERROR_MESSAGE_CODE_NO_ERROR;
     i2c_controller_write_procedure.state = I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED;
 
-    switch(i2c_controller_write_procedure.state)
-    {
-        case I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED:
-        {
+//    switch(i2c_controller_write_procedure.state)
+//    {
+//        case I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED:
+//        {
             if (get_i2c_module_state() != I2C_STATE_READY)
             {
                 i2c_controller_error_message_code = PERIPHERAL_NOT_READY;
-                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_BUSY;
+//                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_BUSY;
+                return I2C_STATUS_ERROR;
             }
-            else
-                i2c_controller_write_procedure.state = I2C_STATE_CHECK_IF_BUS_IS_BUSY;
-        }
-        case I2C_STATE_CHECK_IF_BUS_IS_BUSY:
-        {
+//            else
+//                i2c_controller_write_procedure.state = I2C_STATE_CHECK_IF_BUS_IS_BUSY;
+//        }
+//        case I2C_STATE_CHECK_IF_BUS_IS_BUSY:
+//        {
             tick_start = HAL_GetTick();
 
             if (wait_for_flag(I2C_FLAG_BUS_BUSY, FLAG_SET, I2C_TIMEOUT_BUSY_25_MS, tick_start) != I2C_STATUS_OK)
             {
                 i2c_controller_error_message_code = BUS_BUSY_TIMEOUT;
-                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_BUSY;
+//                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_BUSY;
+                return I2C_STATUS_ERROR;
             }
-            else
-                i2c_controller_write_procedure.state = I2C_STATE_PREPARE_AND_REQUEST_TRANSFER;
-        }
-        case I2C_STATE_PREPARE_AND_REQUEST_TRANSFER:
-        {
+
+//            else
+//                i2c_controller_write_procedure.state = I2C_STATE_PREPARE_AND_REQUEST_TRANSFER;
+//        }
+//        case I2C_STATE_PREPARE_AND_REQUEST_TRANSFER:
+//        {
             lock_i2c_module();
             if (read_control_register_bit(I2C_CR1_REG_PERIPHERAL_ENABLE_BIT) != I2C_CR1_REG_PERIPHERAL_ENABLE_BIT)
                 enable_i2c_module();
@@ -198,24 +201,25 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
 
             if (request_result != I2C_STATUS_OK)
             {
-                switch (request_result)
-                {
-                    case I2C_STATUS_TIMEOUT:
-                        i2c_controller_error_message_code = START_BIT_SET_FAILURE;
-                        break;
-                    case I2C_STATUS_ERROR:
-                        i2c_controller_error_message_code = ADDRESS_SEND_FAILURE;
-                        break;
-                    default:
-                        break;
-                }
-                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_ERROR;
+//                switch (request_result)
+//                {
+//                    case I2C_STATUS_TIMEOUT:
+//                        i2c_controller_error_message_code = START_BIT_SET_FAILURE;
+//                        break;
+//                    case I2C_STATUS_ERROR:
+//                        i2c_controller_error_message_code = ADDRESS_SEND_FAILURE;
+//                        break;
+//                    default:
+//                        break;
+//                }
+//                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_ERROR;
+                return I2C_STATUS_ERROR;
             }
-            else
-                i2c_controller_write_procedure.state = I2C_STATE_TRANSFER;
-        }
-        case I2C_STATE_TRANSFER:
-        {
+//            else
+//                i2c_controller_write_procedure.state = I2C_STATE_TRANSFER;
+//        }
+//        case I2C_STATE_TRANSFER:
+//        {
             clear_address_flag();
             bool i2c_status_error_has_occurred = false;
 
@@ -252,35 +256,38 @@ i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer
                 }
             }
             if (i2c_status_error_has_occurred)
-                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_ERROR;
-            else
-                i2c_controller_write_procedure.state = I2C_STATE_FINISH_TRANSFER;
-        }
-        case I2C_STATE_FINISH_TRANSFER:
-        {
+            {
+                    return I2C_STATUS_ERROR;
+//                i2c_controller_write_procedure.state = I2C_STATE_PERIPHERAL_ERROR;
+            }
+//            else
+//                i2c_controller_write_procedure.state = I2C_STATE_FINISH_TRANSFER;
+//        }
+//        case I2C_STATE_FINISH_TRANSFER:
+//        {
             generate_stop_bit();
             set_i2c_module_state(I2C_STATE_READY);
             set_device_mode(I2C_MODE_NONE);
             unlock_i2c_module();
             return I2C_STATUS_OK;
-        }
-        case I2C_STATE_PERIPHERAL_BUSY:
-        {
-            /*
-             * error handling for busy module
-             */
-            return I2C_STATUS_BUSY;
-        }
-        case I2C_STATE_PERIPHERAL_ERROR:
-        {
-            /*
-             * error handling for module error
-             */
-            return I2C_STATUS_ERROR;
-        }
-        default:
-            break;
-    }
+//        }
+//        case I2C_STATE_PERIPHERAL_BUSY:
+//        {
+//            /*
+//             * error handling for busy module
+//             */
+//            return I2C_STATUS_BUSY;
+//        }
+//        case I2C_STATE_PERIPHERAL_ERROR:
+//        {
+//            /*
+//             * error handling for module error
+//             */
+//            return I2C_STATUS_ERROR;
+//        }
+//        default:
+//            break;
+//    }
     return I2C_STATUS_OK;
 }
 

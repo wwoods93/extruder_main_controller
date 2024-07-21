@@ -37,7 +37,7 @@
   */
 #define HAL_MODULE_ENABLED
 
-  #define HAL_ADC_MODULE_ENABLED
+  /* #define HAL_ADC_MODULE_ENABLED   */
 /* #define HAL_CRYP_MODULE_ENABLED   */
 #define HAL_CAN_MODULE_ENABLED
 /* #define HAL_CRC_MODULE_ENABLED   */
@@ -74,7 +74,7 @@
 /* #define HAL_HCD_MODULE_ENABLED   */
 /* #define HAL_DSI_MODULE_ENABLED   */
 /* #define HAL_QSPI_MODULE_ENABLED   */
-#define HAL_QSPI_MODULE_ENABLED
+/* #define HAL_QSPI_MODULE_ENABLED   */
 /* #define HAL_CEC_MODULE_ENABLED   */
 /* #define HAL_FMPI2C_MODULE_ENABLED   */
 /* #define HAL_FMPSMBUS_MODULE_ENABLED   */
@@ -155,7 +155,7 @@
 #define  DATA_CACHE_ENABLE            1U
 
 #define  USE_HAL_ADC_REGISTER_CALLBACKS         0U /* ADC register callback disabled       */
-#define  USE_HAL_CAN_REGISTER_CALLBACKS         0U /* CAN register callback disabled       */
+#define  USE_HAL_CAN_REGISTER_CALLBACKS         1U /* CAN register callback enabled       */
 #define  USE_HAL_CEC_REGISTER_CALLBACKS         0U /* CEC register callback disabled       */
 #define  USE_HAL_CRYP_REGISTER_CALLBACKS        0U /* CRYP register callback disabled      */
 #define  USE_HAL_DAC_REGISTER_CALLBACKS         0U /* DAC register callback disabled       */

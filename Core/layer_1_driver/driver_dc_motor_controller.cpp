@@ -13,7 +13,7 @@
 #include <cstdint>
 #include "stm32f4xx.h"
 #include "mcu_clock_timers.h"
-#include "../layer_0_hal//hal_i2c.h"
+#include "../layer_0_hal/hal_i2c.h"
 #include "driver_dc_motor_controller.h"
 
 /***************************************************** hal objects ****************************************************/
@@ -139,7 +139,7 @@ int8_t dc_motor_controller::get_rotation_direction(uint8_t id)
 void dc_motor_controller::send_motor_command(uint8_t flag, uint8_t data_byte_1, uint8_t data_byte_2)
 {
     uint8_t motor_command_data[3] = { flag, data_byte_1, data_byte_2 };
-    hal::i2c_2.controller_send(i2c_address, motor_command_data, 3, HAL_MAX_DELAY);
+    hal::i2c_2.controller_send(i2c_address, motor_command_data, 3, 100);
 }
 
 /**

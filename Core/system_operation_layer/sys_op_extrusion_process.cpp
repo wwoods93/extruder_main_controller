@@ -15,6 +15,7 @@
 #include "../layer_2_rtosal/rtosal_globals.h"
 #include "../layer_2_rtosal/rtosal.h"
 #include "../layer_1_driver/driver_rtd.h"
+#include "../layer_1_driver/driver_dc_motor_controller.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
@@ -25,8 +26,9 @@
 namespace driver
 {
     rtd rtd_zone_0;
-//    rtd rtd_zone_1;
-//    rtd rtd_zone_2;
+    rtd rtd_zone_1;
+    rtd rtd_zone_2;
+//    dc_motor_controller motor_controller_1;
 }
 
 namespace sys_op::extrusion
@@ -60,7 +62,8 @@ namespace sys_op::extrusion
     void task_state_machine()
     {
         static uint8_t extrusion_process_state = EXTRUSION_PROCESS_STATE_INITIALIZE;
-
+        static uint32_t counter = 0;
+        static uint8_t flag = 0;
         switch (extrusion_process_state)
         {
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
@@ -83,8 +86,15 @@ namespace sys_op::extrusion
             {
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
                 spi_rx_queue_handle = get_spi_rx_queue_handle();
-                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ);
+//                driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
+                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
+                driver::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
+                driver::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 2);
                 driver::rtd_zone_0.start_read_requests();
+                driver::rtd_zone_1.start_read_requests();
+                driver::rtd_zone_2.start_read_requests();
+
+//                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 150);
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }
@@ -94,7 +104,24 @@ namespace sys_op::extrusion
                 if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 5U /*kernel_tick_frequency_hz*/)
                 {
                     driver::rtd_zone_0.handle_sensor_state();
+                    driver::rtd_zone_1.handle_sensor_state();
+                    driver::rtd_zone_2.handle_sensor_state();
                     extrusion_process_iteration_tick = osKernelGetTickCount();
+//                    if (counter > 100)
+//                    {
+//                        if (flag == 0U)
+//                        {
+//                            driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);
+//                            flag = 1U;
+//                        }
+//                        else
+//                        {
+//                            driver::motor_controller_1.set_speed(dc_motor_controller::M1, 200);
+//                            flag = 1U;
+//                        }
+//                        counter = 0;
+//                    }
+//                    ++counter;
                 }
 
                 if (driver::rtd_zone_0.send_request_if_flag_set(tx_common_packet))
@@ -106,10 +133,51 @@ namespace sys_op::extrusion
                     driver::rtd_zone_0.clear_send_new_request_flag();
                 }
 
-                rx_buffer_accessed = 0U;
-                if (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 50U) == osOK)
+                if (driver::rtd_zone_1.send_request_if_flag_set(tx_common_packet))
                 {
-                    driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
+                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    driver::rtd_zone_1.clear_send_new_request_flag();
+                }
+                if (driver::rtd_zone_2.send_request_if_flag_set(tx_common_packet))
+                {
+                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    driver::rtd_zone_2.clear_send_new_request_flag();
+                }
+
+                rx_buffer_accessed = 0U;
+                uint8_t count = 0U;
+                while (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 50U) == osOK && count < 3)
+                {
+                    switch (rx_common_packet.channel_id)
+                    {
+                        case 0:
+                        {
+                            driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
+                            break;
+                        }
+                        case 1:
+                        {
+                            driver::rtd_zone_1.read_rtd_and_calculate_temperature(rx_common_packet);
+                            break;
+                        }
+                        case 2:
+                        {
+                            driver::rtd_zone_2.read_rtd_and_calculate_temperature(rx_common_packet);
+                            break;
+                        }
+                        default:
+                        {
+                            break;
+                        }
+
+                    }
+                    ++count;
                     rx_buffer_accessed = 1U;
                 }
 

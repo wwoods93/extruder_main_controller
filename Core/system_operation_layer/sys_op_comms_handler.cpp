@@ -46,10 +46,258 @@
 spi::handle_t spi_2_handle;
 i2c::handle_t i2c_2_handle;
 
+void MX_TIM10_reinit(TIM_HandleTypeDef *htim);
+void MX_TIM13_reinit(TIM_HandleTypeDef *htim);
+void MX_TIM14_reinit(TIM_HandleTypeDef *htim);
+
+void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
+{
+    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+    MX_TIM10_reinit(get_timer_10_handle());
+    MX_TIM13_reinit(get_timer_13_handle());
+    MX_TIM14_reinit(get_timer_14_handle());
+    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+}
+
+void timer_1_input_capture_zero_crossing_pulse_half_detected_callback(TIM_HandleTypeDef *htim)
+{
+//    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+}
+
+
+void timer_10_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
+{
+//    HAL_TIM_OC_Stop_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+
+//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+}
+
+void timer_13_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
+{
+//    HAL_TIM_OC_Stop_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+}
+
+void timer_14_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
+{
+//    HAL_TIM_OC_Stop_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+}
+
+
+
+typedef union
+{
+    uint8_t buffer[4];
+    float numeric_param_input;
+} FloatToBytes;
+
+void TIM1_CC_IRQHandler(void)
+{
+    HAL_TIM_IRQHandler(get_timer_1_handle());
+
+}
+
+void TIM1_UP_TIM10_IRQHandler(void)
+{
+    /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
+
+    /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
+    HAL_TIM_IRQHandler(get_timer_1_handle());
+    HAL_TIM_IRQHandler(get_timer_10_handle());
+
+
+
+
+
+
+    /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
+
+    /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
+}
+
+void TIM8_UP_TIM13_IRQHandler(void)
+{
+    /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
+
+    /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
+    HAL_TIM_IRQHandler(get_timer_13_handle());
+    /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
+
+
+    /* USER CODE END TIM8_UP_TIM13_IRQn 1 */
+}
+
+/**
+  * @brief This function handles TIM8 trigger and commutation interrupts and TIM14 global interrupt.
+  */
+void TIM8_TRG_COM_TIM14_IRQHandler(void)
+{
+    /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 0 */
+
+    /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 0 */
+    HAL_TIM_IRQHandler(get_timer_14_handle());
+    /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 1 */
+
+    /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 1 */
+}
+
 void SPI2_IRQHandler()
 {
     spi_irq_handler(hal::spi_object_ptr());
 }
+
+void USART2_IRQHandler(void)
+{
+    HAL_UART_IRQHandler(get_usart_2_handle());
+}
+
+void CAN1_TX_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_RX0_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_RX1_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_SCE_IRQHandler(void)
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void I2C1_EV_IRQHandler(void)
+{
+    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
+}
+
+void I2C1_ER_IRQHandler(void)
+{
+    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
+}
+
+void I2C2_EV_IRQHandler(void)
+{
+    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
+}
+
+void I2C2_ER_IRQHandler(void)
+{
+    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
+}
+
+
+void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
+{
+    TIM_OC_InitTypeDef sConfigOC = {0};
+
+    htim->Instance = TIM10;
+    htim->Init.Prescaler = 64-1;
+    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+    htim->Init.Period = 2250;
+    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(htim) != HAL_OK)
+    {
+        Error_Handler();
+    }
+//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+    sConfigOC.OCMode = TIM_OCMODE_PWM2;
+    sConfigOC.Pulse = 2000;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
+{
+    TIM_OC_InitTypeDef sConfigOC = {0};
+
+    htim->Instance = TIM13;
+    htim->Init.Prescaler = 32-1;
+    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+    htim->Init.Period = 2250;
+    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(htim) != HAL_OK)
+    {
+        Error_Handler();
+    }
+//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+    sConfigOC.OCMode = TIM_OCMODE_PWM2;
+    sConfigOC.Pulse = 2000;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
+{
+    TIM_OC_InitTypeDef sConfigOC = {0};
+
+    htim->Instance = TIM14;
+    htim->Init.Prescaler = 32-1;
+    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+    htim->Init.Period = 3250;
+    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(htim) != HAL_OK)
+    {
+        Error_Handler();
+    }
+//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
+//    {
+//        Error_Handler();
+//    }
+    sConfigOC.OCMode = TIM_OCMODE_PWM2;
+    sConfigOC.Pulse = 2000;
+    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
+    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
+    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+
 
 namespace driver
 {
@@ -80,6 +328,8 @@ uint8_t send_data[6] = {(uint8_t)'h', (uint8_t)'e', (uint8_t)'l', (uint8_t)'l', 
 uint8_t recvd_data; // receive buffer
 uint8_t data_buffer[100]; // data buffer
 uint32_t cnt = 0;
+uint32_t pulse_count = 0;
+uint8_t pulse_set = 0;
 
 //UART 2 transmission complete callback
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -123,6 +373,12 @@ namespace sys_op::comms_handler
     common_packet_t rx_common_packet;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
 
+    FloatToBytes converter;
+    float test_temp = 27.16;
+    uint8_t b1 = 0;
+    uint8_t b2 = 0;
+    uint8_t b3 = 0;
+    uint8_t b4 = 0;
 
     void task_intitialize()
     {
@@ -137,6 +393,15 @@ namespace sys_op::comms_handler
         uint8_t rtd_config_byte = 0xD3;
         uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
         uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
+
+        converter.numeric_param_input = test_temp;
+        b1 = converter.buffer[0];
+        b2 = converter.buffer[1];
+        b3 = converter.buffer[2];
+        b4 = converter.buffer[3];
+        uint8_t i2c_test_data[5] = { 0x01, b1, b2, b3, b4};
+
+
 
         uint8_t packet_added = 0U;
         uint32_t rtd_reading_count = 0;
@@ -167,19 +432,54 @@ namespace sys_op::comms_handler
                 buffer_accessed = false;
                 common_array_accessed = false;
 
+                HAL_TIM_RegisterCallback(get_timer_1_handle(), HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
+                HAL_TIM_RegisterCallback(get_timer_1_handle(), HAL_TIM_IC_CAPTURE_HALF_CB_ID, timer_1_input_capture_zero_crossing_pulse_half_detected_callback);
+
+                HAL_TIM_RegisterCallback(get_timer_10_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_10_output_compare_delay_elapsed_callback);
+                HAL_TIM_RegisterCallback(get_timer_13_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_13_output_compare_delay_elapsed_callback);
+                HAL_TIM_RegisterCallback(get_timer_14_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
+
+
+                HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+
+//                HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+//                HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+//                HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
                 break;
             }
             case COMMS_HANDLER_STATE_RUN:
             {
+
+
+
+                HAL_I2C_Master_Transmit(get_i2c_2_handle(), (0x14 << 1), i2c_test_data, 5, 200);
+
+                if (pulse_count > 5 && pulse_set == 0)
+                {
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+                    pulse_set = 1;
+                }
+
+                if (pulse_count > 10)
+                {
+                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+                    pulse_set = 0;
+                    pulse_count = 0;
+                }
+                pulse_count++;
+
                     if (uart_counter > 50)
                     {
+
+
                         HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
                         HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
                         uart_counter = 0;
 
-                    }
+                     }
                     ++uart_counter;
 
                 if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)

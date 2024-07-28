@@ -24,10 +24,28 @@ extern "C" {
 #include "../../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
 void error_handler(void);
 void Error_Handler(void);
+
+TIM_HandleTypeDef* get_timer_1_handle(void);
+TIM_HandleTypeDef* get_timer_10_handle(void);
+TIM_HandleTypeDef* get_timer_13_handle(void);
+TIM_HandleTypeDef* get_timer_14_handle(void);
+
+CAN_HandleTypeDef* get_can_1_handle(void);
+I2C_HandleTypeDef* get_i2c_1_handle(void);
+I2C_HandleTypeDef* get_i2c_2_handle(void);
 UART_HandleTypeDef* get_usart_2_handle(void);
 void initialize_peripherals(void);
+void MX_CAN1_Init(void);
+void MX_I2C1_Init(void);
+void MX_I2C2_Init();
 void MX_WWDG_Init(void);
 void MX_USART2_UART_Init(void);
+
+void MX_TIM1_Init(void);
+void MX_TIM10_Init(void);
+void MX_TIM13_Init(void);
+void MX_TIM14_Init(void);
+
 #ifdef __cplusplus
 }
 #endif

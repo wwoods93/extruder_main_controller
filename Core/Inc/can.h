@@ -21,7 +21,7 @@
 extern "C" {
 #endif
 
-void MX_CAN1_Init(void);
+//void MX_CAN1_Init(void);
 
 #ifdef __cplusplus
 }

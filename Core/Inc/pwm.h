@@ -22,7 +22,7 @@ extern "C" {
 #endif
 
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
-void MX_TIM10_Init(void);
+//void MX_TIM10_Init(void);
 
 #ifdef __cplusplus
 }

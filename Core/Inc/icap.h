@@ -21,8 +21,8 @@
 extern "C" {
 #endif
 
-void MX_TIM13_Init(void);
-void MX_TIM14_Init(void);
+//void MX_TIM13_Init(void);
+//void MX_TIM14_Init(void);
 
 #ifdef __cplusplus
 }

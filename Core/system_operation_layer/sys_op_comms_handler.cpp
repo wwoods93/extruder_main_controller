@@ -205,7 +205,7 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
     htim->Instance = TIM10;
     htim->Init.Prescaler = 64-1;
     htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 2250;
+    htim->Init.Period = 1000;
     htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
@@ -221,7 +221,7 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
 //        Error_Handler();
 //    }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -238,7 +238,7 @@ void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
     htim->Instance = TIM13;
     htim->Init.Prescaler = 32-1;
     htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 2250;
+    htim->Init.Period = 1000;
     htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
@@ -254,7 +254,7 @@ void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
 //        Error_Handler();
 //    }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -271,7 +271,7 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
     htim->Instance = TIM14;
     htim->Init.Prescaler = 32-1;
     htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 3250;
+    htim->Init.Period = 1000;
     htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
@@ -287,7 +287,7 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
 //        Error_Handler();
 //    }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -421,7 +421,7 @@ namespace sys_op::comms_handler
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
                 hal::spi_2.configure_module(&spi_2_handle);
-                hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, HAL_SPI_TxRxCplt_Callback);
+                hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
                 hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
                 hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
                 hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15);

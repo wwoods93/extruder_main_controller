@@ -249,10 +249,6 @@ static constexpr uint32_t SPI_CRC_CALCULATION_DISABLE                           
 static constexpr uint16_t SPI_CRC_POLYNOMIAL_MIN                                        = (0x0001U);
 static constexpr uint16_t SPI_CRC_POLYNOMIAL_MAX                                        = (0xFFFFU);
 
-static constexpr uint32_t SPI_REGISTER_CALLBACK_COUNT                                   = 10U;
-static constexpr uint32_t SPI_REGISTER_CALLBACK_MIN_ID                                  = 0U;
-static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                                  = 9U;
-
 static constexpr uint8_t  ACTIVE_LOW                                                    = 0U;
 static constexpr uint8_t  CHIP_SELECT_LOGIC_LEVEL                                       = ACTIVE_LOW;
 static constexpr uint8_t  CHIP_SELECT_SET                                               = 0U;

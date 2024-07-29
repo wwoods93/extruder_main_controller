@@ -24,13 +24,16 @@ class spi
     public:
 
 #define SPI_USE_REGISTER_CALLBACKS      1U
-#define SPI_USE_CRC                     0U
 #define TX_SIZE_MAX                     8U
 #define CHIP_SELECT_1                   0U
 #define CHIP_SELECT_2                   1U
 #define CHIP_SELECT_3                   2U
 #define SPI_BYTES_MAX                   255U
 #define SPI_BUFFER_MAX                  255U
+
+static constexpr uint32_t SPI_REGISTER_CALLBACK_COUNT                                   = 10U;
+static constexpr uint32_t SPI_REGISTER_CALLBACK_MIN_ID                                  = 0U;
+static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                                  = 9U;
 
         /* type definitions */
         typedef enum
@@ -89,7 +92,6 @@ class spi
         static constexpr uint32_t   SPI_CR2_RX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE;
         static constexpr uint32_t   SPI_CR2_TX_BUFFER_DMA_ENABLE                = STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE;
 
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
         static constexpr uint8_t    SPI_ERROR_NONE                          = (0x00000000U);
         static constexpr uint8_t    SPI_ERROR_MODE_FAULT                    = (0x00000001U);
         static constexpr uint8_t    SPI_ERROR_DURING_CRC_CALCULATION        = (0x00000002U);
@@ -99,7 +101,7 @@ class spi
         static constexpr uint8_t    SPI_ERROR_WAITING_FOR_FLAG              = (0x00000020U);
         static constexpr uint8_t    SPI_ERROR_DURING_ABORT                  = (0x00000040U);
         static constexpr uint8_t    SPI_ERROR_CALLBACK_INVALID              = (0x00000080U);
-#endif
+
         static constexpr uint32_t   SPI_FLAG_RX_BUFFER_NOT_EMPTY                = STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY;
         static constexpr uint32_t   SPI_FLAG_TX_BUFFER_EMPTY                    = STM_HAL_SPI_SR_TX_BUFFER_EMPTY;
         static constexpr uint32_t   SPI_FLAG_BUSY                               = STM_HAL_SPI_SR_BUSY;
@@ -150,16 +152,13 @@ class spi
         static constexpr uint32_t   SPI_I2S_MODE_SELECT                         = STM_HAL_SPI_I2S_MODE_SELECT;
 
         /* macros */
-#if (USE_RTOS == 1U)
-#error "USE_RTOS should be 0 in the current HAL release"
-#else
 #define SPI_LOCK_MODULE(__HANDLE__)                                                                             \
                 do {                                                                                                        \
                     if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return SPI_STATUS_BUSY; }                                 \
                     else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                                                        \
                 }   while (0U)
 #define SPI_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
-#endif
+
 
 #define STM_HAL_DMA_ENABLE(__HANDLE__)                      ((__HANDLE__)->instance->CONFIG_REG |=  STM_HAL_DMA_SxCR_ENABLE)
 #define STM_HAL_DMA_DISABLE(__HANDLE__)                     ((__HANDLE__)->instance->CONFIG_REG &=  ~STM_HAL_DMA_SxCR_ENABLE)
@@ -276,15 +275,6 @@ class spi
             uint32_t crc_polynomial;
         } init_t;
 
-//        typedef struct
-//        {
-//            GPIO_TypeDef* chip_select_port;
-//            uint16_t chip_select_pin;
-//            // clock setting
-//            // anything else
-//
-//        } peripheral_device_t;
-
         typedef struct _handle_t
         {
             hal_spi_t                   *instance;
@@ -306,7 +296,6 @@ class spi
             GPIO_TypeDef* chip_select_port;
             uint16_t chip_select_pin;
 
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
             void (* TxCpltCallback)             (struct _handle_t *spi_handle);
             void (* RxCpltCallback)             (struct _handle_t *spi_handle);
             void (* TxRxCpltCallback)           (struct _handle_t *spi_handle);
@@ -317,7 +306,8 @@ class spi
             void (* AbortCpltCallback)          (struct _handle_t *spi_handle);
             void (* MspInitCallback)            (struct _handle_t *spi_handle);
             void (* MspDeInitCallback)          (struct _handle_t *spi_handle);
-#endif
+
+            void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *spi_handle);
         } handle_t;
 
         /* public member variables */
@@ -355,14 +345,10 @@ class spi
         void configure_module(handle_t* spi_handle);
         void initialize_spi_buffer();
         status_t spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin);
-//        status_t add_packet_to_buffer(uint8_t packet_chip_select, uint8_t packet_tx_size, uint8_t* tx_bytes);
-//        void shift_buffer_contents_to_front();
-//        void process_spi_buffer();
-#if (SPI_USE_REGISTER_CALLBACKS == 1U)
+
         typedef void (*spi_callback_ptr_t)(handle_t* spi_module_handle);
-        status_t spi_register_callback(callback_id_t callback_id, spi_callback_ptr_t pCallback);
-        status_t spi_unregister_callback(callback_id_t callback_id);
-#endif
+        status_t spi_register_callback(callback_id_t _callback_id, spi_callback_ptr_t _callback_ptr) const;
+        status_t spi_unregister_callback(callback_id_t _callback_id) const;
         /* interrupt service routines */
         friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
         friend void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
@@ -395,16 +381,11 @@ class spi
         void push_active_packet_to_return_buffer();
         status_t reset_active_packet();
         uint8_t process_return_buffer(packet_t& packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
-        spi::status_t spi_transmit_receive_interrupt_from_buffer(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin, uint8_t arg_tx_index);
-        void transmit_and_get_result_from_buffer(uint8_t arg_tx_size, uint8_t* arg_tx_data, uint8_t arg_tx_index);
         void process_send_buffer();
 
     private:
         /* private objects */
-        uint8_t packet_id_counter = 0;
         std::vector<packet_t*> spi_buffer;
-        uint8_t head = 0;
-        uint8_t tail = 0;
         /* private member functions */
         status_t initialize_module();
         void set_rx_and_tx_interrupt_service_routines() const;

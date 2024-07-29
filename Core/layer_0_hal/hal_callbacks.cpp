@@ -51,7 +51,7 @@ void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
     }
 }
 
-void HAL_SPI_TxRxCplt_Callback(spi::handle_t *hspi)
+void hal_callback_spi_rx_tx_complete(spi::handle_t *hspi)
 {
 
     if (HAL_GPIO_ReadPin(hspi->chip_select_port, hspi->chip_select_pin) == GPIO_PIN_RESET)

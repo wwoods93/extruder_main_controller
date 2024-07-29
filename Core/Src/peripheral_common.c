@@ -318,7 +318,7 @@ void MX_TIM10_Init(void)
     htim10.Instance = TIM10;
     htim10.Init.Prescaler = 64-1;
     htim10.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim10.Init.Period = 2250;
+    htim10.Init.Period = 1000;
     htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
@@ -334,7 +334,7 @@ void MX_TIM10_Init(void)
         Error_Handler();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -369,7 +369,7 @@ void MX_TIM13_Init(void)
     htim13.Instance = TIM13;
     htim13.Init.Prescaler = 32-1;
     htim13.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim13.Init.Period = 2250;
+    htim13.Init.Period = 1000;
     htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(&htim13) != HAL_OK)
@@ -385,7 +385,7 @@ void MX_TIM13_Init(void)
         Error_Handler();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -420,7 +420,7 @@ void MX_TIM14_Init(void)
     htim14.Instance = TIM14;
     htim14.Init.Prescaler = 32-1;
     htim14.Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim14.Init.Period = 3250;
+    htim14.Init.Period = 1000;
     htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
@@ -436,7 +436,7 @@ void MX_TIM14_Init(void)
         Error_Handler();
     }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 2000;
+    sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;

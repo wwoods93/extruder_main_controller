@@ -36,6 +36,8 @@
 #define STM_HAL_CHECK_FOR_BIT_STATE_SET(REG, BIT)       (((REG) & (BIT)) == (BIT))
 #define STM_HAL_CHECK_FOR_BIT_STATE_RESET(REG, BIT)     (((REG) & (BIT)) == 0U)
 
+
+static constexpr uint32_t       DELAY_DISABLE = 0xFFFFFFFFU;
 #if (USE_RTOS == 1U)
 #error "USE_RTOS should be 0 in the current HAL release"
 #else
@@ -189,6 +191,12 @@ typedef enum
 
 typedef enum
 {
+    BIT_CLEAR = 0x00,
+    BIT_SET = 0x01
+} bit_status_t;
+
+typedef enum
+{
     HAL_STATUS_OK       = 0x00U,
     HAL_STATUS_ERROR    = 0x01U,
     HAL_STATUS_BUSY     = 0x02U,
@@ -199,15 +207,7 @@ typedef enum
 #define APB1_PERIPHERAL_BASE_ADDRESS        PERIPHERAL_BASE_ADDRESS
 #define APB2_PERIPHERAL_BASE_ADDRESS        (PERIPHERAL_BASE_ADDRESS + 0x00010000UL)
 
-#define SPI_1_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3000UL)
-#define SPI_2_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3800UL)
-#define SPI_3_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3C00UL)
-#define SPI_4_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3400UL)
 
-#define SPI_1                               ((hal_spi_t *) SPI_1_BASE_ADDRESS)
-#define SPI_2                               ((hal_spi_t *) SPI_2_BASE_ADDRESS)
-#define SPI_3                               ((hal_spi_t *) SPI_3_BASE_ADDRESS)
-#define SPI_4                               ((hal_spi_t *) SPI_4_BASE_ADDRESS)
 
 #define I2C_2_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x5800UL)
 #define I2C_2                               ((hal_i2c_t *) I2C_2_BASE_ADDRESS)
@@ -229,18 +229,7 @@ typedef struct
 
 /******************************************************** spi *********************************************************/
 
-typedef struct
-{
-    volatile uint32_t CONTROL_REG_1;
-    volatile uint32_t CONTROL_REG_2;
-    volatile uint32_t STATUS_REG;
-    volatile uint32_t DATA_REG;
-    volatile uint32_t CRC_POLYNOMIAL_REG;
-    volatile uint32_t CRC_RX_REG;
-    volatile uint32_t CRC_TX_REG;
-    volatile uint32_t I2S_CONFIG_REG;
-    volatile uint32_t I2S_PRESCALER_REG;
-} hal_spi_t;
+
 
 /******************************************************** dma *********************************************************/
 typedef struct

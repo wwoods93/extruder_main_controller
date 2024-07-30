@@ -23,7 +23,7 @@ namespace hal
     spi* spi_object_ptr();
 }
 
-spi::handle_t* get_spi_handle();
+spi::module_t* get_spi_handle();
 //rtd* get_rtd_object();
 
 namespace sys_op::comms_handler

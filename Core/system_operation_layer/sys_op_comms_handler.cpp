@@ -43,7 +43,7 @@
 #define COMMS_HANDLER_STATE_INITIALIZE      0
 #define COMMS_HANDLER_STATE_RUN             1
 
-spi::handle_t spi_2_handle;
+spi::module_t spi_2_handle;
 i2c::handle_t i2c_2_handle;
 
 void MX_TIM10_reinit(TIM_HandleTypeDef *htim);
@@ -317,7 +317,7 @@ namespace hal
 
 
 
-spi::handle_t* get_spi_handle()
+spi::module_t* get_spi_handle()
 {
     return &spi_2_handle;
 }
@@ -420,7 +420,7 @@ namespace sys_op::comms_handler
                 initialization_queue_handle         = get_initialization_task_queue_handle();
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-                hal::spi_2.configure_module(&spi_2_handle);
+                hal::spi_2.initialize(&spi_2_handle, SPI_2);
                 hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
                 hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
                 hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
@@ -482,25 +482,59 @@ namespace sys_op::comms_handler
                      }
                     ++uart_counter;
 
-                if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
-                {
-                    common_array_accessed = true;
-                }
+//                    if (rtd_reading_count > 50)
+//                    {
+                        if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
+                        {
+                            common_array_accessed = true;
+                        }
 
-                if (common_array_accessed)
-                {
-                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
-                    common_array_accessed = false;
-                }
+                        if (common_array_accessed)
+                        {
+                            hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
+                            common_array_accessed = false;
+                        }
 
-                HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+                        HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-                osDelay(10);
-                hal::spi_2.process_send_buffer();
-                packet_added = 0U;
+                        osDelay(10);
+                        hal::spi_2.process_send_buffer();
+                        packet_added = 0U;
+//                        rtd_reading_count = 0;
+//                    }
+//                    rtd_reading_count++;
+
+
                 spi::packet_t spi_rx_packet;
+
                 buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
+
+                if (buffer_accessed)
+                {
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
+                    {
+                        packet_added = 1U;
+                    }
+
+                    buffer_access_counter++;
+                    buffer_accessed = 0U;
+                }
+
                 buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d);
+
+                if (buffer_accessed)
+                {
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
+                    {
+                        packet_added = 1U;
+                    }
+
+                    buffer_access_counter++;
+                    buffer_accessed = 0U;
+                }
+
                 buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d);
 
                 if (buffer_accessed)
@@ -514,6 +548,7 @@ namespace sys_op::comms_handler
                     buffer_access_counter++;
                     buffer_accessed = 0U;
                 }
+
                 break;
             }
             default:

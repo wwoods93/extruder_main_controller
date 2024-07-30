@@ -30,7 +30,7 @@
 ///* hal_i2c header */
 //#include "hal_i2c.h"
 //
-//i2c::i2c(handle_t* handle)
+//i2c::i2c(module_t* handle)
 //{
 //    i2c_module_handle = handle;
 //    set_configuration();
@@ -38,7 +38,7 @@
 //    i2c_controller_write_procedure.state = I2C_STATE_CHECK_IF_PERIPHERAL_IS_INITIALIZED;
 //}
 //
-// i2c::status_t i2c::initialize_module(handle_t *hi2c)
+// i2c::procedure_status_t i2c::initialize_module(module_t *hi2c)
 //{
 //    uint32_t freqrange;
 //    uint32_t pclk1;
@@ -108,7 +108,7 @@
 //    return I2C_STATUS_OK;
 //}
 //
-//void i2c::HAL_I2C_MspInit(handle_t* hi2c)
+//void i2c::HAL_I2C_MspInit(module_t* hi2c)
 //{
 //    GPIO_InitTypeDef GPIO_InitStruct = {0};
 //
@@ -155,7 +155,7 @@
 //        Error_Handler();
 //}
 //
-//i2c::status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer_pointer, uint16_t size, uint32_t timeout)
+//i2c::procedure_status_t i2c::controller_send(uint16_t target_address, uint8_t *data_buffer_pointer, uint16_t size, uint32_t timeout)
 //{
 //    uint32_t tick_start = 0;
 //    i2c_controller_error_message_code = ERROR_MESSAGE_CODE_NO_ERROR;
@@ -197,7 +197,7 @@
 //            volatile uint32_t current_transfer_options = I2C_TRANSFER_OPTIONS_DEFAULT;
 //            set_transfer_state();
 //            set_transfer_parameters(data_buffer_pointer, size, current_transfer_options);
-//            status_t request_result = controller_request_send(current_transfer_options, target_address, timeout, tick_start);
+//            procedure_status_t request_result = controller_request_send(current_transfer_options, target_address, timeout, tick_start);
 //
 //            if (request_result != I2C_STATUS_OK)
 //            {
@@ -291,7 +291,7 @@
 //    return I2C_STATUS_OK;
 //}
 //
-//i2c::handle_t* i2c::get_i2c_module_handle() const
+//i2c::module_t* i2c::get_i2c_module_handle() const
 //{
 //    return i2c_module_handle;
 //}
@@ -311,7 +311,7 @@
 //    return (uint8_t) i2c_module_handle->state;
 //}
 //
-//void i2c::set_i2c_module_state(state_t i2c_state)
+//void i2c::set_i2c_module_state(module_status_t i2c_state)
 //{
 //    i2c_module_handle->state = i2c_state;
 //}
@@ -366,7 +366,7 @@
 //    I2C_CLEAR_ADDRESS_FLAG(i2c_module_handle);
 //}
 //
-//i2c::status_t i2c::lock_i2c_module()
+//i2c::procedure_status_t i2c::lock_i2c_module()
 //{
 //    if (i2c_module_handle->lock == HAL_MODULE_LOCKED)
 //        return I2C_STATUS_BUSY;
@@ -435,7 +435,7 @@
 //    i2c_module_handle->transfer_size--;
 //}
 //
-//i2c::status_t i2c::check_for_nack()
+//i2c::procedure_status_t i2c::check_for_nack()
 //{
 //    if (check_flag(I2C_FLAG_ACKNOWLEDGE_FAILED) == FLAG_SET)
 //    {
@@ -447,7 +447,7 @@
 //    return I2C_STATUS_OK;
 //}
 //
-//i2c::status_t i2c::wait_for_flag(uint32_t flag, flag_status_t status, uint32_t timeout, uint32_t tick_start)
+//i2c::procedure_status_t i2c::wait_for_flag(uint32_t flag, flag_status_t status, uint32_t timeout, uint32_t tick_start)
 //{
 //    while (check_flag(flag) == status)
 //    {
@@ -467,7 +467,7 @@
 //    return I2C_STATUS_OK;
 //}
 //
-//i2c::status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t timeout, uint32_t tick_start)
+//i2c::procedure_status_t i2c::wait_for_controller_address_flag(uint32_t flag, uint32_t timeout, uint32_t tick_start)
 //{
 //    while (check_flag(flag) == FLAG_RESET)
 //    {
@@ -492,7 +492,7 @@
 //    return I2C_STATUS_OK;
 //}
 //
-//i2c::status_t i2c::controller_request_send(volatile uint32_t current_transfer_options, uint16_t target_address, uint32_t timeout, uint32_t tick_start)
+//i2c::procedure_status_t i2c::controller_request_send(volatile uint32_t current_transfer_options, uint16_t target_address, uint32_t timeout, uint32_t tick_start)
 //{
 //    // if this is the first frame or module has just received a byte, generate a start bit
 //    if (current_transfer_options == I2C_FIRST_AND_LAST_FRAME

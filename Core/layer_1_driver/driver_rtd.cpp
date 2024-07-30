@@ -246,7 +246,6 @@ uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& ar
 
 }
 
-
 uint16_t rtd::read_rtd() const
 {
     rtd_begin();

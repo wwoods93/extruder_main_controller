@@ -21,7 +21,7 @@
 //
 //namespace hal
 //{
-//    i2c i2c_2((i2c::handle_t *)&hi2c2);
+//    i2c i2c_2((i2c::module_t *)&hi2c2);
 //}
 ///******************************************************* public *******************************************************/
 //dc_motor_controller::dc_motor_controller() = default;

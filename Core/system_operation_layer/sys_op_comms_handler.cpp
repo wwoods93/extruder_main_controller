@@ -19,10 +19,10 @@
 /* 3rd-party includes */
 #include "cmsis_os2.h"
 /* hal includes */
-#include "../layer_0_hal//hal_general.h"
-#include "../layer_0_hal//hal_callbacks.h"
-#include "../layer_0_hal//hal_spi.h"
-#include "../layer_0_hal//hal_i2c.h"
+#include "../layer_0_hal/hal_general.h"
+#include "../layer_0_hal/hal_callbacks.h"
+#include "../layer_0_hal/hal_spi.h"
+#include "../layer_0_hal/hal_i2c.h"
 #include "../Inc/peripheral_common.h"
 #include "mcu_clock_timers.h"
 #include "system_clock.h"
@@ -359,6 +359,7 @@ namespace sys_op::comms_handler
     osMessageQueueId_t initialization_queue_handle = nullptr;
     osMessageQueueId_t spi_tx_queue_handle = nullptr;
     osMessageQueueId_t spi_rx_queue_handle = nullptr;
+    osMessageQueueId_t i2c_tx_queue_handle = nullptr;
 
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
@@ -371,10 +372,12 @@ namespace sys_op::comms_handler
     id_number_t rtd_2_channel_id = ID_INVALID;
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
+    common_float_data_t rtd_reading;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
-
+    uint8_t i2c_data[5] = { 0, 0, 0, 0, 0 };
     FloatToBytes converter;
     float test_temp = 27.16;
+    uint8_t b0 = 0;
     uint8_t b1 = 0;
     uint8_t b2 = 0;
     uint8_t b3 = 0;
@@ -394,12 +397,7 @@ namespace sys_op::comms_handler
         uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
         uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
 
-        converter.numeric_param_input = test_temp;
-        b1 = converter.buffer[0];
-        b2 = converter.buffer[1];
-        b3 = converter.buffer[2];
-        b4 = converter.buffer[3];
-        uint8_t i2c_test_data[5] = { 0x01, b1, b2, b3, b4};
+
 
 
 
@@ -417,6 +415,7 @@ namespace sys_op::comms_handler
                 initialization_event_flags_handle   = get_initialization_event_flags_handle();
                 spi_tx_queue_handle                 = get_spi_tx_queue_handle();
                 spi_rx_queue_handle                 = get_spi_rx_queue_handle();
+                i2c_tx_queue_handle                 = get_i2c_tx_queue_handle();
                 initialization_queue_handle         = get_initialization_task_queue_handle();
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
@@ -452,10 +451,6 @@ namespace sys_op::comms_handler
             }
             case COMMS_HANDLER_STATE_RUN:
             {
-
-
-
-                HAL_I2C_Master_Transmit(get_i2c_2_handle(), (0x14 << 1), i2c_test_data, 5, 200);
 
                 if (pulse_count > 5 && pulse_set == 0)
                 {
@@ -547,6 +542,40 @@ namespace sys_op::comms_handler
 
                     buffer_access_counter++;
                     buffer_accessed = 0U;
+                }
+
+                if (osMessageQueueGet( i2c_tx_queue_handle, &rtd_reading, nullptr, 50) == osOK)
+                {
+                    converter.numeric_param_input = rtd_reading.value;
+
+                    switch (rtd_reading.id)
+                    {
+                        case 0:
+                        {
+                            i2c_data[0] = 0x01;
+                            break;
+                        }
+                        case 1:
+                        {
+                            i2c_data[0] = 0x03;
+                            break;
+                        }
+                        case 2:
+                        {
+                            i2c_data[0] = 0x05;
+                            break;
+                        }
+                    }
+
+                    i2c_data[1] = converter.buffer[0];
+                    i2c_data[2] = converter.buffer[1];
+                    i2c_data[3] = converter.buffer[2];
+                    i2c_data[4] = converter.buffer[3];
+
+                    HAL_I2C_Master_Transmit(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5, 200);
+
+                    rtd_reading.id = 0;
+                    rtd_reading.value = 0;
                 }
 
                 break;

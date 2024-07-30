@@ -169,8 +169,12 @@ class rtd : public user
 
 
         id_number_t user_id{};
+
+        float temperature_celsius_current_reading = 0;
+        float temperature_celsius_moving_average = 1;
+        uint8_t moving_average_sample_count = 5;
+
         double rtd_resistance_scaled_and_rounded{};
-        float temperature_celsius{};
         sensor_state_t sensor_state = SENSOR_INITIALIZE;
         uint32_t read_rate_os_ticks = 0;
         uint32_t tick_count_at_last_sensor_read = 0;
@@ -201,13 +205,14 @@ class rtd : public user
         void clear_send_new_request_flag();
         void pass_available_sensor_command_to_buffer(common_packet_t& _packet);
         void handle_sensor_state();
-        void rtd_begin() const;
-        void write_register_8(uint8_t register_address, uint8_t data) const;
-        [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
-        [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
-        [[nodiscard]] uint16_t read_rtd() const;
+//        void rtd_begin() const;
+//        void write_register_8(uint8_t register_address, uint8_t data) const;
+//        [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
+//        [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
+//        [[nodiscard]] uint16_t read_rtd() const;
         uint16_t get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet);
         float read_rtd_and_calculate_temperature(common_packet_t& arg_common_packet);
+        float compute_temperature_moving_average();
         [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);
         float rtd_resistance_to_temperature_celsius (uint32_t rtd_resistance);

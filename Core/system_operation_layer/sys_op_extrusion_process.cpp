@@ -28,6 +28,14 @@ namespace driver
     rtd rtd_zone_0;
     rtd rtd_zone_1;
     rtd rtd_zone_2;
+
+    float average_temp_zone_0 = 0;
+    float average_temp_zone_1 = 0;
+    float average_temp_zone_2 = 0;
+
+    uint8_t value_updated_zone_0 = 0;
+    uint8_t value_updated_zone_1 = 0;
+    uint8_t value_updated_zone_2 = 0;
 //    dc_motor_controller motor_controller_1;
 }
 
@@ -36,6 +44,7 @@ namespace sys_op::extrusion
     osEventFlagsId_t initialization_event_flags_handle = nullptr;
     osMessageQueueId_t spi_tx_queue_handle = nullptr;
     osMessageQueueId_t spi_rx_queue_handle = nullptr;
+    osMessageQueueId_t i2c_tx_queue_handle = nullptr;
 
     static uint32_t extrusion_process_iteration_tick;
     uint32_t kernel_tick_frequency_hz;
@@ -46,6 +55,7 @@ namespace sys_op::extrusion
 
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
+    common_float_data_t rtd_reading;
 
 
 //    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
@@ -86,6 +96,8 @@ namespace sys_op::extrusion
             {
                 spi_tx_queue_handle = get_spi_tx_queue_handle();
                 spi_rx_queue_handle = get_spi_rx_queue_handle();
+                i2c_tx_queue_handle = get_i2c_tx_queue_handle();
+
 //                driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
                 driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
                 driver::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
@@ -159,16 +171,22 @@ namespace sys_op::extrusion
                         case 0:
                         {
                             driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
+                            driver::average_temp_zone_0 = driver::rtd_zone_0.compute_temperature_moving_average();
+                            driver::value_updated_zone_0 = 1;
                             break;
                         }
                         case 1:
                         {
                             driver::rtd_zone_1.read_rtd_and_calculate_temperature(rx_common_packet);
+                            driver::average_temp_zone_1 = driver::rtd_zone_1.compute_temperature_moving_average();
+                            driver::value_updated_zone_1 = 1;
                             break;
                         }
                         case 2:
                         {
                             driver::rtd_zone_2.read_rtd_and_calculate_temperature(rx_common_packet);
+                            driver::average_temp_zone_2 = driver::rtd_zone_2.compute_temperature_moving_average();
+                            driver::value_updated_zone_2 = 1;
                             break;
                         }
                         default:
@@ -179,6 +197,45 @@ namespace sys_op::extrusion
                     }
                     ++count;
                     rx_buffer_accessed = 1U;
+                }
+
+                if (driver::value_updated_zone_0 == 1U)
+                {
+                    rtd_reading.id = 0;
+                    rtd_reading.value = driver::average_temp_zone_0;
+                    if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    rtd_reading.id = 0;
+                    rtd_reading.value = 0;
+                    driver::value_updated_zone_0 = 0U;
+                }
+
+                if (driver::value_updated_zone_1 == 1U)
+                {
+                    rtd_reading.id = 1;
+                    rtd_reading.value = driver::average_temp_zone_1;
+                    if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    rtd_reading.id = 0;
+                    rtd_reading.value = 0;
+                    driver::value_updated_zone_1 = 0U;
+                }
+
+                if (driver::value_updated_zone_2 == 1U)
+                {
+                    rtd_reading.id = 2;
+                    rtd_reading.value = driver::average_temp_zone_2;
+                    if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
+                    {
+                        ++success_counter;
+                    }
+                    rtd_reading.id = 0;
+                    rtd_reading.value = 0;
+                    driver::value_updated_zone_2 = 0U;
                 }
 
 

@@ -40,6 +40,7 @@ static constexpr uint32_t READY_FOR_COMMS_RUN           = 0X00100000;
 osMessageQueueId_t get_initialization_task_queue_handle();
 osMessageQueueId_t get_spi_tx_queue_handle();
 osMessageQueueId_t get_spi_rx_queue_handle();
+osMessageQueueId_t get_i2c_tx_queue_handle();
 osMessageQueueId_t get_extrusion_task_i2c_tx_queue_handle();
 osMessageQueueId_t get_extrusion_task_i2c_rx_queue_handle();
 osMessageQueueId_t get_spooling_task_i2c_tx_queue_handle();

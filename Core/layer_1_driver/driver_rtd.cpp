@@ -153,32 +153,32 @@ void rtd::handle_sensor_state()
     }
 }
 
-void rtd::rtd_begin() const
-{
-    write_register_8(CONFIG_REGISTER_ADDRESS, RTD_CONFIG_REG_BYTE);
-}
+//void rtd::rtd_begin() const
+//{
+//    write_register_8(CONFIG_REGISTER_ADDRESS, RTD_CONFIG_REG_BYTE);
+//}
 
-void rtd::write_register_8(uint8_t register_address, uint8_t data) const
-{
-    uint8_t rx_1 = 0;
-    uint8_t rx_2 = 0;
-    register_address |= WRITE_REGISTER_ADDRESS_MASK;
-//    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, device_id);
-//    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, device_id);
-//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
-//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &data);
-}
+//void rtd::write_register_8(uint8_t register_address, uint8_t data) const
+//{
+//    uint8_t rx_1 = 0;
+//    uint8_t rx_2 = 0;
+//    register_address |= WRITE_REGISTER_ADDRESS_MASK;
+////    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_1, 1, device_id);
+////    rtd_spi_object->spi_transmit_receive_interrupt(&data, &rx_2, 1, device_id);
+////    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
+////    rtd_spi_object->add_packet_to_buffer(device_id, 1, &data);
+//}
 
-uint8_t rtd::read_register_8(uint8_t register_address) const
-{
-    register_address &= READ_REGISTER_ADDRESS_MASK;
-    uint8_t rx_data = 0;
-//    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, device_id);
-//    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
-//    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//    hal_callbacks_set_spi_rx_data_ready_flag(0);
-    return rx_data;
-}
+//uint8_t rtd::read_register_8(uint8_t register_address) const
+//{
+//    register_address &= READ_REGISTER_ADDRESS_MASK;
+//    uint8_t rx_data = 0;
+////    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, device_id);
+////    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
+////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
+////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+//    return rx_data;
+//}
 
 //uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
 //{
@@ -204,36 +204,36 @@ uint8_t rtd::read_register_8(uint8_t register_address) const
 //
 //    return rtd_reading >> 1;
 //}
-
-uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
-{
-    uint16_t rtd_reading = 0;
-//    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
-//    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
-
-
-
-
-
-//    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
-//    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
-//    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
-//    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//    hal_callbacks_set_spi_rx_data_ready_flag(0);
-//spi_byte = *(++rx_ptr);
-//    rtd_reading = *(++rx_ptr);
-//    rtd_reading <<= 8;
-//    *rx_ptr = 0;
-//    *(--rx_ptr) = 0;
-//    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
-////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_2);
-//    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//    hal_callbacks_set_spi_rx_data_ready_flag(0);
-//    rtd_reading |= *(++rx_ptr);
-//    free(--rx_ptr);
-
-    return rtd_reading >> 1;
-}
+//
+//uint16_t rtd::read_msb_and_lsb_registers_and_concatenate() const
+//{
+//    uint16_t rtd_reading = 0;
+////    uint8_t tx_data_1[2] = {MSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
+////    uint8_t tx_data_2[2] = {LSB_REGISTER_ADDRESS_FOR_READ, DUMMY_BYTE};
+//
+//
+//
+//
+//
+////    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
+////    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
+////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
+////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
+////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+////spi_byte = *(++rx_ptr);
+////    rtd_reading = *(++rx_ptr);
+////    rtd_reading <<= 8;
+////    *rx_ptr = 0;
+////    *(--rx_ptr) = 0;
+////    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
+//////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_2);
+////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
+////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+////    rtd_reading |= *(++rx_ptr);
+////    free(--rx_ptr);
+//
+//    return rtd_reading >> 1;
+//}
 
 uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet)
 {
@@ -241,33 +241,43 @@ uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& ar
     rtd_reading = arg_common_packet.bytes[3];
     rtd_reading <<= 8;
     rtd_reading |= arg_common_packet.bytes[5];
+
     return rtd_reading >> 1;
-
-
 }
 
-uint16_t rtd::read_rtd() const
-{
-    rtd_begin();
-    return read_msb_and_lsb_registers_and_concatenate();
-}
+//uint16_t rtd::read_rtd() const
+//{
+//    rtd_begin();
+//    return read_msb_and_lsb_registers_and_concatenate();
+//}
 
 float rtd::read_rtd_and_calculate_temperature(common_packet_t& arg_common_packet)
 {
-    double resistance_as_double = 0;
-    float calculated_temperture_celsius = 0;
+//    double resistance_as_double = 0;
+    temperature_celsius_current_reading = 0;
 
     rtd_resistance_scaled_and_rounded = (double)get_msb_and_lsb_register_bytes_and_concatenate(arg_common_packet);
     rtd_resistance_scaled_and_rounded = ceil((double)(rtd_resistance_scaled_and_rounded * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0)) / 1000.0;
     rtd_resistance_scaled_and_rounded = ceil(rtd_resistance_scaled_and_rounded * 100);
-    calculated_temperture_celsius = rtd_resistance_to_temperature_celsius((uint32_t)rtd_resistance_scaled_and_rounded);
-    temperature_celsius = calculated_temperture_celsius;
-     return calculated_temperture_celsius;
+    temperature_celsius_current_reading = rtd_resistance_to_temperature_celsius((uint32_t)rtd_resistance_scaled_and_rounded);
+
+     return temperature_celsius_current_reading;
+}
+
+float rtd::compute_temperature_moving_average()
+{
+    if (temperature_celsius_current_reading > 0 && temperature_celsius_current_reading < 60000)
+    {
+        temperature_celsius_moving_average -= (temperature_celsius_moving_average / (float) moving_average_sample_count);
+        temperature_celsius_moving_average += (temperature_celsius_current_reading / (float) moving_average_sample_count);
+    }
+
+    return temperature_celsius_moving_average;
 }
 
 float rtd::get_device_reading_degrees_celsius() const
 {
-    return temperature_celsius;
+    return temperature_celsius_moving_average;
 }
 
 uint32_t rtd::search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance)

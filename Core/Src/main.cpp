@@ -33,8 +33,10 @@ const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "ini
 
 osMessageQueueId_t spi_tx_queue_handle;
 osMessageQueueId_t spi_rx_queue_handle;
+osMessageQueueId_t i2c_tx_queue_handle;
 const osMessageQueueAttr_t spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
 const osMessageQueueAttr_t spi_rx_queue_attributes = { .name = "extrusion_task_spi_rx_queue" };
+const osMessageQueueAttr_t i2c_tx_queue_attributes = { .name = "touchscreen_i2c_tx_queue" };
 
 
 osThreadId_t initialization_taskHandle;
@@ -71,6 +73,7 @@ int main()
     initialization_task_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &initialization_task_queue_attributes);
     spi_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_tx_queue_attributes);
     spi_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_rx_queue_attributes);
+    i2c_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &i2c_tx_queue_attributes);
 
     initialization_taskHandle       = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
     comms_handler_taskHandle        = osThreadNew(start_comms_handler_task,         nullptr, &comms_handler_task_attributes);
@@ -182,6 +185,11 @@ osMessageQueueId_t get_spi_tx_queue_handle()
 osMessageQueueId_t get_spi_rx_queue_handle()
 {
     return spi_rx_queue_handle;
+}
+
+osMessageQueueId_t get_i2c_tx_queue_handle()
+{
+    return i2c_tx_queue_handle;
 }
 
 osEventFlagsId_t get_initialization_event_flags_handle()

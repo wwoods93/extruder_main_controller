@@ -34,6 +34,12 @@ typedef struct
     uint8_t tx_byte_count;
 } common_packet_t;
 
+typedef struct
+{
+    id_number_t id;
+    float value;
+} common_float_data_t;
+
 
 
 namespace rtosal

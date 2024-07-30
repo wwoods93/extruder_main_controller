@@ -127,6 +127,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
         (module->settings.baud_rate_prescaler & SPI_CR1_BIT_BAUD_RATE) |
         (module->settings.first_bit_setting & SPI_CR1_BIT_LSB_FIRST) |
         (module->settings.crc_calculation & SPI_CR1_BIT_CRC_ENABLE)));
+
     WRITE_REG(module->instance->CONTROL_REG_2, (((module->settings.chip_select_setting >> 16U) & SPI_CR2_BIT_CHIP_SELECT_OUTPUT_ENABLE) |
                                                 (module->settings.ti_mode & SPI_CR2_BIT_FRAME_FORMAT)));
 

@@ -397,7 +397,8 @@ namespace sys_op::comms_handler
         uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
         uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
 
-
+        static uint32_t start_time = 0;
+        uint32_t delay = 1000000U;
 
 
 
@@ -419,7 +420,7 @@ namespace sys_op::comms_handler
                 initialization_queue_handle         = get_initialization_task_queue_handle();
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-                hal::spi_2.initialize(&spi_2_handle, SPI_2);
+                hal::spi_2.initialize(&spi_2_handle, SPI_2, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
                 hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
                 hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
@@ -439,7 +440,10 @@ namespace sys_op::comms_handler
                 HAL_TIM_RegisterCallback(get_timer_14_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
 
 
+                HAL_TIM_Base_Start(get_timer_2_handle());
                 HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+
+                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 
 //                HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
 //                HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
@@ -452,19 +456,27 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-                if (pulse_count > 5 && pulse_set == 0)
-                {
-                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-                    pulse_set = 1;
-                }
-
-                if (pulse_count > 10)
-                {
-                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-                    pulse_set = 0;
-                    pulse_count = 0;
-                }
-                pulse_count++;
+//                if (start_time == 0)
+//                {
+//                    start_time = get_timer_2_handle()->Instance->CNT;
+//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+//                }
+//                while (get_timer_2_handle()->Instance->CNT - start_time < 200U);
+//                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+//                start_time = 0;
+//                if (pulse_count > 5 && pulse_set == 0)
+//                {
+//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
+//                    pulse_set = 1;
+//                }
+//
+//                if (pulse_count > 10)
+//                {
+//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
+//                    pulse_set = 0;
+//                    pulse_count = 0;
+//                }
+//                pulse_count++;
 
                     if (uart_counter > 50)
                     {
@@ -477,27 +489,23 @@ namespace sys_op::comms_handler
                      }
                     ++uart_counter;
 
-//                    if (rtd_reading_count > 50)
-//                    {
-                        if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
-                        {
-                            common_array_accessed = true;
-                        }
+                if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
+                {
+                    common_array_accessed = true;
+                }
 
-                        if (common_array_accessed)
-                        {
-                            hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
-                            common_array_accessed = false;
-                        }
+                if (common_array_accessed)
+                {
+                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
+                    common_array_accessed = false;
+                }
 
-                        HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+                HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-                        osDelay(10);
-                        hal::spi_2.process_send_buffer();
-                        packet_added = 0U;
-//                        rtd_reading_count = 0;
-//                    }
-//                    rtd_reading_count++;
+                osDelay(10);
+                hal::spi_2.process_send_buffer();
+                packet_added = 0U;
+
 
 
                 spi::packet_t spi_rx_packet;

@@ -26,9 +26,12 @@ void error_handler(void);
 void Error_Handler(void);
 
 TIM_HandleTypeDef* get_timer_1_handle(void);
+TIM_HandleTypeDef* get_timer_2_handle(void);
 TIM_HandleTypeDef* get_timer_10_handle(void);
 TIM_HandleTypeDef* get_timer_13_handle(void);
 TIM_HandleTypeDef* get_timer_14_handle(void);
+
+uint32_t get_timer_2_count(void);
 
 CAN_HandleTypeDef* get_can_1_handle(void);
 I2C_HandleTypeDef* get_i2c_1_handle(void);
@@ -42,6 +45,7 @@ void MX_WWDG_Init(void);
 void MX_USART2_UART_Init(void);
 
 void MX_TIM1_Init(void);
+void MX_TIM2_Init(void);
 void MX_TIM10_Init(void);
 void MX_TIM13_Init(void);
 void MX_TIM14_Init(void);

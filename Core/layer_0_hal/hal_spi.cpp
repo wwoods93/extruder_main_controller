@@ -39,9 +39,12 @@
 
 
 /********************************************* public member functions ************************************************/
-spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_instance)
+spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
+
+    timeout_time_base = arg_timeout_time_base;
+    timeout_time_base_frequency = arg_timeout_time_base_frequency;
 
     module = arg_module;
 
@@ -302,7 +305,7 @@ spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id)
     return status;
 }
 
-void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *(volatile uint8_t *)&spi_handle->instance->DATA_REG = (*spi_handle->tx_buffer_ptr);
     spi_handle->tx_buffer_ptr++;
@@ -310,11 +313,11 @@ void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
     if (spi_handle->tx_transfer_counter == 0U)
     {
         spi_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
     }
 }
 
-void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *(spi_handle->rx_buffer_ptr) = *((volatile uint8_t *)&spi_handle->instance->DATA_REG);     // receive data in 8-bit mode
     spi_handle->rx_buffer_ptr++;
@@ -323,11 +326,11 @@ void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
     if (spi_handle->rx_transfer_counter == 0U)
     {
         spi_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
     }
 }
 
-void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     spi_handle->instance->DATA_REG = *((uint16_t *)spi_handle->tx_buffer_ptr);
     spi_handle->tx_buffer_ptr += sizeof(uint16_t);
@@ -336,11 +339,11 @@ void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
     if (spi_handle->tx_transfer_counter == 0U)
     {
         spi_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
     }
 }
 
-void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
 {
     *((uint16_t *)spi_handle->rx_buffer_ptr) = (uint16_t)(spi_handle->instance->DATA_REG);
     spi_handle->rx_buffer_ptr += sizeof(uint16_t);
@@ -349,7 +352,7 @@ void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
     if (spi_handle->rx_transfer_counter == 0U)
     {
         spi_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_rx_tx_isr(); }
+        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
     }
 }
 /*************************************************** friend functions *************************************************/
@@ -406,77 +409,26 @@ void spi_irq_handler(spi* spi_object)
         return;
     }
 }
-/************************************************ spi callback prototypes *********************************************/
-__weak void HAL_SPI_TxCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
-__weak void HAL_SPI_RxCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
-//__weak void HAL_SPI_TxRxCpltCallback(spi::module_t *spi_handle)
-//{
-//    UNUSED_CAST_VOID(spi_handle);
-//}
-
-__weak void HAL_SPI_TxHalfCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
-__weak void HAL_SPI_RxHalfCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
-__weak void HAL_SPI_TxRxHalfCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
-//__weak void HAL_SPI_ErrorCallback(spi::module_t *spi_handle)
-//{
-//    UNUSED_CAST_VOID(spi_handle);
-//}
-
-__weak void HAL_SPI_AbortCpltCallback(spi::module_t *spi_handle)
-{
-    UNUSED_CAST_VOID(spi_handle);
-}
-
 
 void spi::set_rx_and_tx_interrupt_service_routines() const
 {
     if (module->settings.data_size == SPI_CONFIG_DATA_SIZE_8_BIT)
     {
-        module->rx_isr_ptr     = spi_rx_2_line_8_bit_isr;
-        module->tx_isr_ptr     = spi_tx_2_line_8_bit_isr;
+        module->rx_isr_ptr     = rx_2_line_8_bit_isr;
+        module->tx_isr_ptr     = tx_2_line_8_bit_isr;
     }
     else
     {
-        module->rx_isr_ptr     = spi_rx_2_line_16_bit_isr;
-        module->tx_isr_ptr     = spi_tx_2_line_16_bit_isr;
+        module->rx_isr_ptr     = rx_2_line_16_bit_isr;
+        module->tx_isr_ptr     = tx_2_line_16_bit_isr;
     }
 }
 
-//spi::module_status_t spi::get_module_communication_state() const
-//{
-//    return module->status;
-//}
-//
-//uint32_t spi::get_module_operating_mode() const
-//{
-//    return (uint32_t) module->settings.mode;
-//}
-
-spi::procedure_status_t spi::verify_communication_direction(uint32_t intended_direction) const
+spi::procedure_status_t spi::verify_communication_direction(uint32_t arg_intended_direction) const
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
 
-    if (module->settings.direction != intended_direction)
+    if (module->settings.direction != arg_intended_direction)
     {
         status = PROCEDURE_STATUS_ERROR;
     }
@@ -484,246 +436,160 @@ spi::procedure_status_t spi::verify_communication_direction(uint32_t intended_di
     return status;
 }
 
-void spi::set_transaction_parameters(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size) const
+void spi::set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const
 {
     module->error_code = SPI_ERROR_NONE;
-    module->tx_buffer_ptr = (uint8_t *)tx_data_pointer;
-    module->rx_buffer_ptr = (uint8_t *)rx_data_pointer;
-    module->tx_transfer_counter = packet_size;
-    module->rx_transfer_counter = packet_size;
+    module->tx_buffer_ptr = (uint8_t *)arg_tx_data_ptr;
+    module->rx_buffer_ptr = (uint8_t *)arg_rx_data_ptr;
+    module->tx_transfer_counter = arg_packet_size;
+    module->rx_transfer_counter = arg_packet_size;
 }
 
-spi::procedure_status_t spi::wait_for_flag_until_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status, uint32_t arg_timeout, uint32_t arg_start_time) const
+spi::procedure_status_t spi::flag_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status) const
 {
-    volatile uint32_t count;
-    uint32_t adjusted_timeout;
-    uint32_t wait_start_time;
-
-    adjusted_timeout    = arg_timeout - (HAL_GetTick() - arg_start_time);
-    wait_start_time          = HAL_GetTick();
-    count               = adjusted_timeout * ((SystemCoreClock * 32U) >> 20U);
+    uint32_t start_time = timeout_time_base->Instance->CNT;
+    uint16_t fallback_countdown = FALLBACK_COUNTDOWN;
 
     while (get_status_register_bit(arg_status_reg_bit) != arg_bit_status)
     {
-        if (arg_timeout != DELAY_DISABLE)
+        if (timeout_time_base->Instance->CNT - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
         {
-            if (((HAL_GetTick() - wait_start_time) >= adjusted_timeout) || (adjusted_timeout == 0U))
+            disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
+
+            if ((module->settings.mode == SPI_CONFIG_MODE_CONTROLLER) && ((module->settings.direction == SPI_CONFIG_DIRECTION_1_LINE) || (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)))
             {
-                disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-
-                if ((module->settings.mode == SPI_CONFIG_MODE_CONTROLLER) && ((module->settings.direction == SPI_CONFIG_DIRECTION_1_LINE) || (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)))
-                {
-                    disable_module();
-                }
-
-                module->status = MODULE_STATUS_READY;
-                if (unlock_module() == PROCEDURE_STATUS_OK)
-                {
-                    return PROCEDURE_STATUS_TIMEOUT;
-                }
-                else
-                {
-                    return PROCEDURE_STATUS_ERROR;
-                }
-
+                disable_module();
             }
-            if (count == 0U) { adjusted_timeout = 0U; }
-            count--;
+
+            module->status = MODULE_STATUS_READY;
+            if (unlock_module() == PROCEDURE_STATUS_OK)
+            {
+                return PROCEDURE_STATUS_TIMEOUT;
+            }
+            else
+            {
+                return PROCEDURE_STATUS_ERROR;
+            }
         }
+        --fallback_countdown;
     }
     return PROCEDURE_STATUS_OK;
 }
 
-spi::procedure_status_t spi::end_rx_transaction(uint32_t arg_timeout, uint32_t arg_start_time)
+spi::procedure_status_t spi::wait_for_pending_flags_and_end_transaction(transaction_t arg_transaction_type)
 {
+    procedure_status_t status = PROCEDURE_STATUS_OK;
+    uint32_t pending_flag = 0;
+
     if ((module->settings.mode == SPI_CONFIG_MODE_CONTROLLER)
         && ((module->settings.direction == SPI_CONFIG_DIRECTION_1_LINE)
             || (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)))
         disable_module();
+
     if (module->settings.mode == SPI_CONFIG_MODE_CONTROLLER)
     {
-        if (module->settings.direction != SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)
+        if (arg_transaction_type == TX_RX || module->settings.direction != SPI_CONFIG_DIRECTION_2_LINE_RX_ONLY)
         {
-            if (wait_for_flag_until_timeout(SPI_SR_BIT_RESOURCE_BUSY, BIT_CLEAR, arg_timeout, arg_start_time) != PROCEDURE_STATUS_OK)
-            {
-                set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-                return PROCEDURE_STATUS_TIMEOUT;
-            }
+            pending_flag = SPI_SR_BIT_RESOURCE_BUSY;
         }
         else
         {
-            if (wait_for_flag_until_timeout(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout, arg_start_time) != PROCEDURE_STATUS_OK)
+            pending_flag = SPI_SR_BIT_RX_BUFFER_NOT_EMPTY;
+        }
+    }
+    else
+    {
+        pending_flag = SPI_SR_BIT_RX_BUFFER_NOT_EMPTY;
+    }
+
+    if (flag_timeout(pending_flag, BIT_CLEAR) != PROCEDURE_STATUS_OK)
+    {
+        set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
+        status = PROCEDURE_STATUS_TIMEOUT;
+    }
+
+    return status;
+}
+
+void spi::close_isr(transaction_t arg_transaction_type)
+{
+
+    uint32_t active_interrupts = 0;
+
+    switch(arg_transaction_type)
+    {
+        case TX_RX:
+        {
+            active_interrupts = SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE;
+
+            if (flag_timeout(SPI_SR_BIT_TX_BUFFER_EMPTY, BIT_SET))
             {
                 set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-                return PROCEDURE_STATUS_TIMEOUT;
             }
-        }
-    }
-    else
-    {
-        if (wait_for_flag_until_timeout(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY, BIT_CLEAR, arg_timeout, arg_start_time) != PROCEDURE_STATUS_OK)
-        {
-            set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-            return PROCEDURE_STATUS_TIMEOUT;
-        }
-    }
-    return PROCEDURE_STATUS_OK;
-}
 
-spi::procedure_status_t spi::end_rx_tx_transaction(uint32_t arg_timeout, uint32_t arg_start_time)
-{
-    volatile uint32_t count = SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US * (SystemCoreClock / 24U / 1000000U);
-    if (module->settings.mode == SPI_CONFIG_MODE_CONTROLLER)
-    {
-        if (wait_for_flag_until_timeout(SPI_SR_BIT_RESOURCE_BUSY, BIT_CLEAR, arg_timeout, arg_start_time) != PROCEDURE_STATUS_OK)
-        {
-            set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-            return PROCEDURE_STATUS_TIMEOUT;
-        }
-    }
-    else
-    {
-        do
-        {
-            if (count == 0U) { break; }
-            count--;
-        }   while (get_status_register_bit(SPI_SR_BIT_RESOURCE_BUSY) == BIT_SET);
-    }
-    return PROCEDURE_STATUS_OK;
-}
-
-void spi::close_rx_tx_isr()
-{
-    uint32_t tickstart;
-    volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
-    tickstart = HAL_GetTick();
-    disable_interrupts(SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-    do
-    {
-        if (count == 0U)
-        {
-            set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
             break;
         }
-        count--;
-    }   while (get_status_register_bit(SPI_SR_BIT_TX_BUFFER_EMPTY) != BIT_SET);
+        case TX_ONLY:
+        {
+            active_interrupts = SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE;
 
-    if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != PROCEDURE_STATUS_OK)
-        set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-    if (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE)
-        clear_overrun_flag();
+            if (flag_timeout(SPI_SR_BIT_TX_BUFFER_EMPTY, BIT_SET) != PROCEDURE_STATUS_OK)
+            {
+                set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
+            }
 
-    if (module->error_code == SPI_ERROR_NONE)
+            break;
+        }
+        case RX_ONLY:
+        {
+            active_interrupts = SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE;
+
+            break;
+
+        }
+        default:
+        {
+            break;
+        }
+    }
+
+    disable_interrupts(active_interrupts);
+
+    if (wait_for_pending_flags_and_end_transaction(arg_transaction_type) != PROCEDURE_STATUS_OK)
     {
-        if (module->status == MODULE_STATUS_BUSY_RX)
+        set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
+    }
+
+    if (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE)
+    {
+        clear_overrun_flag();
+    }
+
+    if (module->error_code != SPI_ERROR_NONE)
+    {
+        module->status = MODULE_STATUS_READY;
+        module->callbacks[SPI_ERROR_CALLBACK_ID](module);
+    }
+    else
+    {
+        if (arg_transaction_type == RX_ONLY ||
+            (arg_transaction_type == TX_RX && module->status == MODULE_STATUS_BUSY_RX))
         {
             module->status = MODULE_STATUS_READY;
             module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
         }
-        else
+        else if (arg_transaction_type == TX_ONLY)
+        {
+            module->status = MODULE_STATUS_READY;
+            module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID](module);
+        }
+        else if (arg_transaction_type == TX_RX)
         {
             module->status = MODULE_STATUS_READY;
             module->callbacks[SPI_TX_RX_COMPLETE_CALLBACK_ID](module);
         }
     }
-    else
-    {
-        module->status = MODULE_STATUS_READY;
-        module->callbacks[SPI_ERROR_CALLBACK_ID](module);
-    }
 
-}
-
-void spi::close_rx_isr()
-{
-    disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-
-    if (end_rx_transaction(SPI_DEFAULT_TIMEOUT_100_US, HAL_GetTick()) != PROCEDURE_STATUS_OK)
-    {
-        set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-    }
-
-    if (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE)
-    {
-        clear_overrun_flag();
-    }
-
-    module->status = MODULE_STATUS_READY;
-
-    if (module->error_code == SPI_ERROR_NONE)
-    {
-        module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
-    }
-    else
-    {
-        HAL_SPI_ErrorCallback(module);
-    }
-}
-
-void spi::close_tx_isr()
-{
-    uint32_t tickstart;
-    volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
-    tickstart = HAL_GetTick();
-    do
-    {
-        if (count == 0U)
-        {
-            set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-            break;
-        }
-        count--;
-    }   while (get_status_register_bit(SPI_SR_BIT_TX_BUFFER_EMPTY) != BIT_SET);
-
-    disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-    if (end_rx_tx_transaction(SPI_DEFAULT_TIMEOUT_100_US, tickstart) != PROCEDURE_STATUS_OK)
-    {
-        set_error_bit(SPI_ERROR_WAITING_FOR_FLAG);
-    }
-
-    if (module->settings.direction == SPI_CONFIG_DIRECTION_2_LINE)
-    {
-        clear_overrun_flag();
-    }
-
-    module->status = MODULE_STATUS_READY;
-
-    if (module->error_code != SPI_ERROR_NONE)
-    {
-        module->callbacks[SPI_ERROR_CALLBACK_ID](module);
-    }
-    else
-    {
-        module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID](module);
-    }
-}
-
-void spi::abort_rx_isr()
-{
-    volatile uint32_t register_contents = 0U;
-    volatile uint32_t count = SPI_DEFAULT_TIMEOUT_100_US * (SystemCoreClock / 24U / 1000U);
-    do
-    {
-        if (count == 0U)
-        {
-            set_error_bit(SPI_ERROR_DURING_ABORT);
-            break;
-        }
-        count--;
-    }   while (get_status_register_bit(SPI_SR_BIT_TX_BUFFER_EMPTY) != BIT_SET);
-
-    disable_module();
-    disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-    register_contents = STM_HAL_READ_REG(module->instance->DATA_REG);
-    UNUSED_CAST_VOID(register_contents);
-    module->status = MODULE_STATUS_ABORT;
-}
-
-void spi::abort_tx_isr()
-{
-    disable_module();
-    disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-    module->status = MODULE_STATUS_ABORT;
 }
 
 void spi::transmit_and_get_result(uint8_t packet_size, uint8_t* tx_data)

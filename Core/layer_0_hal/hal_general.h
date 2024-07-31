@@ -29,149 +29,17 @@
 
 /* meta structure includes */
 
-#define STM_HAL_SET_BIT(REG, BIT)                       ((REG) |=  (BIT))
-#define STM_HAL_CLEAR_BIT(REG, BIT)                     ((REG) &= ~(BIT))
-#define STM_HAL_READ_REG(REG)                           ((REG))
-#define STM_HAL_UNUSED(X)                               (void) X
-#define STM_HAL_CHECK_FOR_BIT_STATE_SET(REG, BIT)       (((REG) & (BIT)) == (BIT))
-#define STM_HAL_CHECK_FOR_BIT_STATE_RESET(REG, BIT)     (((REG) & (BIT)) == 0U)
 
+static constexpr uint32_t   FREQUENCY_1_KHZ         = 1000U;
+static constexpr uint32_t   FREQUENCY_1_MHZ         = 1000000U;
+static constexpr uint32_t   FREQUENCY_16_MHZ        = 16000000U;
+static constexpr uint32_t   FREQUENCY_32_MHZ        = 32000000U;
+static constexpr uint32_t   FREQUENCY_64_MHZ        = 64000000U;
 
-static constexpr uint32_t       DELAY_DISABLE = 0xFFFFFFFFU;
-#if (USE_RTOS == 1U)
-#error "USE_RTOS should be 0 in the current HAL release"
-#else
-#define STM_HAL_LOCK_MODULE(__HANDLE__)                                                                         \
-                                    do                                                                              \
-                                    {                                                                               \
-                                        if((__HANDLE__)->lock == HAL_MODULE_LOCKED) { return HAL_STATUS_BUSY; }     \
-                                        else { (__HANDLE__)->lock = HAL_MODULE_LOCKED; }                            \
-                                    } while (0U)                                                                    \
-
-#define STM_HAL_UNLOCK_MODULE(__HANDLE__) do { (__HANDLE__)->lock = HAL_MODULE_UNLOCKED; } while (0U)
-#endif
-/*************************************** spi control register 1 definitions *******************************************/
-#define STM_HAL_SPI_CR1_CLOCK_PHASE_POSITION                            (0U)
-#define STM_HAL_SPI_CR1_CLOCK_PHASE_MASK                                (0x1UL << STM_HAL_SPI_CR1_CLOCK_PHASE_POSITION)
-#define STM_HAL_SPI_CR1_CLOCK_PHASE                                     STM_HAL_SPI_CR1_CLOCK_PHASE_MASK
-#define STM_HAL_SPI_CR1_CLOCK_POLARITY_POSITION                         (1U)
-#define STM_HAL_SPI_CR1_CLOCK_POLARITY_MASK                             (0x1UL << STM_HAL_SPI_CR1_CLOCK_POLARITY_POSITION)
-#define STM_HAL_SPI_CR1_CLOCK_POLARITY                                  STM_HAL_SPI_CR1_CLOCK_POLARITY_MASK
-#define STM_HAL_SPI_CR1_CONTROLLER_POSITION                             (2U)
-#define STM_HAL_SPI_CR1_CONTROLLER_MASK                                 (0x1UL << STM_HAL_SPI_CR1_CONTROLLER_POSITION)
-#define STM_HAL_SPI_CR1_CONTROLLER                                      STM_HAL_SPI_CR1_CONTROLLER_MASK
-#define STM_HAL_SPI_CR1_BAUD_RATE_POSITION                              (3U)
-#define STM_HAL_SPI_CR1_BAUD_RATE_MASK                                  (0x7UL << STM_HAL_SPI_CR1_BAUD_RATE_POSITION)
-#define STM_HAL_SPI_CR1_BAUD_RATE                                       STM_HAL_SPI_CR1_BAUD_RATE_MASK
-#define STM_HAL_SPI_CR1_BAUD_RATE_0                                     (0x1UL << STM_HAL_SPI_CR1_BAUD_RATE_POSITION)
-#define STM_HAL_SPI_CR1_BAUD_RATE_1                                     (0x2UL << STM_HAL_SPI_CR1_BAUD_RATE_POSITION)
-#define STM_HAL_SPI_CR1_BAUD_RATE_2                                     (0x4UL << STM_HAL_SPI_CR1_BAUD_RATE_POSITION)
-#define STM_HAL_SPI_CR1_SPI_ENABLE_POSITION                             (6U)
-#define STM_HAL_SPI_CR1_SPI_ENABLE_MASK                                 (0x1UL << STM_HAL_SPI_CR1_SPI_ENABLE_POSITION)
-#define STM_HAL_SPI_CR1_SPI_ENABLE                                      STM_HAL_SPI_CR1_SPI_ENABLE_MASK
-#define STM_HAL_SPI_CR1_LSB_FIRST_POSITION                              (7U)
-#define STM_HAL_SPI_CR1_LSB_FIRST_MASK                                  (0x1UL << STM_HAL_SPI_CR1_LSB_FIRST_POSITION)
-#define STM_HAL_SPI_CR1_LSB_FIRST                                       STM_HAL_SPI_CR1_LSB_FIRST_MASK
-#define STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT_POSITION                   (8U)
-#define STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT_MASK                       (0x1UL << STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT_POSITION)
-#define STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT                            STM_HAL_SPI_CR1_INTERNAL_CHIP_SELECT_MASK
-#define STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT_POSITION                   (9U)
-#define STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT_MASK                       (0x1UL << STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT_POSITION)
-#define STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT                            STM_HAL_SPI_CR1_SOFTWARE_CHIP_SELECT_MASK
-#define STM_HAL_SPI_CR1_RECEIVE_ONLY_POSITION                           (10U)
-#define STM_HAL_SPI_CR1_RECEIVE_ONLY_MASK                               (0x1UL << STM_HAL_SPI_CR1_RECEIVE_ONLY_POSITION)
-#define STM_HAL_SPI_CR1_RECEIVE_ONLY                                    STM_HAL_SPI_CR1_RECEIVE_ONLY_MASK
-#define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_POSITION                      (11U)
-#define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_MASK                          (0x1UL << STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_POSITION)
-#define STM_HAL_SPI_CR1_DATA_FRAME_FORMAT                               STM_HAL_SPI_CR1_DATA_FRAME_FORMAT_MASK
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_POSITION                      (12U)
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_MASK                          (0x1UL << STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_POSITION)
-#define STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT                               STM_HAL_SPI_CR1_TRANSMIT_CRC_NEXT_MASK
-#define STM_HAL_SPI_CR1_CRC_ENABLE_POSITION                             (13U)
-#define STM_HAL_SPI_CR1_CRC_ENABLE_MASK                                 (0x1UL << STM_HAL_SPI_CR1_CRC_ENABLE_POSITION)
-#define STM_HAL_SPI_CR1_CRC_ENABLE                                      STM_HAL_SPI_CR1_CRC_ENABLE_MASK
-#define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION               (14U)
-#define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK                    (0x1UL << STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_POSITION)
-#define STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE                         STM_HAL_SPI_BIDIRECTIONAL_OUTPUT_ENABLE_MASK
-#define STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE_POSITION                     (15U)
-#define STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE_MASK                         (0x1UL << STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE_POSITION)
-#define STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE                              STM_HAL_SPI_CR1_BIDIRECTIONAL_MODE_MASK
-/*************************************** spi control register 2 definitions *******************************************/
-#define STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE_POSITION                   (0U)
-#define STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE_MASK                       0x1UL << STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE_POSITION
-#define STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE                            STM_HAL_SPI_CR2_RX_BUFFER_DMA_ENABLE_MASK
-#define STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE_POSITION                   (1U)
-#define STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE_MASK                       0x1UL << STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE_POSITION
-#define STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE                            STM_HAL_SPI_CR2_TX_BUFFER_DMA_ENABLE_MASK
-#define STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE_POSITION              (2U)
-#define STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE_MASK                  (0x1UL << STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE_POSITION)
-#define STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE                       STM_HAL_SPI_CR2_CHIP_SELECT_OUTPUT_ENABLE_MASK
-#define STM_HAL_SPI_CR2_FRAME_FORMAT_POSITION                           (4U)
-#define STM_HAL_SPI_CR2_FRAME_FORMAT_MASK                               (0x1UL << STM_HAL_SPI_CR2_FRAME_FORMAT_POSITION)
-#define STM_HAL_SPI_CR2_FRAME_FORMAT                                    STM_HAL_SPI_CR2_FRAME_FORMAT_MASK
-#define STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE_POSITION                 (5U)
-#define STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE_MASK                     (0x1UL << STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE_POSITION)
-#define STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE                          STM_HAL_SPI_CR2_ERROR_INTERRUPT_ENABLE_MASK
-#define STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE_POSITION   (6U)
-#define STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE_MASK       (0x1UL << STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE_POSITION)
-#define STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE            STM_HAL_SPI_CR2_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE_MASK
-#define STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_POSITION       (7U)
-#define STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_MASK           (0x1UL << STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_POSITION)
-#define STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE                STM_HAL_SPI_CR2_TX_BUFFER_EMPTY_INTERRUPT_ENABLE_MASK
-/***************************************** spi status register definitions ********************************************/
-#define STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY_POSITION                     (0U)
-#define STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY_MASK                         (0x1UL << STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY_POSITION)
-#define STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY                              STM_HAL_SPI_SR_RX_BUFFER_NOT_EMPTY_MASK
-#define STM_HAL_SPI_SR_TX_BUFFER_EMPTY_POSITION                         (1U)
-#define STM_HAL_SPI_SR_TX_BUFFER_EMPTY_MASK                             (0x1UL << STM_HAL_SPI_SR_TX_BUFFER_EMPTY_POSITION)
-#define STM_HAL_SPI_SR_TX_BUFFER_EMPTY                                  STM_HAL_SPI_SR_TX_BUFFER_EMPTY_MASK
-#define STM_HAL_SPI_SR_CHANNEL_SIZE_POSITION                            (2U)
-#define STM_HAL_SPI_SR_CHANNEL_SIZE_MASK                                (0x1UL << STM_HAL_SPI_SR_CHANNEL_SIZE_POSITION)
-#define STM_HAL_SPI_SR_CHANNEL_SIZE                                     STM_HAL_SPI_SR_CHANNEL_SIZE_MASK
-#define STM_HAL_SPI_SR_UNDERRUN_FLAG_POSITION                           (3U)
-#define STM_HAL_SPI_SR_UNDERRUN_FLAG_MASK                               (0x1UL << STM_HAL_SPI_SR_UNDERRUN_FLAG_POSITION)
-#define STM_HAL_SPI_SR_UNDERRUN_FLAG                                    STM_HAL_SPI_SR_UNDERRUN_FLAG_MASK
-#define STM_HAL_SPI_SR_CRC_ERROR_POSITION                               (4U)
-#define STM_HAL_SPI_SR_CRC_ERROR_MASK                                   (0x1UL << STM_HAL_SPI_SR_CRC_ERROR_POSITION)
-#define STM_HAL_SPI_SR_CRC_ERROR                                        STM_HAL_SPI_SR_CRC_ERROR_MASK
-#define STM_HAL_SPI_SR_MODE_FAULT_POSITION                              (5U)
-#define STM_HAL_SPI_SR_MODE_FAULT_MASK                                  (0x1UL << STM_HAL_SPI_SR_MODE_FAULT_POSITION)
-#define STM_HAL_SPI_SR_MODE_FAULT                                       STM_HAL_SPI_SR_MODE_FAULT_MASK
-#define STM_HAL_SPI_SR_OVERRUN_POSITION                                 (6U)
-#define STM_HAL_SPI_SR_OVERRUN_MASK                                     (0x1UL << STM_HAL_SPI_SR_OVERRUN_POSITION)
-#define STM_HAL_SPI_SR_OVERRUN                                          STM_HAL_SPI_SR_OVERRUN_MASK
-#define STM_HAL_SPI_SR_BUSY_POSITION                                    (7U)
-#define STM_HAL_SPI_SR_BUSY_MASK                                        (0x1UL << STM_HAL_SPI_SR_BUSY_POSITION)
-#define STM_HAL_SPI_SR_BUSY                                             STM_HAL_SPI_SR_BUSY_MASK
-#define STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR_POSITION              (8U)
-#define STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR_MASK                  (0x1UL << STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR_POSITION)
-#define STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR                       STM_HAL_SPI_SR_TI_MODE_FRAME_FORMAT_ERROR_MASK
-
-#define STM_HAL_SPI_DATA_REG_POSITION                                   (0U)
-#define STM_HAL_SPI_DATA_REG_MASK                                       (0xFFFFUL << STM_HAL_SPI_DATA_REG_POSITION)
-#define STM_HAL_SPI_DATA_REG                                            STM_HAL_SPI_DATA_REG_MASK
-
-/**********************************************************************************************************************/
-
-#define STM_HAL_SPI_I2S_MODE_SELECT_POSITION                            (11U)
-#define STM_HAL_SPI_I2S_MODE_SELECT_MASK                                (0x1UL << STM_HAL_SPI_I2S_MODE_SELECT_POSITION)
-#define STM_HAL_SPI_I2S_MODE_SELECT                                     STM_HAL_SPI_I2S_MODE_SELECT_MASK
-
-/**************************************** dma control register definitions ********************************************/
-
-#define STM_HAL_DMA_SxCR_ENABLE_POSITION                                (0U)
-#define STM_HAL_DMA_SxCR_ENABLE_MASK                                    (0x1UL << STM_HAL_DMA_SxCR_ENABLE_POSITION)
-#define STM_HAL_DMA_SxCR_ENABLE                                         STM_HAL_DMA_SxCR_ENABLE_MASK
-
-#define STM_HAL_DMA_ERROR_NONE            0x00000000U    /*!< No error                               */
-#define STM_HAL_DMA_ERROR_TE              0x00000001U    /*!< Transfer error                         */
-#define STM_HAL_DMA_ERROR_FE              0x00000002U    /*!< FIFO error                             */
-#define STM_HAL_DMA_ERROR_DME             0x00000004U    /*!< Direct Mode error                      */
-#define STM_HAL_DMA_ERROR_TIMEOUT         0x00000020U    /*!< Timeout error                          */
-#define STM_HAL_DMA_ERROR_PARAM           0x00000040U    /*!< Parameter error                        */
-#define STM_HAL_DMA_ERROR_NO_XFER         0x00000080U    /*!< Abort requested with no Xfer ongoing   */
-#define STM_HAL_DMA_ERROR_NOT_SUPPORTED   0x00000100U    /*!< Not supported mode                     */
-/**********************************************************************************************************************/
+static constexpr uint32_t   TIME_50_US              = 50U;
+static constexpr uint32_t   TIME_100_US             = 100U;
+static constexpr uint32_t   TIME_1000_US            = 1000U;
+static constexpr uint32_t   DELAY_DISABLE           = 0xFFFFFFFFU;
 
 #define I2C_CR1_MODULE_ENABLE_POSITION    (0U)
 #define I2C_CR1_MODULE_ENABLE_MASK        (0x1UL << I2C_CR1_MODULE_ENABLE_POSITION)

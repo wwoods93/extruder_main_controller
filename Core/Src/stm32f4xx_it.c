@@ -190,25 +190,25 @@ void RCC_IRQHandler(void)
 //void CAN1_TX_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN CAN1_TX_IRQn 0 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_TX_IRQn 0 */
 //  HAL_CAN_IRQHandler(&hcan1);
 //  /* USER CODE BEGIN CAN1_TX_IRQn 1 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_TX_IRQn 1 */
 //}
-//
-///**
-//  * @brief This function handles CAN1 RX0 interrupt.
-//  */
+
+/**
+  * @brief This function handles CAN1 RX0 interrupt.
+  */
 //void CAN1_RX0_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN CAN1_RX0_IRQn 0 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_RX0_IRQn 0 */
 //  HAL_CAN_IRQHandler(&hcan1);
 //  /* USER CODE BEGIN CAN1_RX0_IRQn 1 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_RX0_IRQn 1 */
 //}
 //
@@ -218,11 +218,11 @@ void RCC_IRQHandler(void)
 //void CAN1_RX1_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN CAN1_RX1_IRQn 0 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_RX1_IRQn 0 */
 //  HAL_CAN_IRQHandler(&hcan1);
 //  /* USER CODE BEGIN CAN1_RX1_IRQn 1 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_RX1_IRQn 1 */
 //}
 //
@@ -232,11 +232,11 @@ void RCC_IRQHandler(void)
 //void CAN1_SCE_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN CAN1_SCE_IRQn 0 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_SCE_IRQn 0 */
 //  HAL_CAN_IRQHandler(&hcan1);
 //  /* USER CODE BEGIN CAN1_SCE_IRQn 1 */
-////////////
+//////////////
 //  /* USER CODE END CAN1_SCE_IRQn 1 */
 //}
 //
@@ -246,12 +246,12 @@ void RCC_IRQHandler(void)
 //void TIM1_UP_TIM10_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
-//////
+////////
 //  /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
 //  HAL_TIM_IRQHandler(&htim1);
 //  HAL_TIM_IRQHandler(&htim10);
 //  /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
-//////
+////////
 //  /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 //}
 //
@@ -261,11 +261,11 @@ void RCC_IRQHandler(void)
 //void TIM1_CC_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN TIM1_CC_IRQn 0 */
-////////
+//////////
 //  /* USER CODE END TIM1_CC_IRQn 0 */
 //  HAL_TIM_IRQHandler(&htim1);
 //  /* USER CODE BEGIN TIM1_CC_IRQn 1 */
-////////
+//////////
 //  /* USER CODE END TIM1_CC_IRQn 1 */
 //}
 
@@ -289,11 +289,11 @@ void TIM3_IRQHandler(void)
 //void I2C1_EV_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN I2C1_EV_IRQn 0 */
-//////////////
+////////////////
 //  /* USER CODE END I2C1_EV_IRQn 0 */
 //  HAL_I2C_EV_IRQHandler(&hi2c1);
 //  /* USER CODE BEGIN I2C1_EV_IRQn 1 */
-//////////////
+////////////////
 //  /* USER CODE END I2C1_EV_IRQn 1 */
 //}
 //
@@ -303,11 +303,11 @@ void TIM3_IRQHandler(void)
 //void I2C1_ER_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN I2C1_ER_IRQn 0 */
-//////////////
+////////////////
 //  /* USER CODE END I2C1_ER_IRQn 0 */
 //  HAL_I2C_ER_IRQHandler(&hi2c1);
 //  /* USER CODE BEGIN I2C1_ER_IRQn 1 */
-//////////////
+////////////////
 //  /* USER CODE END I2C1_ER_IRQn 1 */
 //}
 //
@@ -317,11 +317,11 @@ void TIM3_IRQHandler(void)
 //void I2C2_EV_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN I2C2_EV_IRQn 0 */
-//////////////
+////////////////
 //  /* USER CODE END I2C2_EV_IRQn 0 */
 //  HAL_I2C_EV_IRQHandler(&hi2c2);
 //  /* USER CODE BEGIN I2C2_EV_IRQn 1 */
-//////////////
+////////////////
 //  /* USER CODE END I2C2_EV_IRQn 1 */
 //}
 //
@@ -331,11 +331,11 @@ void TIM3_IRQHandler(void)
 //void I2C2_ER_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN I2C2_ER_IRQn 0 */
-//////////////
+////////////////
 //  /* USER CODE END I2C2_ER_IRQn 0 */
 //  HAL_I2C_ER_IRQHandler(&hi2c2);
 //  /* USER CODE BEGIN I2C2_ER_IRQn 1 */
-//////////////
+////////////////
 //  /* USER CODE END I2C2_ER_IRQn 1 */
 //}
 //
@@ -345,11 +345,11 @@ void TIM3_IRQHandler(void)
 //void SPI2_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN SPI2_IRQn 0 */
-////////////////////////
+//////////////////////////
 //  /* USER CODE END SPI2_IRQn 0 */
 //  HAL_SPI_IRQHandler(&hspi2);
 //  /* USER CODE BEGIN SPI2_IRQn 1 */
-////////////////////////
+//////////////////////////
 //  /* USER CODE END SPI2_IRQn 1 */
 //}
 //
@@ -359,11 +359,11 @@ void TIM3_IRQHandler(void)
 //void USART2_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN USART2_IRQn 0 */
-////////////
+//////////////
 //  /* USER CODE END USART2_IRQn 0 */
 //  HAL_UART_IRQHandler(&huart2);
 //  /* USER CODE BEGIN USART2_IRQn 1 */
-////////////
+//////////////
 //  /* USER CODE END USART2_IRQn 1 */
 //}
 //
@@ -373,11 +373,11 @@ void TIM3_IRQHandler(void)
 //void TIM8_UP_TIM13_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
-//////
+////////
 //  /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
 //  HAL_TIM_IRQHandler(&htim13);
 //  /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
-//////
+////////
 //  /* USER CODE END TIM8_UP_TIM13_IRQn 1 */
 //}
 //
@@ -387,11 +387,11 @@ void TIM3_IRQHandler(void)
 //void TIM8_TRG_COM_TIM14_IRQHandler(void)
 //{
 //  /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 0 */
-//////
+////////
 //  /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 0 */
 //  HAL_TIM_IRQHandler(&htim14);
 //  /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 1 */
-//////
+////////
 //  /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 1 */
 //}
 

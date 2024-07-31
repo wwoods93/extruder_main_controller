@@ -26,8 +26,19 @@ class spi
 
         #define TX_SIZE_MAX                     8U
 
+        static constexpr uint32_t FLAG_TIMEOUT          = TIME_50_US;
+        static constexpr uint32_t TRANSACTION_TIMEOUT   = TIME_100_US;
+        static constexpr uint16_t FALLBACK_COUNTDOWN    = 1000U;
+
 
         /* type definitions */
+
+        typedef enum
+        {
+            TX_RX       = 0x00,
+            TX_ONLY     = 0x01,
+            RX_ONLY     = 0x02,
+        }transaction_t;
 
         typedef enum
         {
@@ -118,8 +129,11 @@ class spi
         typedef struct _handle_t
         {
             hal_spi_t                   *instance;
-            chip_select_t               chip_select;
             settings_t                  settings;
+            volatile module_status_t    status;
+            volatile uint32_t           error_code;
+            chip_select_t               chip_select;
+
             uint8_t                     *tx_buffer_ptr;
             uint8_t                     *rx_buffer_ptr;
             volatile uint16_t           tx_transfer_counter;
@@ -127,8 +141,8 @@ class spi
             void                        (*rx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
             void                        (*tx_isr_ptr)(spi spi_object, struct _handle_t *spi_handle);
             hal_lock_t                  lock;
-            volatile module_status_t    status;
-            volatile uint32_t           error_code;
+
+
             GPIO_TypeDef*               chip_select_port;
             uint16_t                    chip_select_pin;
 
@@ -142,6 +156,9 @@ class spi
         packet_t        active_packet;
         uint8_t         send_state = 0;
         uint8_t         chip_select_set = 0;
+
+        TIM_HandleTypeDef* timeout_time_base;
+        uint32_t timeout_time_base_frequency = 0;
 
         std::queue<packet_t> send_buffer;
         std::queue<packet_t> return_buffer_0;
@@ -168,10 +185,10 @@ class spi
         typedef void (*spi_callback_ptr_t)(module_t* spi_module_handle);
 
         /* public member functions */
-        procedure_status_t initialize(module_t* arg_module, hal_spi_t* arg_instance);
+        procedure_status_t initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency);
         procedure_status_t spi_register_callback(callback_id_t _callback_id, spi_callback_ptr_t _callback_ptr) const;
         [[nodiscard]] procedure_status_t spi_unregister_callback(callback_id_t _callback_id) const;
-//        void initialize_spi_buffer();
+
         procedure_status_t create_channel(id_number_t& arg_channel_id, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin);
         void get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id);
         id_number_t assign_next_available_channel_id();
@@ -187,53 +204,35 @@ class spi
         uint8_t process_return_buffer(packet_t& packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         procedure_status_t reset_active_packet();
 
-        friend void spi_tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
-        friend void spi_rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
-        friend void spi_tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
-        friend void spi_rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
-
         friend spi::module_t* get_spi_handle(spi* spi_object);
-        friend void spi_irq_handler(spi* spi_object);
 
-        friend void HAL_SPI_TxCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_RxCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_TxRxCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_TxHalfCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_RxHalfCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_TxRxHalfCpltCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_ErrorCallback(spi::module_t *spi_handle);
-        friend void HAL_SPI_AbortCpltCallback(spi::module_t *spi_handle);
+        friend void tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+        friend void rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle);
+
+        friend void spi_irq_handler(spi* spi_object);
 
     private:
 
         void set_rx_and_tx_interrupt_service_routines() const;
-//        [[nodiscard]] module_status_t get_module_communication_state() const;
-//        [[nodiscard]] uint32_t get_module_operating_mode() const;
-        [[nodiscard]] procedure_status_t verify_communication_direction(uint32_t intended_direction) const;
-        void set_transaction_parameters(uint8_t *tx_data_ptr, uint8_t *rx_data_ptr, uint16_t packet_size) const;
-        [[nodiscard]] procedure_status_t wait_for_flag_until_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status, uint32_t arg_timeout, uint32_t arg_start_time) const;
-        procedure_status_t end_rx_transaction(uint32_t arg_timeout, uint32_t arg_start_time);
-        procedure_status_t end_rx_tx_transaction(uint32_t arg_timeout, uint32_t arg_start_time);
-        void close_rx_tx_isr();
-        void close_rx_isr();
-        void close_tx_isr();
-        void abort_rx_isr();
-        void abort_tx_isr();
+        [[nodiscard]] procedure_status_t verify_communication_direction(uint32_t arg_intended_direction) const;
+        void set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size) const;
+        procedure_status_t wait_for_pending_flags_and_end_transaction(transaction_t arg_transaction_type);
+        [[nodiscard]] procedure_status_t flag_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status) const;
+        void close_isr(transaction_t arg_transaction_type);
+
         [[nodiscard]] procedure_status_t lock_module() const;
         [[nodiscard]] procedure_status_t unlock_module() const;
         void enable_module() const;
         void disable_module() const;
         void enable_interrupts(uint32_t arg_interrupts) const;
         void disable_interrupts(uint32_t arg_interrupts) const;
-
+        [[nodiscard]] bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
         void set_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
         void clear_bit_spi_register_32(register_id_t arg_register, uint32_t arg_bit) const;
         [[nodiscard]] bit_status_t get_status_register_bit(uint32_t arg_bit) const;
-
         void set_error_bit(uint32_t arg_bit) const;
-
-        [[nodiscard]] bit_status_t check_interrupt_source(uint32_t arg_interrupt) const;
-
         void clear_mode_fault_flag() const;
         void clear_overrun_flag() const;
 

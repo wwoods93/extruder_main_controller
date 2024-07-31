@@ -64,7 +64,7 @@ typedef struct
 #define SPI_3                               ((hal_spi_t *) SPI_3_BASE_ADDRESS)
 #define SPI_4                               ((hal_spi_t *) SPI_4_BASE_ADDRESS)
 
-// spi cr1 definitions
+// spi cr1 map
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_PHASE                                       = 0x00000001U;
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_POLARITY                                    = 0x00000002U;
 static constexpr uint32_t SPI_CR1_BIT_CONTROLLER_MODE                                   = 0x00000004U;
@@ -83,7 +83,7 @@ static constexpr uint32_t SPI_CR1_BIT_CRC_ENABLE                                
 static constexpr uint32_t SPI_CR1_BIT_BIDIRECTIONAL_OUTPUT_ENABLE                       = 0x00004000U;
 static constexpr uint32_t SPI_CR1_BIT_BIDIRECTIONAL_MODE                                = 0x00008000U;
 
-// spi cr2 definitions
+// spi cr2 map
 static constexpr uint32_t SPI_CR2_BIT_RX_BUFFER_DMA_ENABLE                              = 0x00000001U;
 static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_DMA_ENABLE                              = 0x00000002U;
 static constexpr uint32_t SPI_CR2_BIT_CHIP_SELECT_OUTPUT_ENABLE                         = 0x00000004U;
@@ -92,7 +92,7 @@ static constexpr uint32_t SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE                    
 static constexpr uint32_t SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE              = 0x00000040U;
 static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE                  = 0x00000080U;
 
-// spi sr definitions
+// spi sr map
 static constexpr uint32_t SPI_SR_BIT_RX_BUFFER_NOT_EMPTY                                = 0x00000001U;
 static constexpr uint32_t SPI_SR_BIT_TX_BUFFER_EMPTY                                    = 0x00000002U;
 // bit 2 channel side unused by SPI

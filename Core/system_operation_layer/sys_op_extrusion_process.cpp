@@ -12,10 +12,10 @@
 
 #include <cstdint>
 #include "cmsis_os2.h"
-#include "../layer_2_rtosal/rtosal_globals.h"
-#include "../layer_2_rtosal/rtosal.h"
-#include "../layer_1_driver/driver_rtd.h"
-#include "../layer_1_driver/driver_dc_motor_controller.h"
+#include "../layer_1_rtosal/rtosal_globals.h"
+#include "../layer_1_rtosal/rtosal.h"
+#include "../layer_2_driver/driver_rtd.h"
+#include "../layer_2_driver/driver_dc_motor_controller.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
@@ -237,7 +237,6 @@ namespace sys_op::extrusion
                     rtd_reading.value = 0;
                     driver::value_updated_zone_2 = 0U;
                 }
-
 
                 break;
             }

@@ -1,6 +1,6 @@
 /***********************************************************************************************************************
  * Main_Controller
- * layer_2_rtosal.cpp
+ * layer_1_rtosal.cpp
  *
  * wilson
  * 11/6/22
@@ -11,6 +11,7 @@
  **********************************************************************************************************************/
 
 /* c/c++ includes */
+#include <cstdint>
 #include <cstring>
 /* stm32 includes */
 
@@ -26,7 +27,7 @@
 
 /* meta structure includes */
 #include "../meta_structure/meta_structure_system_manager.h"
-/* layer_2_rtosal header */
+/* layer_1_rtosal header */
 #include "rtosal.h"
 
 

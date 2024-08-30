@@ -17,13 +17,13 @@
 #include "cmsis_os2.h"
 #include "peripheral_common.h"
 #include "mcu_clock_timers.h"
-#include "../layer_0_hal//hal_spi.h"
+#include "../layer_0_hal/hal_spi.h"
 #include "driver_rtd.h"
-#include "../layer_2_rtosal/rtosal.h"
-#include "../layer_0_hal//hal_callbacks.h"
+#include "../layer_1_rtosal/rtosal.h"
+#include "../layer_0_hal/hal_callback.h"
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_user.h"
-#include "../layer_2_rtosal/rtosal_spi_shared_resources.h"
+#include "../layer_1_rtosal/rtosal_spi_shared_resources.h"
 
 // div2 = 8MHz
 // div4 = 4MHz
@@ -175,8 +175,8 @@ void rtd::handle_sensor_state()
 //    uint8_t rx_data = 0;
 ////    rtd_spi_object->spi_transmit_receive_interrupt(&register_address, &rx_data, 1, device_id);
 ////    rtd_spi_object->add_packet_to_buffer(device_id, 1, &register_address);
-////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+////    while (!hal_callback_get_spi_rx_data_ready_flag());
+////    hal_callback_set_spi_rx_data_ready_flag(0);
 //    return rx_data;
 //}
 
@@ -189,16 +189,16 @@ void rtd::handle_sensor_state()
 //    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
 //    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
 ////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
-//    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//    hal_callbacks_set_spi_rx_data_ready_flag(0);
+//    while (!hal_callback_get_spi_rx_data_ready_flag());
+//    hal_callback_set_spi_rx_data_ready_flag(0);
 //    rtd_reading = *(++rx_ptr);
 //    rtd_reading <<= 8;
 //    *rx_ptr = 0;
 //    *(--rx_ptr) = 0;
 //    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
 ////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_2);
-//    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-//    hal_callbacks_set_spi_rx_data_ready_flag(0);
+//    while (!hal_callback_get_spi_rx_data_ready_flag());
+//    hal_callback_set_spi_rx_data_ready_flag(0);
 //    rtd_reading |= *(++rx_ptr);
 //    free(--rx_ptr);
 //
@@ -218,8 +218,8 @@ void rtd::handle_sensor_state()
 ////    auto *rx_ptr = static_cast<uint8_t *>(malloc(2 * sizeof(uint8_t)));
 ////    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_1, rx_ptr, 2, device_id);
 ////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_1);
-////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+////    while (!hal_callback_get_spi_rx_data_ready_flag());
+////    hal_callback_set_spi_rx_data_ready_flag(0);
 ////spi_byte = *(++rx_ptr);
 ////    rtd_reading = *(++rx_ptr);
 ////    rtd_reading <<= 8;
@@ -227,8 +227,8 @@ void rtd::handle_sensor_state()
 ////    *(--rx_ptr) = 0;
 ////    rtd_spi_object->spi_transmit_receive_interrupt(tx_data_2, rx_ptr, 2, device_id);
 //////    rtd_spi_object->add_packet_to_buffer(device_id, 2, tx_data_2);
-////    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-////    hal_callbacks_set_spi_rx_data_ready_flag(0);
+////    while (!hal_callback_get_spi_rx_data_ready_flag());
+////    hal_callback_set_spi_rx_data_ready_flag(0);
 ////    rtd_reading |= *(++rx_ptr);
 ////    free(--rx_ptr);
 //

@@ -20,7 +20,7 @@
 #include "cmsis_os2.h"
 /* hal includes */
 #include "../layer_0_hal/hal_general.h"
-#include "../layer_0_hal/hal_callbacks.h"
+#include "../layer_0_hal/hal_callback.h"
 #include "../layer_0_hal/hal_spi.h"
 #include "../layer_0_hal/hal_i2c.h"
 #include "../Inc/peripheral_common.h"
@@ -29,12 +29,12 @@
 #include "gpio.h"
 #include "spi.h"
 /* driver includes */
-#include "../layer_1_driver/driver_dc_motor_controller.h"
-#include "../layer_1_driver/driver_rtd.h"
+#include "../layer_2_driver/driver_dc_motor_controller.h"
+#include "../layer_2_driver/driver_rtd.h"
 /* system includes */
 /* rtos includes */
-#include "../layer_2_rtosal/rtosal_globals.h"
-#include "../layer_2_rtosal/rtosal.h"
+#include "../layer_1_rtosal/rtosal_globals.h"
+#include "../layer_1_rtosal/rtosal.h"
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
@@ -421,12 +421,12 @@ namespace sys_op::comms_handler
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2, get_timer_2_handle(), FREQUENCY_1_MHZ);
-                hal::spi_2.spi_register_callback(spi::SPI_TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
-                hal::spi_2.spi_register_callback(spi::SPI_ERROR_CALLBACK_ID, HAL_SPI_Error_Callback);
-                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14);
-                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15);
-                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1);
-                comms_handler_iteration_tick = 0;
+                hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
+                hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_error);
+                hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14);
+                hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15);
+                hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1);
+                comms_handler_iteration_tick = 0U;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
                 buffer_accessed = false;

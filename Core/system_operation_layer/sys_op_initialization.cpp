@@ -12,7 +12,7 @@
 #include <cstdint>
 #include "stm32f4xx.h"
 #include "cmsis_os2.h"
-#include "../layer_2_rtosal/rtosal_globals.h"
+#include "../layer_1_rtosal/rtosal_globals.h"
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "sys_op_initialization.h"
 

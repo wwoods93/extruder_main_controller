@@ -57,11 +57,6 @@ typedef enum
     FLAG_SET    = 0x01U
 } flag_status_t;
 
-typedef enum
-{
-    BIT_CLEAR = 0x00,
-    BIT_SET = 0x01
-} bit_status_t;
 
 typedef enum
 {
@@ -71,10 +66,17 @@ typedef enum
     HAL_STATUS_TIMEOUT  = 0x03U
 } hal_status_t;
 
+#ifndef PERIPHERAL_BASE_ADDRESS
 #define PERIPHERAL_BASE_ADDRESS             0x40000000UL
-#define APB1_PERIPHERAL_BASE_ADDRESS        PERIPHERAL_BASE_ADDRESS
-#define APB2_PERIPHERAL_BASE_ADDRESS        (PERIPHERAL_BASE_ADDRESS + 0x00010000UL)
+#endif
 
+#ifndef APB1_PERIPHERAL_BASE_ADDRESS
+#define APB1_PERIPHERAL_BASE_ADDRESS        PERIPHERAL_BASE_ADDRESS
+#endif
+
+#ifndef APB2_PERIPHERAL_BASE_ADDRESS
+#define APB2_PERIPHERAL_BASE_ADDRESS        (PERIPHERAL_BASE_ADDRESS + 0x00010000UL)
+#endif
 
 
 #define I2C_2_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x5800UL)
@@ -184,7 +186,10 @@ typedef struct _dma_handle_t
 
 #define REGISTER_READ(REG)                  ((REG))
 #define REGISTER_CHECK_SET_BIT(REG, BIT)    ((((REG) & (BIT)) == (BIT)) ? BIT_SET : BIT_CLEAR)
+
+#ifndef UNUSED_CAST_VOID
 #define UNUSED_CAST_VOID(X)                 (void) X
+#endif
 //
 ////void assert_failed(uint8_t *file, uint32_t line);
 ////#define ASSERT_PARAM(expr) ((expr) ? (void)0U : assert_failed((uint8_t *)__FILE__, __LINE__))
@@ -199,8 +204,8 @@ typedef struct _dma_handle_t
 //
 //typedef enum
 //{
-//    HAL_MODULE_UNLOCKED = 0x00U,
-//    HAL_MODULE_LOCKED   = 0x01U
+//    MODULE_UNLOCKED = 0x00U,
+//    MODULE_LOCKED   = 0x01U
 //} hal_lock_t;
 //
 //typedef enum

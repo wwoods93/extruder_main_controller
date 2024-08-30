@@ -1,5 +1,4 @@
 /***********************************************************************************************************************
- * Main_Controller
  * hal_spi.cpp
  *
  * wilson
@@ -14,31 +13,41 @@
 #include <cstdlib>
 #include <cstring>
 #include <memory>
-#include <vector>
-#include <cstdint>
 /* stm32 includes */
 
 /* third-party includes */
 
 /* hal includes */
-#include "hal_general.h"
+#include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
-#include "hal_callbacks.h"
-#include "peripheral_common.h"
-#include "mcu_clock_timers.h"
 /* driver includes */
 
-/* rtos abstraction includes */
-#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
+/* rtosal includes */
+
 /* sys op includes */
 
 /* meta structure includes */
-#include "../meta_structure/meta_structure_system_manager.h"
+
 /* hal_spi header */
 #include "hal_spi.h"
 
+void spi::chip_select_set_active(uint8_t arg_channel_id)
+{
+    channel_t channel;
 
-/********************************************* public member functions ************************************************/
+    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+}
+
+void spi::chip_select_set_inactive(uint8_t arg_channel_id)
+{
+    channel_t channel;
+
+    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
+}
+
+
 spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
@@ -47,8 +56,8 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
     timeout_time_base_frequency = arg_timeout_time_base_frequency;
 
     module = arg_module;
-
     module->instance = arg_instance;
+    module->rx_data_ready_flag = 0U;
     module->settings.mode = SPI_CONFIG_MODE_CONTROLLER;
     module->settings.direction = SPI_CONFIG_DIRECTION_2_LINE;
     module->settings.data_size = SPI_CONFIG_DATA_SIZE_8_BIT;
@@ -59,11 +68,11 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
     module->settings.first_bit_setting = SPI_CONFIG_DATA_MSB_FIRST;
     module->settings.ti_mode = SPI_CONFIG_TI_MODE_DISABLE;
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
-    module->settings.crc_polynomial = 10;
+    module->settings.crc_polynomial = 0U;
 
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
-    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_1, (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(GPIO_PORT_B, PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(GPIO_PORT_B, PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(GPIO_PORT_B, PIN_1,  (GPIO_PinState) CHIP_SELECT_RESET);
 
     if (module == nullptr)                                                              { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
@@ -97,30 +106,29 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
 
     if (module->status == MODULE_STATUS_RESET)
     {
-        module->lock = HAL_MODULE_UNLOCKED;
-        module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID] = nullptr;
-        module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID] = nullptr;
-        module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID]       = nullptr;
-        module->callbacks[SPI_TX_RX_COMPLETE_CALLBACK_ID] = nullptr;
-        module->callbacks[SPI_TX_HALF_COMPLETE_CALLBACK_ID]   = nullptr;
-        module->callbacks[SPI_RX_HALF_COMPLETE_CALLBACK_ID] = nullptr;
-        module->callbacks[SPI_TX_RX_HALF_COMPLETE_CALLBACK_ID] = nullptr;
+        module->lock = MODULE_UNLOCKED;
+        module->callbacks[TX_COMPLETE_CALLBACK_ID]          = nullptr;
+        module->callbacks[TX_COMPLETE_CALLBACK_ID]          = nullptr;
+        module->callbacks[RX_COMPLETE_CALLBACK_ID]          = nullptr;
+        module->callbacks[TX_RX_COMPLETE_CALLBACK_ID]       = nullptr;
+        module->callbacks[TX_HALF_COMPLETE_CALLBACK_ID]     = nullptr;
+        module->callbacks[RX_HALF_COMPLETE_CALLBACK_ID]     = nullptr;
+        module->callbacks[TX_RX_HALF_COMPLETE_CALLBACK_ID]  = nullptr;
+        module->callbacks[ERROR_CALLBACK_ID]                = nullptr;
+        module->callbacks[ABORT_CALLBACK_ID]                = nullptr;
 
-        module->callbacks[SPI_ERROR_CALLBACK_ID]        = nullptr;
-        module->callbacks[SPI_ABORT_CALLBACK_ID]    = nullptr;
-
-        if (module->callbacks[SPI_MSP_INIT_CALLBACK_ID] == nullptr)
+        if (module->callbacks[MSP_INIT_CALLBACK_ID] == nullptr)
         {
-            module->callbacks[SPI_MSP_INIT_CALLBACK_ID] = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
+            module->callbacks[MSP_INIT_CALLBACK_ID] = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
         }
 
-        module->callbacks[SPI_MSP_INIT_CALLBACK_ID](module);
+        module->callbacks[MSP_INIT_CALLBACK_ID](module);
     }
 
     module->status = MODULE_STATUS_BUSY;
     disable_module();
 
-    WRITE_REG(module->instance->CONTROL_REG_1, (
+    set_bit_spi_register_32(CONTROL_REG_1_ID, (
         (module->settings.mode & (SPI_CR1_BIT_CONTROLLER_MODE | SPI_CR1_BIT_INTERNAL_CHIP_SELECT)) |
         (module->settings.direction & (SPI_CR1_BIT_RECEIVE_ONLY | SPI_CR1_BIT_BIDIRECTIONAL_MODE)) |
         (module->settings.data_size & SPI_CR1_BIT_DATA_FRAME_FORMAT) |
@@ -131,19 +139,18 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
         (module->settings.first_bit_setting & SPI_CR1_BIT_LSB_FIRST) |
         (module->settings.crc_calculation & SPI_CR1_BIT_CRC_ENABLE)));
 
-    WRITE_REG(module->instance->CONTROL_REG_2, (((module->settings.chip_select_setting >> 16U) & SPI_CR2_BIT_CHIP_SELECT_OUTPUT_ENABLE) |
+    set_bit_spi_register_32(CONTROL_REG_2_ID, (((module->settings.chip_select_setting >> 16U) & SPI_CR2_BIT_CHIP_SELECT_OUTPUT_ENABLE) |
                                                 (module->settings.ti_mode & SPI_CR2_BIT_FRAME_FORMAT)));
-
     module->error_code   = SPI_ERROR_NONE;
     module->status        = MODULE_STATUS_READY;
     return PROCEDURE_STATUS_OK;
 }
 
-spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_pointer, uint8_t *rx_data_pointer, uint16_t packet_size, GPIO_TypeDef* chip_select_port, uint16_t chip_select_pin)
+spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
 {
     uint8_t spi_procedure_error = SPI_PROCEDURE_ERROR_NONE;
 
-    if ((tx_data_pointer == nullptr) || (rx_data_pointer == nullptr) || (packet_size == 0U))
+    if ((arg_tx_data_ptr == nullptr) || (arg_rx_data_ptr == nullptr) || (arg_packet_size == 0U))
     {
         spi_procedure_error = SPI_PROCEDURE_STATE_DATA_ERROR;
     }
@@ -161,13 +168,14 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_poi
                 module->status = MODULE_STATUS_BUSY_TX_RX;
             }
 
-            set_transaction_parameters(tx_data_pointer, rx_data_pointer, packet_size);
-            set_rx_and_tx_interrupt_service_routines();
+            set_transaction_parameters(arg_tx_data_ptr, arg_rx_data_ptr, arg_packet_size);
+            set_tx_and_rx_interrupt_service_routines();
 
-            module->chip_select_port = chip_select_port;
-            module->chip_select_pin = chip_select_pin;
+            module->chip_select_port = arg_chip_select_port;
+            module->chip_select_pin = arg_chip_select_pin;
 
-            HAL_GPIO_WritePin(chip_select_port, chip_select_pin, GPIO_PIN_RESET);
+            hal::gpio_write_pin(arg_chip_select_port, arg_chip_select_pin, GPIO_PIN_RESET);
+            chip_select_set_active(active_packet.channel_id);
             enable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
 
             if ((module->instance->CONTROL_REG_1 & SPI_CR1_BIT_SPI_ENABLE) != SPI_CR1_BIT_SPI_ENABLE)
@@ -196,13 +204,13 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *tx_data_poi
     return PROCEDURE_STATUS_OK;
 }
 
-spi::procedure_status_t spi::spi_register_callback(callback_id_t _callback_id, spi_callback_ptr_t _callback_ptr) const
+spi::procedure_status_t spi::register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
 
-    if (_callback_ptr == nullptr)
+    if (arg_callback_ptr == nullptr)
     {
-        module->error_code |= SPI_ERROR_CALLBACK_ID;
+        module->error_code |= ERROR_CALLBACK_ID;
 
         return PROCEDURE_STATUS_ERROR;
     }
@@ -211,9 +219,9 @@ spi::procedure_status_t spi::spi_register_callback(callback_id_t _callback_id, s
     {
         if (module->status == MODULE_STATUS_READY)
         {
-            if (_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && _callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
+            if (arg_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && arg_callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
             {
-                module->callbacks[_callback_id] = _callback_ptr;
+                module->callbacks[arg_callback_id] = arg_callback_ptr;
             }
             else
             {
@@ -224,9 +232,9 @@ spi::procedure_status_t spi::spi_register_callback(callback_id_t _callback_id, s
         else if (module->status == MODULE_STATUS_RESET)
         {
 
-            if (_callback_id == SPI_MSP_INIT_CALLBACK_ID || _callback_id == SPI_MSP_DEINIT_CALLBACK_ID)
+            if (arg_callback_id == MSP_INIT_CALLBACK_ID || arg_callback_id == MSP_DEINIT_CALLBACK_ID)
             {
-                module->callbacks[_callback_id] = _callback_ptr;
+                module->callbacks[arg_callback_id] = arg_callback_ptr;
             }
             else
             {
@@ -252,7 +260,7 @@ spi::procedure_status_t spi::spi_register_callback(callback_id_t _callback_id, s
     return status;
 }
 
-spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id) const
+spi::procedure_status_t spi::unregister_callback(callback_id_t arg_callback_id) const
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
 
@@ -261,9 +269,9 @@ spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id)
     {
         if (module->status == MODULE_STATUS_READY)
         {
-            if (_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && _callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
+            if (arg_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && arg_callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
             {
-                module->callbacks[_callback_id] = nullptr;
+                module->callbacks[arg_callback_id] = nullptr;
             }
             else
             {
@@ -274,9 +282,9 @@ spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id)
         else if (module->status == MODULE_STATUS_RESET)
         {
 
-            if (_callback_id == SPI_MSP_INIT_CALLBACK_ID || _callback_id == SPI_MSP_DEINIT_CALLBACK_ID)
+            if (arg_callback_id == MSP_INIT_CALLBACK_ID || arg_callback_id == MSP_DEINIT_CALLBACK_ID)
             {
-                module->callbacks[_callback_id] = nullptr;
+                module->callbacks[arg_callback_id] = nullptr;
             }
             else
             {
@@ -300,124 +308,117 @@ spi::procedure_status_t spi::spi_unregister_callback(callback_id_t _callback_id)
         status = PROCEDURE_STATUS_ERROR;
     }
 
-
-
     return status;
 }
 
-void tx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 {
-    *(volatile uint8_t *)&spi_handle->instance->DATA_REG = (*spi_handle->tx_buffer_ptr);
-    spi_handle->tx_buffer_ptr++;
-    spi_handle->tx_transfer_counter--;
-    if (spi_handle->tx_transfer_counter == 0U)
+    *(volatile uint8_t *)&arg_module->instance->DATA_REG = (*arg_module->tx_buffer_ptr);
+    arg_module->tx_buffer_ptr++;
+    arg_module->tx_transfer_counter--;
+    if (arg_module->tx_transfer_counter == 0U)
     {
-        spi_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
+        arg_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        if (arg_module->rx_transfer_counter == 0U) { arg_object.close_isr(spi::TX_RX); }
     }
 }
 
-void rx_2_line_8_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 {
-    *(spi_handle->rx_buffer_ptr) = *((volatile uint8_t *)&spi_handle->instance->DATA_REG);     // receive data in 8-bit mode
-    spi_handle->rx_buffer_ptr++;
-    spi_handle->rx_transfer_counter--;
+    *(arg_module->rx_buffer_ptr) = *((volatile uint8_t *)&arg_module->instance->DATA_REG);     // receive data in 8-bit mode
+    arg_module->rx_buffer_ptr++;
+    arg_module->rx_transfer_counter--;
 
-    if (spi_handle->rx_transfer_counter == 0U)
+    if (arg_module->rx_transfer_counter == 0U)
     {
-        spi_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
+        arg_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
+        if (arg_module->tx_transfer_counter == 0U) { arg_object.close_isr(spi::TX_RX); }
     }
 }
 
-void tx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 {
-    spi_handle->instance->DATA_REG = *((uint16_t *)spi_handle->tx_buffer_ptr);
-    spi_handle->tx_buffer_ptr += sizeof(uint16_t);
-    spi_handle->tx_transfer_counter--;
+    arg_module->instance->DATA_REG = *((uint16_t *)arg_module->tx_buffer_ptr);
+    arg_module->tx_buffer_ptr += sizeof(uint16_t);
+    arg_module->tx_transfer_counter--;
 
-    if (spi_handle->tx_transfer_counter == 0U)
+    if (arg_module->tx_transfer_counter == 0U)
     {
-        spi_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->rx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
+        arg_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
+        if (arg_module->rx_transfer_counter == 0U) { arg_object.close_isr(spi::TX_RX); }
     }
 }
 
-void rx_2_line_16_bit_isr(spi spi_object, struct spi::_handle_t *spi_handle)
+void rx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 {
-    *((uint16_t *)spi_handle->rx_buffer_ptr) = (uint16_t)(spi_handle->instance->DATA_REG);
-    spi_handle->rx_buffer_ptr += sizeof(uint16_t);
-    spi_handle->rx_transfer_counter--;
+    *((uint16_t *)arg_module->rx_buffer_ptr) = (uint16_t)(arg_module->instance->DATA_REG);
+    arg_module->rx_buffer_ptr += sizeof(uint16_t);
+    arg_module->rx_transfer_counter--;
 
-    if (spi_handle->rx_transfer_counter == 0U)
+    if (arg_module->rx_transfer_counter == 0U)
     {
-        spi_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
-        if (spi_handle->tx_transfer_counter == 0U) { spi_object.close_isr(spi::TX_RX); }
+        arg_object.disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE);
+        if (arg_module->tx_transfer_counter == 0U) { arg_object.close_isr(spi::TX_RX); }
     }
 }
-/*************************************************** friend functions *************************************************/
-spi::module_t* get_spi_handle(spi* spi_object)
-{
-    return spi_object->module;
-}
 
-void spi_irq_handler(spi* spi_object)
+void spi_irq_handler(spi* arg_object)
 {
-    if ((spi_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) != BIT_SET)
-        && (spi_object->get_status_register_bit(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY) == BIT_SET)
-        && (spi_object->check_interrupt_source(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) == BIT_SET))
+    if ((arg_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) != BIT_SET)
+        && (arg_object->get_status_register_bit(SPI_SR_BIT_RX_BUFFER_NOT_EMPTY) == BIT_SET)
+        && (arg_object->check_interrupt_source(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE) == BIT_SET))
     {
-        spi_object->module->rx_isr_ptr(*spi_object, spi_object->module);
+        arg_object->module->rx_isr_ptr(*arg_object, arg_object->module);
         return;
     }
-    if ((spi_object->get_status_register_bit(SPI_SR_BIT_TX_BUFFER_EMPTY) == BIT_SET)
-        && (spi_object->check_interrupt_source(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) == BIT_SET))
+    if ((arg_object->get_status_register_bit(SPI_SR_BIT_TX_BUFFER_EMPTY) == BIT_SET)
+        && (arg_object->check_interrupt_source(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE) == BIT_SET))
     {
-        spi_object->module->tx_isr_ptr(*spi_object, spi_object->module);
+        arg_object->module->tx_isr_ptr(*arg_object, arg_object->module);
         return;
     }
-    if (((spi_object->get_status_register_bit(SPI_SR_BIT_MODE_FAULT) == BIT_SET)
-         || (spi_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) == BIT_SET))
-         && (spi_object->check_interrupt_source(SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE) == BIT_SET))
+    if (((arg_object->get_status_register_bit(SPI_SR_BIT_MODE_FAULT) == BIT_SET)
+         || (arg_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) == BIT_SET))
+        && (arg_object->check_interrupt_source(SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE) == BIT_SET))
     {
-        if (spi_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) == BIT_SET)
+        if (arg_object->get_status_register_bit(SPI_SR_BIT_OVERRUN) == BIT_SET)
         {
-            if (spi_object->module->status != spi::MODULE_STATUS_BUSY_TX)
+            if (arg_object->module->status != spi::MODULE_STATUS_BUSY_TX)
             {
-                spi_object->set_error_bit(SPI_ERROR_OVERRUN);
-                spi_object->clear_overrun_flag();
+                arg_object->set_error_bit(SPI_ERROR_OVERRUN);
+                arg_object->clear_overrun_flag();
             }
             else
             {
-                spi_object->clear_overrun_flag();
+                arg_object->clear_overrun_flag();
                 return;
             }
         }
 
-        if (spi_object->get_status_register_bit(SPI_SR_BIT_MODE_FAULT) == BIT_SET)
+        if (arg_object->get_status_register_bit(SPI_SR_BIT_MODE_FAULT) == BIT_SET)
         {
-            spi_object->set_error_bit(SPI_ERROR_MODE_FAULT);
-            spi_object->clear_mode_fault_flag();
+            arg_object->set_error_bit(SPI_ERROR_MODE_FAULT);
+            arg_object->clear_mode_fault_flag();
         }
 
-        if (spi_object->module->error_code != SPI_ERROR_NONE)
+        if (arg_object->module->error_code != SPI_ERROR_NONE)
         {
-            spi_object->disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
-            spi_object->module->status = spi::MODULE_STATUS_READY;
-            spi_object->module->callbacks[spi::SPI_ERROR_CALLBACK_ID](spi_object->module);
+            arg_object->disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
+            arg_object->module->status = spi::MODULE_STATUS_READY;
+            arg_object->module->callbacks[spi::ERROR_CALLBACK_ID](arg_object->module);
         }
         return;
     }
 }
 
-void spi::set_rx_and_tx_interrupt_service_routines() const
+void spi::set_tx_and_rx_interrupt_service_routines() const
 {
     if (module->settings.data_size == SPI_CONFIG_DATA_SIZE_8_BIT)
     {
         module->rx_isr_ptr     = rx_2_line_8_bit_isr;
         module->tx_isr_ptr     = tx_2_line_8_bit_isr;
     }
-    else
+    else if (module->settings.data_size == SPI_CONFIG_DATA_SIZE_16_BIT)
     {
         module->rx_isr_ptr     = rx_2_line_16_bit_isr;
         module->tx_isr_ptr     = tx_2_line_16_bit_isr;
@@ -568,7 +569,7 @@ void spi::close_isr(transaction_t arg_transaction_type)
     if (module->error_code != SPI_ERROR_NONE)
     {
         module->status = MODULE_STATUS_READY;
-        module->callbacks[SPI_ERROR_CALLBACK_ID](module);
+        module->callbacks[ERROR_CALLBACK_ID](module);
     }
     else
     {
@@ -576,40 +577,41 @@ void spi::close_isr(transaction_t arg_transaction_type)
             (arg_transaction_type == TX_RX && module->status == MODULE_STATUS_BUSY_RX))
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[SPI_RX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[RX_COMPLETE_CALLBACK_ID](module);
         }
         else if (arg_transaction_type == TX_ONLY)
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[SPI_TX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[TX_COMPLETE_CALLBACK_ID](module);
         }
         else if (arg_transaction_type == TX_RX)
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[SPI_TX_RX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[TX_RX_COMPLETE_CALLBACK_ID](module);
         }
     }
-
 }
 
-void spi::transmit_and_get_result(uint8_t packet_size, uint8_t* tx_data)
+void spi::transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data)
 {
-    auto *rx_ptr = static_cast<uint8_t *>(malloc(packet_size * sizeof(uint8_t)));
-    spi_transmit_receive_interrupt(tx_data, rx_ptr, packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
-    while (!hal_callbacks_get_spi_rx_data_ready_flag());
-    hal_callbacks_set_spi_rx_data_ready_flag(0);
-    for (uint8_t i = 0; i < packet_size; ++i)
+    auto *rx_ptr = static_cast<uint8_t *>(malloc(arg_packet_size * sizeof(uint8_t)));
+    spi_transmit_receive_interrupt(arg_tx_data, rx_ptr, arg_packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
+    while (!module->rx_data_ready_flag);
+    module->rx_data_ready_flag = 0U;
+
+    for (uint8_t index = 0U; index < arg_packet_size; ++index)
     {
-        rx_result[i] = *rx_ptr;
-        if (i < packet_size - 1)
+        rx_result[index] = *rx_ptr;
+        if (index < arg_packet_size - 1U)
         {
             rx_ptr++;
         }
     }
-    for (uint8_t i = 0; i < packet_size; ++i)
+
+    for (uint8_t index = 0U; index < arg_packet_size; ++index)
     {
-        *rx_ptr = 0;
-        if (i < packet_size - 1)
+        *rx_ptr = 0U;
+        if (index < arg_packet_size - 1U)
         {
             rx_ptr--;
         }
@@ -618,7 +620,7 @@ void spi::transmit_and_get_result(uint8_t packet_size, uint8_t* tx_data)
 }
 
 
-spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, port_name_t arg_chip_select_port, uint16_t arg_chip_select_pin)
+spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
 {
     arg_channel_id = ID_INVALID;
 
@@ -632,54 +634,54 @@ spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, port_na
 
         GPIO_TypeDef* chip_select_port = nullptr;
 
-        switch (arg_chip_select_port)
-        {
-            case PORT_A:
-            {
-                chip_select_port = GPIOA;
-                break;
-            }
-            case PORT_B:
-            {
-                chip_select_port = GPIOB;
-                break;
-            }
-            case PORT_C:
-            {
-                chip_select_port = GPIOC;
-                break;
-            }
-            case PORT_D:
-            {
-                chip_select_port = GPIOD;
-                break;
-            }
-            case PORT_E:
-
-                chip_select_port = GPIOE;
-                break;
-
-            case PORT_F:
-            {
-                chip_select_port = GPIOF;
-                break;
-            }
-            case PORT_G:
-            {
-                chip_select_port = GPIOG;
-                break;
-            }
-            case PORT_H:
-            {
-                chip_select_port = GPIOH;
-                break;
-            }
-            default:
-            {
-                break;
-            }
-        }
-        new_channel.chip_select.port = chip_select_port;
+//        switch (arg_chip_select_port)
+//        {
+//            case PORT_A:
+//            {
+//                chip_select_port = GPIOA;
+//                break;
+//            }
+//            case PORT_B:
+//            {
+//                chip_select_port = GPIOB;
+//                break;
+//            }
+//            case PORT_C:
+//            {
+//                chip_select_port = GPIOC;
+//                break;
+//            }
+//            case PORT_D:
+//            {
+//                chip_select_port = GPIOD;
+//                break;
+//            }
+//            case PORT_E:
+//
+//                chip_select_port = GPIOE;
+//                break;
+//
+//            case PORT_F:
+//            {
+//                chip_select_port = GPIOF;
+//                break;
+//            }
+//            case PORT_G:
+//            {
+//                chip_select_port = GPIOG;
+//                break;
+//            }
+//            case PORT_H:
+//            {
+//                chip_select_port = GPIOH;
+//                break;
+//            }
+//            default:
+//            {
+//                break;
+//            }
+//        }
+        new_channel.chip_select.port = arg_chip_select_port;
         new_channel.chip_select.pin = arg_chip_select_pin;
 
         switch (new_channel_id)
@@ -736,6 +738,7 @@ spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, port_na
             {
                 break;
             }
+            chip_select_set_inactive(new_channel.channel_id);
         }
     }
     else
@@ -923,11 +926,11 @@ spi::procedure_status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
+uint8_t spi::process_return_buffer(packet_t& arg_packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
 {
     uint8_t buffer_accessed = 0U;
 
-    memset(&packet, '\0', sizeof(packet_t));
+    memset(&arg_packet, '\0', sizeof(packet_t));
 
     switch(arg_channel)
     {
@@ -935,7 +938,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_0.empty())
             {
-                memcpy(&packet, &return_buffer_0.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_0.front(), sizeof(packet_t));
                 return_buffer_0.pop();
                 buffer_accessed = 1U;
             }
@@ -946,7 +949,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_1.empty())
             {
-                memcpy(&packet, &return_buffer_1.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_1.front(), sizeof(packet_t));
                 return_buffer_1.pop();
                 buffer_accessed = 1U;
             }
@@ -957,7 +960,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_2.empty())
             {
-                memcpy(&packet, &return_buffer_2.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_2.front(), sizeof(packet_t));
                 return_buffer_2.pop();
                 buffer_accessed = 1U;
             }
@@ -968,7 +971,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_3.empty())
             {
-                memcpy(&packet, &return_buffer_3.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_3.front(), sizeof(packet_t));
                 return_buffer_3.pop();
                 buffer_accessed = 1U;
             }
@@ -979,7 +982,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_4.empty())
             {
-                memcpy(&packet, &return_buffer_4.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_4.front(), sizeof(packet_t));
                 return_buffer_4.pop();
                 buffer_accessed = 1U;
             }
@@ -990,7 +993,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_5.empty())
             {
-                memcpy(&packet, &return_buffer_5.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_5.front(), sizeof(packet_t));
                 return_buffer_5.pop();
                 buffer_accessed = 1U;
             }
@@ -1001,7 +1004,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_6.empty())
             {
-                memcpy(&packet, &return_buffer_6.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_6.front(), sizeof(packet_t));
                 return_buffer_6.pop();
                 buffer_accessed = 1U;
             }
@@ -1012,7 +1015,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
         {
             if (!return_buffer_7.empty())
             {
-                memcpy(&packet, &return_buffer_7.front(), sizeof(packet_t));
+                memcpy(&arg_packet, &return_buffer_7.front(), sizeof(packet_t));
                 return_buffer_7.pop();
                 buffer_accessed = 1U;
             }
@@ -1027,7 +1030,7 @@ uint8_t spi::process_return_buffer(packet_t& packet, id_number_t arg_channel, ui
 
     if (buffer_accessed)
     {
-        memcpy(&arg_rx_array, &packet.rx_bytes, sizeof(arg_rx_array));
+        memcpy(&arg_rx_array, &arg_packet.rx_bytes, sizeof(arg_rx_array));
     }
 
     return buffer_accessed;
@@ -1042,17 +1045,17 @@ void spi::process_send_buffer()
         module->chip_select.port = active_packet.chip_select.port;
         module->chip_select.pin = active_packet.chip_select.pin;
 
-        uint8_t tx_index = 0;
+        uint8_t tx_index = 0U;
         uint8_t byte_count_of_current_tx = 0;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
 
-        for (uint8_t byte_count_array_index = 0; byte_count_array_index < 8U; ++byte_count_array_index)
+        for (uint8_t byte_count_array_index = 0U; byte_count_array_index < 8U; ++byte_count_array_index)
         {
             byte_count_of_current_tx = active_packet.bytes_per_tx[byte_count_array_index];
-            if (byte_count_of_current_tx != 0)
+            if (byte_count_of_current_tx != 0U)
             {
                 transmit_and_get_result(byte_count_of_current_tx, &active_packet.tx_bytes[tx_index]);
-                for (uint8_t result_byte = 0; result_byte < byte_count_of_current_tx; ++result_byte)
+                for (uint8_t result_byte = 0U; result_byte < byte_count_of_current_tx; ++result_byte)
                 {
                     active_packet.rx_bytes[tx_index++] = rx_result[result_byte];
                 }

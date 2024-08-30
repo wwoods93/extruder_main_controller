@@ -20,14 +20,22 @@
 /* third-party includes */
 
 /* hal includes */
-#include "hal_general.h"
-/* driver includes */
 
-/* rtos abstraction includes */
+/* rtosal includes */
+
+/* driver includes */
 
 /* sys op includes */
 
 /* meta structure includes */
+
+#ifndef ID_INVALID
+#define ID_INVALID (-1)
+#endif
+
+#ifndef UNUSED_CAST_VOID
+#define UNUSED_CAST_VOID(X)                 (void) X
+#endif
 
 #ifndef PERIPHERAL_BASE_ADDRESS
 #define PERIPHERAL_BASE_ADDRESS         0x40000000UL
@@ -38,13 +46,8 @@
 #endif
 
 #ifndef APB2_PERIPHERAL_BASE_ADDRESS
-#define APB2_PERIPHERAL_BASE_ADDRESS        (PERIPHERAL_BASE_ADDRESS + 0x00010000UL)
+#define APB2_PERIPHERAL_BASE_ADDRESS    (PERIPHERAL_BASE_ADDRESS + 0x00010000UL)
 #endif
-
-#define SPI_1_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3000UL)
-#define SPI_2_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3800UL)
-#define SPI_3_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3C00UL)
-#define SPI_4_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3400UL)
 
 typedef struct
 {
@@ -59,6 +62,10 @@ typedef struct
     volatile uint32_t I2S_PRESCALER_REG;
 } hal_spi_t;
 
+#define SPI_1_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3000UL)
+#define SPI_2_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3800UL)
+#define SPI_3_BASE_ADDRESS                  (APB1_PERIPHERAL_BASE_ADDRESS + 0x3C00UL)
+#define SPI_4_BASE_ADDRESS                  (APB2_PERIPHERAL_BASE_ADDRESS + 0x3400UL)
 #define SPI_1                               ((hal_spi_t *) SPI_1_BASE_ADDRESS)
 #define SPI_2                               ((hal_spi_t *) SPI_2_BASE_ADDRESS)
 #define SPI_3                               ((hal_spi_t *) SPI_3_BASE_ADDRESS)
@@ -95,7 +102,7 @@ static constexpr uint32_t SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE          
 // spi sr map
 static constexpr uint32_t SPI_SR_BIT_RX_BUFFER_NOT_EMPTY                                = 0x00000001U;
 static constexpr uint32_t SPI_SR_BIT_TX_BUFFER_EMPTY                                    = 0x00000002U;
-// bit 2 channel side unused by SPI
+// bit 2 channel side unused by spi
 static constexpr uint32_t SPI_SR_BIT_UNDERRUN_FLAG                                      = 0x00000008U;
 static constexpr uint32_t SPI_SR_BIT_CRC_ERROR                                          = 0x00000010U;
 static constexpr uint32_t SPI_SR_BIT_MODE_FAULT                                         = 0x00000020U;
@@ -162,10 +169,11 @@ static constexpr uint32_t SPI_BUSY_FLAG_WORK_AROUND_TIMEOUT_1000_US             
 static constexpr uint32_t SPI_MAX_TIMEOUT                                               = (0xFFFFFFFFU);
 
 static constexpr uint8_t  ACTIVE_LOW                                                    = 0U;
+static constexpr uint8_t  ACTIVE_HIGH                                                   = 1U;
 
 static constexpr uint8_t  CHIP_SELECT_LOGIC_LEVEL                                       = ACTIVE_LOW;
-static constexpr uint8_t  CHIP_SELECT_SET                                               = 0U;
-static constexpr uint8_t  CHIP_SELECT_RESET                                             = 1U;
+static constexpr uint8_t  CHIP_SELECT_SET                                               = CHIP_SELECT_LOGIC_LEVEL;
+static constexpr uint8_t  CHIP_SELECT_RESET                                             = !CHIP_SELECT_SET;
 
 static constexpr uint8_t  SPI_TRANSACTION_NOT_IN_PROGRESS                               = 0U;
 static constexpr uint8_t  SPI_TRANSACTION_IN_PROGRESS                                   = 1U;

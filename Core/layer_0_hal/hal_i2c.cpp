@@ -58,7 +58,7 @@
 //
 //    if (hi2c->state == I2C_STATE_RESET)
 //    {
-//        hi2c->lock = HAL_MODULE_UNLOCKED;
+//        hi2c->lock = MODULE_UNLOCKED;
 //
 //        #if (USE_HAL_I2C_REGISTER_CALLBACKS == 1)
 //
@@ -368,15 +368,15 @@
 //
 //i2c::procedure_status_t i2c::lock_i2c_module()
 //{
-//    if (i2c_module_handle->lock == HAL_MODULE_LOCKED)
+//    if (i2c_module_handle->lock == MODULE_LOCKED)
 //        return I2C_STATUS_BUSY;
-//    i2c_module_handle->lock = HAL_MODULE_LOCKED;
+//    i2c_module_handle->lock = MODULE_LOCKED;
 //    return I2C_STATUS_OK;
 //}
 //
 //void i2c::unlock_i2c_module()
 //{
-//    i2c_module_handle->lock = HAL_MODULE_UNLOCKED;
+//    i2c_module_handle->lock = MODULE_UNLOCKED;
 //}
 //
 //void i2c::set_control_register_bit(uint32_t control_register_bit)

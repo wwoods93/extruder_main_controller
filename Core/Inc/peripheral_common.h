@@ -25,6 +25,7 @@ extern "C" {
 void error_handler(void);
 void Error_Handler(void);
 
+RTC_HandleTypeDef* get_rtc_handle(void);
 TIM_HandleTypeDef* get_timer_1_handle(void);
 TIM_HandleTypeDef* get_timer_2_handle(void);
 TIM_HandleTypeDef* get_timer_10_handle(void);
@@ -44,6 +45,7 @@ void MX_I2C2_Init();
 void MX_WWDG_Init(void);
 void MX_USART2_UART_Init(void);
 
+void MX_RTC_Init(void);
 void MX_TIM1_Init(void);
 void MX_TIM2_Init(void);
 void MX_TIM10_Init(void);

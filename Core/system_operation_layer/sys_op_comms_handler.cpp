@@ -13,6 +13,7 @@
 /* c/c++ includes */
 #include <cstdint>
 #include <cstring>
+#include <string>
 /* stm32 includes */
 #include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
@@ -21,6 +22,7 @@
 /* hal includes */
 #include "../layer_0_hal/hal_general.h"
 #include "../layer_0_hal/hal_callback.h"
+#include "../layer_0_hal/hal_wrapper.h"
 #include "../layer_0_hal/hal_spi.h"
 #include "../layer_0_hal/hal_i2c.h"
 #include "../Inc/peripheral_common.h"
@@ -395,6 +397,7 @@ namespace sys_op::comms_handler
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
+        char time_stamp[9];
         uint8_t rtd_config_reg = 0x00 | 0x80;
         uint8_t rtd_config_byte = 0xD3;
         uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
@@ -557,6 +560,9 @@ namespace sys_op::comms_handler
                     buffer_access_counter++;
                     buffer_accessed = 0U;
                 }
+
+                hal::rtc_get_time_stamp(time_stamp);
+
 
                 if (osMessageQueueGet( i2c_tx_queue_handle, &rtd_reading, nullptr, 50) == osOK)
                 {

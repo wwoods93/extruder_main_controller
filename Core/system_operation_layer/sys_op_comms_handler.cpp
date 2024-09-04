@@ -189,12 +189,12 @@ void I2C1_ER_IRQHandler(void)
 
 void I2C2_EV_IRQHandler(void)
 {
-    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
+    HAL_I2C_EV_IRQHandler(get_i2c_2_handle());
 }
 
 void I2C2_ER_IRQHandler(void)
 {
-    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
+    HAL_I2C_ER_IRQHandler(get_i2c_2_handle());
 }
 
 
@@ -205,7 +205,7 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
     htim->Instance = TIM10;
     htim->Init.Prescaler = 64-1;
     htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 1000;
+    htim->Init.Period = 8100;
     htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
@@ -221,7 +221,7 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
 //        Error_Handler();
 //    }
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 750;
+    sConfigOC.Pulse = 7710;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -382,6 +382,9 @@ namespace sys_op::comms_handler
     uint8_t b2 = 0;
     uint8_t b3 = 0;
     uint8_t b4 = 0;
+    volatile uint32_t i2c_busy_count = 0;
+    volatile uint32_t i2c_error_count = 0;
+    volatile uint32_t i2c_timeout_count = 0;
 
     void task_intitialize()
     {
@@ -401,7 +404,7 @@ namespace sys_op::comms_handler
         uint32_t delay = 1000000U;
 
 
-
+        HAL_StatusTypeDef i2c_status;
         uint8_t packet_added = 0U;
         uint32_t rtd_reading_count = 0;
 
@@ -426,6 +429,9 @@ namespace sys_op::comms_handler
                 hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14);
                 hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15);
                 hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1);
+
+                HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
+                HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
                 comms_handler_iteration_tick = 0U;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
                 rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
@@ -580,10 +586,54 @@ namespace sys_op::comms_handler
                     i2c_data[3] = converter.buffer[2];
                     i2c_data[4] = converter.buffer[3];
 
-                    HAL_I2C_Master_Transmit(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5, 200);
+                    i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+                    if (i2c_status != HAL_OK)
+                    {
+                        switch (i2c_status)
+                        {
+                            case HAL_OK:
+                            {
+                                break;
+                            }
+                            case HAL_BUSY:
+                            {
+                                i2c_busy_count++;
+                                break;
+                            }
+                            case HAL_ERROR:
+                            {
+                                if ((get_i2c_2_handle()->Instance->SR1 & I2C_SR1_ARLO) == I2C_SR1_ARLO)
+                                {
+//                                    get_i2c_2_handle()->Instance->SR1 &= (~I2C_SR1_ARLO);
+//                                    get_i2c_2_handle()->Instance->SR2 |= I2C_SR2_MSL;
+//                                    get_i2c_2_handle()->Instance->CR1 |= I2C_CR1_SWRST;
+//                                    get_i2c_2_handle()->Instance->CR1 &= ~I2C_CR1_SWRST;
+                                }
+                                i2c_error_count++;
+                                break;
+                            }
+                            case HAL_TIMEOUT:
+                            {
+                                i2c_timeout_count++;
+                                break;
+                            }
+                            default:
+                            {
+                                break;
+                            }
+                        }
+                    }
 
-                    rtd_reading.id = 0;
-                    rtd_reading.value = 0;
+                    if (i2c_busy_count > 500000 && i2c_error_count > 500000 && i2c_timeout_count > 500000)
+                    {
+                        rtd_reading.id = 10;
+                    }
+                    else
+                    {
+                        rtd_reading.id = 0;
+                        rtd_reading.value = 0;
+                    }
+
                 }
 
                 break;

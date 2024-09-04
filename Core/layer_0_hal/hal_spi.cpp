@@ -31,22 +31,6 @@
 /* hal_spi header */
 #include "hal_spi.h"
 
-void spi::chip_select_set_active(uint8_t arg_channel_id)
-{
-    channel_t channel;
-
-    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
-    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
-}
-
-void spi::chip_select_set_inactive(uint8_t arg_channel_id)
-{
-    channel_t channel;
-
-    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
-    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
-}
-
 
 spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
 {
@@ -309,6 +293,22 @@ spi::procedure_status_t spi::unregister_callback(callback_id_t arg_callback_id) 
     }
 
     return status;
+}
+
+void spi::chip_select_set_active(uint8_t arg_channel_id)
+{
+    channel_t channel;
+
+    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+}
+
+void spi::chip_select_set_inactive(uint8_t arg_channel_id)
+{
+    channel_t channel;
+
+    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
 void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
@@ -631,56 +631,6 @@ spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, hal::gp
         channel_t new_channel;
         memset(&new_channel, '\0', sizeof(channel_t));
         new_channel.channel_id = new_channel_id;
-
-        GPIO_TypeDef* chip_select_port = nullptr;
-
-//        switch (arg_chip_select_port)
-//        {
-//            case PORT_A:
-//            {
-//                chip_select_port = GPIOA;
-//                break;
-//            }
-//            case PORT_B:
-//            {
-//                chip_select_port = GPIOB;
-//                break;
-//            }
-//            case PORT_C:
-//            {
-//                chip_select_port = GPIOC;
-//                break;
-//            }
-//            case PORT_D:
-//            {
-//                chip_select_port = GPIOD;
-//                break;
-//            }
-//            case PORT_E:
-//
-//                chip_select_port = GPIOE;
-//                break;
-//
-//            case PORT_F:
-//            {
-//                chip_select_port = GPIOF;
-//                break;
-//            }
-//            case PORT_G:
-//            {
-//                chip_select_port = GPIOG;
-//                break;
-//            }
-//            case PORT_H:
-//            {
-//                chip_select_port = GPIOH;
-//                break;
-//            }
-//            default:
-//            {
-//                break;
-//            }
-//        }
         new_channel.chip_select.port = arg_chip_select_port;
         new_channel.chip_select.pin = arg_chip_select_pin;
 

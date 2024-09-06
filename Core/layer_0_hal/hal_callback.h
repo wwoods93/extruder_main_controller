@@ -30,8 +30,8 @@
 /* meta structure includes */
 
 
-void hal_callback_spi_rx_tx_complete(spi::module_t *arg_module);
-void hal_callback_spi_error(spi::module_t *arg_module);
+void hal_callback_spi_rx_tx_complete(spi *arg_object);
+void hal_callback_spi_error(spi *arg_object);
 
 void hal_callback_i2c_controller_tx_complete(I2C_HandleTypeDef *hi2c);
 void hal_callback_i2c_controller_error(I2C_HandleTypeDef *hi2c);

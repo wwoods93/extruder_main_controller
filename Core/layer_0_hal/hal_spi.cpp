@@ -101,12 +101,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
         module->callbacks[ERROR_CALLBACK_ID]                = nullptr;
         module->callbacks[ABORT_CALLBACK_ID]                = nullptr;
 
-        if (module->callbacks[MSP_INIT_CALLBACK_ID] == nullptr)
-        {
-            module->callbacks[MSP_INIT_CALLBACK_ID] = reinterpret_cast<void (*)(_handle_t *)>(HAL_SPI_MspInit);
-        }
-
-        module->callbacks[MSP_INIT_CALLBACK_ID](module);
+        hal::spi_2_msp_initialize();
     }
 
     module->status = MODULE_STATUS_BUSY;
@@ -213,24 +208,12 @@ spi::procedure_status_t spi::register_callback(callback_id_t arg_callback_id, sp
                 status =  PROCEDURE_STATUS_ERROR;
             }
         }
-        else if (module->status == MODULE_STATUS_RESET)
-        {
-
-            if (arg_callback_id == MSP_INIT_CALLBACK_ID || arg_callback_id == MSP_DEINIT_CALLBACK_ID)
-            {
-                module->callbacks[arg_callback_id] = arg_callback_ptr;
-            }
-            else
-            {
-                set_error_bit(SPI_ERROR_CALLBACK_INVALID);
-                status =  PROCEDURE_STATUS_ERROR;
-            }
-        }
         else
         {
             set_error_bit(SPI_ERROR_CALLBACK_INVALID);
             status =  PROCEDURE_STATUS_ERROR;
         }
+
         if (unlock_module() != PROCEDURE_STATUS_OK)
         {
             status = PROCEDURE_STATUS_ERROR;
@@ -254,19 +237,6 @@ spi::procedure_status_t spi::unregister_callback(callback_id_t arg_callback_id) 
         if (module->status == MODULE_STATUS_READY)
         {
             if (arg_callback_id >= SPI_REGISTER_CALLBACK_MIN_ID && arg_callback_id <= SPI_REGISTER_CALLBACK_MAX_ID)
-            {
-                module->callbacks[arg_callback_id] = nullptr;
-            }
-            else
-            {
-                set_error_bit(SPI_ERROR_CALLBACK_INVALID);
-                status =  PROCEDURE_STATUS_ERROR;
-            }
-        }
-        else if (module->status == MODULE_STATUS_RESET)
-        {
-
-            if (arg_callback_id == MSP_INIT_CALLBACK_ID || arg_callback_id == MSP_DEINIT_CALLBACK_ID)
             {
                 module->callbacks[arg_callback_id] = nullptr;
             }
@@ -405,7 +375,7 @@ void spi_irq_handler(spi* arg_object)
         {
             arg_object->disable_interrupts(SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
             arg_object->module->status = spi::MODULE_STATUS_READY;
-            arg_object->module->callbacks[spi::ERROR_CALLBACK_ID](arg_object->module);
+            arg_object->module->callbacks[spi::ERROR_CALLBACK_ID](arg_object);
         }
         return;
     }
@@ -569,7 +539,7 @@ void spi::close_isr(transaction_t arg_transaction_type)
     if (module->error_code != SPI_ERROR_NONE)
     {
         module->status = MODULE_STATUS_READY;
-        module->callbacks[ERROR_CALLBACK_ID](module);
+        module->callbacks[ERROR_CALLBACK_ID](this);
     }
     else
     {
@@ -577,17 +547,17 @@ void spi::close_isr(transaction_t arg_transaction_type)
             (arg_transaction_type == TX_RX && module->status == MODULE_STATUS_BUSY_RX))
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[RX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[RX_COMPLETE_CALLBACK_ID](this);
         }
         else if (arg_transaction_type == TX_ONLY)
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[TX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[TX_COMPLETE_CALLBACK_ID](this);
         }
         else if (arg_transaction_type == TX_RX)
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[TX_RX_COMPLETE_CALLBACK_ID](module);
+            module->callbacks[TX_RX_COMPLETE_CALLBACK_ID](this);
         }
     }
 }
@@ -799,6 +769,33 @@ void spi::send_buffer_get_front(spi::packet_t& arg_packet)
     }
 }
 
+void spi::push_active_packet_to_pending_buffer()
+{
+    pending_buffer.push(active_packet);
+}
+
+void spi::pending_buffer_push(packet_t& arg_packet)
+{
+    pending_buffer.push(arg_packet);
+}
+
+void spi::pending_buffer_pop()
+{
+    if (!pending_buffer.empty())
+    {
+        pending_buffer.pop();
+    }
+}
+
+void spi::pending_buffer_get_front(spi::packet_t& arg_packet)
+{
+    if (!pending_buffer.empty())
+    {
+        memset(&arg_packet, '\0', sizeof(packet_t));
+        memcpy(&arg_packet, &pending_buffer.front(), sizeof(packet_t));
+    }
+}
+
 void spi::set_active_packet_from_send_buffer()
 {
     send_buffer_get_front(active_packet);
@@ -987,6 +984,8 @@ void spi::process_send_buffer()
         uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
 
+        push_active_packet_to_pending_buffer();
+
         for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {
             transaction_byte_count = active_packet.bytes_per_transaction[current_transaction];
@@ -1001,6 +1000,7 @@ void spi::process_send_buffer()
         }
         ++packets_received_count;
         send_buffer_pop();
+
         push_active_packet_to_return_buffer();
         reset_active_packet();
     }

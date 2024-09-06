@@ -108,8 +108,6 @@ class spi
             TX_RX_HALF_COMPLETE_CALLBACK_ID = 0x05U,
             ERROR_CALLBACK_ID               = 0x06U,
             ABORT_CALLBACK_ID               = 0x07U,
-            MSP_INIT_CALLBACK_ID            = 0x08U,
-            MSP_DEINIT_CALLBACK_ID          = 0x09U
         } callback_id_t;
 
         typedef struct
@@ -167,10 +165,10 @@ class spi
             hal::gpio_t*                chip_select_port;
             uint16_t                    chip_select_pin;
             std::unique_ptr<uint8_t[]>  rx_pointer;
-            void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *arg_module);
+            void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (spi *arg_object);
         } module_t;
 
-        typedef void (*spi_callback_ptr_t)(module_t* arg_module);
+        typedef void (*spi_callback_ptr_t)(spi *arg_object);
 
         module_t*               module;
         packet_t                active_packet;
@@ -183,6 +181,7 @@ class spi
         uint32_t                packets_received_count = 0U;
 
         std::queue<packet_t>    send_buffer;
+        std::queue<packet_t>    pending_buffer;
         std::queue<packet_t>    return_buffer_0;
         std::queue<packet_t>    return_buffer_1;
         std::queue<packet_t>    return_buffer_2;
@@ -220,14 +219,18 @@ class spi
         void send_buffer_get_front(packet_t& arg_packet);
         void set_active_packet_from_send_buffer();
         void push_active_packet_to_return_buffer();
+        void pending_buffer_push(packet_t& arg_packet);
+        void pending_buffer_pop();
+        void pending_buffer_get_front(spi::packet_t& arg_packet);
+        void push_active_packet_to_pending_buffer();
         void transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
         uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);
-        uint32_t get_packets_requested_count() const;
-        uint32_t get_packets_received_count() const;
+        [[nodiscard]] uint32_t get_packets_requested_count() const;
+        [[nodiscard]] uint32_t get_packets_received_count() const;
 
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);

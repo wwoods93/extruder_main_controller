@@ -191,8 +191,8 @@ static constexpr uint8_t  CHANNEL_6                                             
 static constexpr uint8_t  CHANNEL_7                                                     = 7U;
 
 static constexpr uint8_t  SPI_USER_CHANNELS_MAX                                         = 8U;
-static constexpr uint32_t SPI_REGISTER_CALLBACK_COUNT                                   = 10U;
+static constexpr uint32_t SPI_REGISTER_CALLBACK_COUNT                                   = 8U;
 static constexpr uint32_t SPI_REGISTER_CALLBACK_MIN_ID                                  = 0U;
-static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                                  = 9U;
+static constexpr uint32_t SPI_REGISTER_CALLBACK_MAX_ID                                  = 7U;
 
 #endif //MAIN_CONTROLLER_HAL_SPI_DEFINITIONS_H

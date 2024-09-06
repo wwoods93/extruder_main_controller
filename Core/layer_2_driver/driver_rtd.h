@@ -63,7 +63,7 @@ class rtd : public user
         uint16_t chip_select_2_pin = GPIO_PIN_7;
         uint16_t chip_select_3_pin = GPIO_PIN_8;
 
-        id_number_t channel_id = ID_INVALID;
+        int16_t channel_id = ID_INVALID;
 
         #define CELSIUS_MIN                     0
         #define CELSIUS_MAX                     509
@@ -168,7 +168,7 @@ class rtd : public user
         };
 
 
-        id_number_t user_id{};
+        int16_t user_id{};
 
         float temperature_celsius_current_reading = 0;
         float temperature_celsius_moving_average = 1;
@@ -199,7 +199,7 @@ class rtd : public user
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-        void initialize(read_rate_t _read_rate_hz, id_number_t arg_channel_id);
+        void initialize(read_rate_t _read_rate_hz, int16_t arg_channel_id);
         void start_read_requests();
         uint8_t send_request_if_flag_set(common_packet_t& _packet);
         void clear_send_new_request_flag();

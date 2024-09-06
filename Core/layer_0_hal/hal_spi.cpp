@@ -299,7 +299,7 @@ void spi::chip_select_set_active(uint8_t arg_channel_id)
 {
     channel_t channel;
 
-    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    get_channel_by_channel_id(channel, (int16_t)arg_channel_id);
     hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
 }
 
@@ -307,7 +307,7 @@ void spi::chip_select_set_inactive(uint8_t arg_channel_id)
 {
     channel_t channel;
 
-    get_channel_by_channel_id(channel, (id_number_t)arg_channel_id);
+    get_channel_by_channel_id(channel, (int16_t)arg_channel_id);
     hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
 }
 
@@ -608,11 +608,11 @@ void spi::transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data)
     }
 }
 
-spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
+spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
 {
     arg_channel_id = ID_INVALID;
 
-    id_number_t new_channel_id = assign_next_available_channel_id();
+    int16_t new_channel_id = assign_next_available_channel_id();
 
     if (new_channel_id != ID_INVALID)
     {
@@ -690,9 +690,9 @@ spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, hal::gp
 }
 
 
-id_number_t spi::assign_next_available_channel_id()
+int16_t spi::assign_next_available_channel_id()
 {
-    id_number_t channel_id = ID_INVALID;
+    int16_t channel_id = ID_INVALID;
 
     if (next_available_channel_id <= SPI_USER_CHANNELS_MAX)
     {
@@ -704,7 +704,7 @@ id_number_t spi::assign_next_available_channel_id()
 }
 
 
-spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_tx)[8])
+spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(int16_t arg_channel_id, uint8_t arg_tx_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_transaction)[8])
 {
     packet_t packet;
     channel_t channel;
@@ -712,10 +712,9 @@ spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(id_number_t ar
 
     memset(&packet, '\0', sizeof(packet_t));
     memcpy(&packet.tx_bytes, arg_tx_bytes, sizeof(packet.tx_bytes));
-    memcpy(&packet.bytes_per_tx, arg_bytes_per_tx, sizeof(packet.bytes_per_tx));
+    memcpy(&packet.bytes_per_transaction, arg_bytes_per_transaction, sizeof(packet.bytes_per_transaction));
     packet.channel_id = arg_channel_id;
-    packet.total_byte_count = arg_total_byte_count;
-    packet.tx_byte_count = arg_tx_byte_count;
+    packet.packet_id = ++next_available_packet_id;
     packet.chip_select.port = channel.chip_select.port;
     packet.chip_select.pin = channel.chip_select.pin;
     send_buffer_push(packet);
@@ -725,7 +724,7 @@ spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(id_number_t ar
 }
 
 
-void spi::get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id)
+void spi::get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id)
 {
     memset(&arg_channel, '\0', sizeof(channel_t));
 
@@ -865,7 +864,7 @@ spi::procedure_status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(packet_t& arg_packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
+uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
 {
     uint8_t buffer_accessed = 0U;
 
@@ -984,19 +983,19 @@ void spi::process_send_buffer()
         module->chip_select.port = active_packet.chip_select.port;
         module->chip_select.pin = active_packet.chip_select.pin;
 
-        uint8_t tx_index = 0U;
-        uint8_t byte_count_of_current_tx = 0;
+        uint8_t packet_index = 0U;
+        uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
 
-        for (uint8_t byte_count_array_index = 0U; byte_count_array_index < 8U; ++byte_count_array_index)
+        for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {
-            byte_count_of_current_tx = active_packet.bytes_per_tx[byte_count_array_index];
-            if (byte_count_of_current_tx != 0U)
+            transaction_byte_count = active_packet.bytes_per_transaction[current_transaction];
+            if (transaction_byte_count != 0U)
             {
-                transmit_and_get_result(byte_count_of_current_tx, &active_packet.tx_bytes[tx_index]);
-                for (uint8_t result_byte = 0U; result_byte < byte_count_of_current_tx; ++result_byte)
+                transmit_and_get_result(transaction_byte_count, &active_packet.tx_bytes[packet_index]);
+                for (uint8_t transaction_index = 0U; transaction_index < transaction_byte_count; ++transaction_index)
                 {
-                    active_packet.rx_bytes[tx_index++] = rx_result[result_byte];
+                    active_packet.rx_bytes[packet_index++] = rx_result[transaction_index];
                 }
             }
         }

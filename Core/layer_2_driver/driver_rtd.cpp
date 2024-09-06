@@ -40,7 +40,7 @@
 //
 //}
 
-void rtd::initialize(read_rate_t _read_rate_hz, id_number_t arg_channel_id)
+void rtd::initialize(read_rate_t _read_rate_hz, int16_t arg_channel_id)
 {
     os_kernel_frequency = osKernelGetTickFreq();
 
@@ -86,7 +86,7 @@ uint8_t rtd::send_request_if_flag_set(common_packet_t& _packet)
     memset(&_packet, '\0', sizeof(_packet));
     if (send_new_request == 1U)
     {
-        rtosal::build_common_packet(_packet, channel_id, complete_tx, bytes_per_tx, 1, 1);
+        rtosal::build_common_packet(_packet, channel_id, complete_tx, bytes_per_tx);
 
         new_request = 1U;
     }

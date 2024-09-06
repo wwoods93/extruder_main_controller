@@ -120,11 +120,9 @@ class spi
 
         typedef struct
         {
-            id_number_t     channel_id;
-            id_number_t     packet_id;
-            uint8_t         total_byte_count;
-            uint8_t         tx_byte_count;
-            uint8_t         bytes_per_tx[TX_SIZE_MAX];
+            int16_t         channel_id;
+            int16_t         packet_id;
+            uint8_t         bytes_per_transaction[TX_SIZE_MAX];
             uint8_t         tx_bytes[TX_SIZE_MAX];
             uint8_t         rx_bytes[TX_SIZE_MAX];
             chip_select_t   chip_select;
@@ -132,7 +130,7 @@ class spi
 
         typedef struct
         {
-            id_number_t     channel_id;
+            int16_t     channel_id;
             chip_select_t   chip_select;
         } channel_t;
 
@@ -179,10 +177,10 @@ class spi
         TIM_HandleTypeDef*      timeout_time_base;
         uint32_t                timeout_time_base_frequency = 0U;
         uint8_t                 rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
-        id_number_t             next_available_channel_id = 0U;
+        int16_t                 next_available_channel_id = 0U;
+        int16_t                 next_available_packet_id = 0U;
         uint32_t                packets_requested_count = 0U;
         uint32_t                packets_received_count = 0U;
-//        std::unique_ptr<uint8_t[]> rx_pointer;
 
         std::queue<packet_t>    send_buffer;
         std::queue<packet_t>    return_buffer_0;
@@ -212,11 +210,11 @@ class spi
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
 
-        procedure_status_t create_channel(id_number_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
-        void get_channel_by_channel_id(channel_t& arg_channel, id_number_t arg_channel_id);
-        id_number_t assign_next_available_channel_id();
+        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
+        void get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id);
+        int16_t assign_next_available_channel_id();
         void process_send_buffer();
-        spi::procedure_status_t create_packet_and_add_to_send_buffer(id_number_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t arg_tx_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_tx)[8]);
+        spi::procedure_status_t create_packet_and_add_to_send_buffer(int16_t arg_channel_id, uint8_t arg_total_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_transaction)[8]);
         void send_buffer_push(packet_t& arg_packet);
         void send_buffer_pop();
         void send_buffer_get_front(packet_t& arg_packet);
@@ -224,7 +222,7 @@ class spi
         void push_active_packet_to_return_buffer();
         void transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
-        uint8_t process_return_buffer(packet_t& arg_packet, id_number_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
+        uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);

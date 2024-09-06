@@ -11,7 +11,7 @@
  **********************************************************************************************************************/
 
 /* c/c++ includes */
-
+#include <cstdint>
 /* stm32 includes */
 
 /* third-party includes */
@@ -34,7 +34,7 @@ user::user()
 
 }
 
-id_number_t user::get_user_id()
+int16_t user::get_user_id()
 {
     return user_id;
 }

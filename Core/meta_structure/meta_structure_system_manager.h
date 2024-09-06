@@ -40,7 +40,6 @@
 #define NAME_LENGTH_MAX                     20U
 #define PIN_NULL                            0xFFFF
 #define ADDRESS_NULL_8_BIT                  0xFF
-typedef int16_t id_number_t;
 
 #ifndef ID_INVALID
 #define ID_INVALID (-1)
@@ -95,15 +94,15 @@ typedef enum
 
 struct resource_config_t
 {
-    id_number_t resource_id = ID_INVALID;
+    int16_t resource_id = ID_INVALID;
     char resource_name[NAME_LENGTH_MAX] = "default_name\0";
     resource_t resource_type = RESOURCE_TYPE_NULL;
 };
 
 struct device_config_t
 {
-    id_number_t device_id = ID_INVALID;
-    id_number_t channel_id = ID_INVALID;
+    int16_t device_id = ID_INVALID;
+    int16_t channel_id = ID_INVALID;
     char device_name[NAME_LENGTH_MAX] = "default_name\0";
     device_t device_type = DEVICE_TYPE_NULL;
     resource_t device_resource_type = RESOURCE_TYPE_NULL;
@@ -116,11 +115,11 @@ struct device_config_t
 
 struct user_config_t
 {
-    id_number_t user_id = ID_INVALID;
+    int16_t user_id = ID_INVALID;
     char user_name[NAME_LENGTH_MAX] = "default_name\0";
     user_t user_type = USER_TYPE_NULL;
     uint8_t device_count = 0;
-    id_number_t device_ids[DEVICES_PER_USER_MAX] = { ID_INVALID, ID_INVALID, ID_INVALID, ID_INVALID };
+    int16_t device_ids[DEVICES_PER_USER_MAX] = { ID_INVALID, ID_INVALID, ID_INVALID, ID_INVALID };
 };
 
 
@@ -132,17 +131,17 @@ namespace meta_structure
     static std::vector<resource_config_t *> resource_manifest;
 
     void initialize_system_manifests();
-    id_number_t claim_next_available_user_id();
-    id_number_t claim_next_available_device_id();
-    id_number_t claim_next_available_resource_id();
+    int16_t claim_next_available_user_id();
+    int16_t claim_next_available_device_id();
+    int16_t claim_next_available_resource_id();
 
-    id_number_t create_resource_config(resource_config_t& _resource_config, char* _resource_name, resource_t _type);
-    id_number_t create_device_config(device_config_t& _device_config, char* _device_name, device_t _device_type, resource_t _device_resource_type, uint8_t _packet_size, uint8_t _tx_size, uint8_t _device_address, port_name_t _device_port, uint16_t _device_pin);
-    id_number_t create_user_config(user_config_t& _user_config, char* _user_name, user_t _type, uint8_t _device_count, id_number_t _device_id_0, id_number_t _device_id_1, id_number_t _device_id_2, id_number_t _device_id_3);
+    int16_t create_resource_config(resource_config_t& _resource_config, char* _resource_name, resource_t _type);
+    int16_t create_device_config(device_config_t& _device_config, char* _device_name, device_t _device_type, resource_t _device_resource_type, uint8_t _packet_size, uint8_t _tx_size, uint8_t _device_address, port_name_t _device_port, uint16_t _device_pin);
+    int16_t create_user_config(user_config_t& _user_config, char* _user_name, user_t _type, uint8_t _device_count, int16_t _device_id_0, int16_t _device_id_1, int16_t _device_id_2, int16_t _device_id_3);
     void get_device_from_device_manifest(device_config_t& _device, uint8_t _index);
-    void set_channel_id_for_device_in_manifest(id_number_t _channel_id, uint8_t _index);
+    void set_channel_id_for_device_in_manifest(int16_t _channel_id, uint8_t _index);
     uint8_t get_device_manifest_size();
-    id_number_t get_channel_id_by_device_name(char* _device_name);
+    int16_t get_channel_id_by_device_name(char* _device_name);
     void get_user_config_from_user_manifest(user_config_t& _user, uint8_t _index);
     void get_user_config_by_user_name(user_config_t& _user, char* _user_name);
 }

@@ -31,10 +31,10 @@
 class resource
 {
     public:
-        id_number_t get_resource_id();
+        int16_t get_resource_id();
     protected:
         resource();
-        id_number_t resource_id;
+        int16_t resource_id;
     private:
 
 };

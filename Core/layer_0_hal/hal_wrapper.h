@@ -50,8 +50,6 @@ typedef enum
     PORT_NULL   = 0xFF,
 } port_name_t;
 
-typedef int16_t id_number_t;
-
 #define GPIO_PORT_A (hal::gpio_t*)GPIOA
 #define GPIO_PORT_B (hal::gpio_t*)GPIOB
 #define GPIO_PORT_C (hal::gpio_t*)GPIOC

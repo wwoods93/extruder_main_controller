@@ -33,7 +33,7 @@ resource::resource()
 
 }
 
-id_number_t resource::get_resource_id()
+int16_t resource::get_resource_id()
 {
     return resource_id;
 }

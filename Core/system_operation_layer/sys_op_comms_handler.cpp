@@ -319,9 +319,9 @@ namespace sys_op::comms_handler
     static volatile uint8_t buffer_accessed;
     static uint8_t common_array_accessed;
 
-    id_number_t rtd_0_channel_id = ID_INVALID;
-    id_number_t rtd_1_channel_id = ID_INVALID;
-    id_number_t rtd_2_channel_id = ID_INVALID;
+    int16_t rtd_0_channel_id = ID_INVALID;
+    int16_t rtd_1_channel_id = ID_INVALID;
+    int16_t rtd_2_channel_id = ID_INVALID;
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
     common_float_data_t rtd_reading;
@@ -420,7 +420,7 @@ namespace sys_op::comms_handler
 
                 if (common_array_accessed)
                 {
-                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.total_byte_count, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_tx);
+                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_transaction);
                     common_array_accessed = false;
                 }
 
@@ -436,7 +436,7 @@ namespace sys_op::comms_handler
 
                 if (buffer_accessed)
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
                     if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
                     {
                         packet_added = 1U;
@@ -450,7 +450,7 @@ namespace sys_op::comms_handler
 
                 if (buffer_accessed)
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
                     if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
                     {
                         packet_added = 1U;
@@ -464,7 +464,7 @@ namespace sys_op::comms_handler
 
                 if (buffer_accessed)
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_tx, spi_rx_packet.total_byte_count, spi_rx_packet.tx_byte_count);
+                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
                     if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
                     {
                         packet_added = 1U;

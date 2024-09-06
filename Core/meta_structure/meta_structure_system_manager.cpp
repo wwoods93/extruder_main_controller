@@ -59,9 +59,9 @@ namespace meta_structure
         resource_manifest.reserve(MAX_HAL_RESOURCES);
     }
 
-    id_number_t claim_next_available_user_id()
+    int16_t claim_next_available_user_id()
     {
-        id_number_t claimed_id = ID_INVALID;
+        int16_t claimed_id = ID_INVALID;
         if (next_available_user_id <= SYSTEM_MANAGER_USERS_MAX)
         {
             claimed_id = next_available_user_id;
@@ -70,21 +70,21 @@ namespace meta_structure
         return claimed_id;
     }
 
-    id_number_t claim_next_available_device_id()
+    int16_t claim_next_available_device_id()
     {
-        id_number_t claimed_id = next_available_device_id;
+        int16_t claimed_id = next_available_device_id;
         next_available_device_id++;
         return claimed_id;
     }
 
-    id_number_t claim_next_available_resource_id()
+    int16_t claim_next_available_resource_id()
     {
-        id_number_t claimed_id = next_available_resource_id;
+        int16_t claimed_id = next_available_resource_id;
         next_available_resource_id++;
         return claimed_id;
     }
 
-    id_number_t create_resource_config(resource_config_t& _resource_config, char* _resource_name, resource_t _type)
+    int16_t create_resource_config(resource_config_t& _resource_config, char* _resource_name, resource_t _type)
     {
         memset(&_resource_config, '\0', sizeof(resource_config_t));
         _resource_config.resource_id = claim_next_available_resource_id();
@@ -94,7 +94,7 @@ namespace meta_structure
         return _resource_config.resource_id;
     }
 
-    id_number_t create_device_config(device_config_t& _device_config, char* _device_name, device_t _device_type, resource_t _device_resource_type, uint8_t _packet_size, uint8_t _tx_size, uint8_t _device_address, port_name_t _device_port, uint16_t _device_pin)
+    int16_t create_device_config(device_config_t& _device_config, char* _device_name, device_t _device_type, resource_t _device_resource_type, uint8_t _packet_size, uint8_t _tx_size, uint8_t _device_address, port_name_t _device_port, uint16_t _device_pin)
     {
         memset(&_device_config, '\0', sizeof(device_config_t));
         _device_config.device_id = claim_next_available_device_id();
@@ -110,7 +110,7 @@ namespace meta_structure
         return _device_config.device_id;
     }
 
-    id_number_t create_user_config(user_config_t& _user_config, char* _user_name, user_t _type, uint8_t _device_count, id_number_t _device_id_0, id_number_t _device_id_1, id_number_t _device_id_2, id_number_t _device_id_3)
+    int16_t create_user_config(user_config_t& _user_config, char* _user_name, user_t _type, uint8_t _device_count, int16_t _device_id_0, int16_t _device_id_1, int16_t _device_id_2, int16_t _device_id_3)
     {
         memset(&_user_config, '\0', sizeof (user_config_t));
         _user_config.user_id = claim_next_available_user_id();
@@ -131,7 +131,7 @@ namespace meta_structure
         memcpy(&_device, device_manifest[_index], sizeof(device_config_t));
     }
 
-    void set_channel_id_for_device_in_manifest(id_number_t _channel_id, uint8_t _index)
+    void set_channel_id_for_device_in_manifest(int16_t _channel_id, uint8_t _index)
     {
         device_manifest[_index]->channel_id = _channel_id;
     }
@@ -140,9 +140,9 @@ namespace meta_structure
     {
         return (uint8_t)device_manifest.size();
     }
-    id_number_t get_channel_id_by_device_name(char* _device_name)
+    int16_t get_channel_id_by_device_name(char* _device_name)
     {
-        id_number_t channel_id = ID_INVALID;
+        int16_t channel_id = ID_INVALID;
         for (uint8_t index = 0; index < (uint8_t)device_manifest.size(); ++index)
         {
             if (!strcmp( device_manifest[index]->device_name, _device_name))

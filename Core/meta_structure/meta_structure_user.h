@@ -31,12 +31,12 @@
 class user
 {
     public:
-        id_number_t get_user_id();
+        int16_t get_user_id();
 
 
     protected:
         user();
-        id_number_t user_id = ID_INVALID;
+        int16_t user_id = ID_INVALID;
     private:
 
 

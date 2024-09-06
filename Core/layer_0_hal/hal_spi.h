@@ -15,6 +15,7 @@
 /* c/c++ includes */
 #include <vector>
 #include <queue>
+#include <memory>
 /* stm32 includes */
 
 /* third-party includes */
@@ -167,6 +168,7 @@ class spi
             lock_t                      lock;
             hal::gpio_t*                chip_select_port;
             uint16_t                    chip_select_pin;
+            std::unique_ptr<uint8_t[]>  rx_pointer;
             void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (struct _handle_t *arg_module);
         } module_t;
 
@@ -178,6 +180,9 @@ class spi
         uint32_t                timeout_time_base_frequency = 0U;
         uint8_t                 rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
         id_number_t             next_available_channel_id = 0U;
+        uint32_t                packets_requested_count = 0U;
+        uint32_t                packets_received_count = 0U;
+//        std::unique_ptr<uint8_t[]> rx_pointer;
 
         std::queue<packet_t>    send_buffer;
         std::queue<packet_t>    return_buffer_0;
@@ -223,6 +228,8 @@ class spi
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);
+        uint32_t get_packets_requested_count() const;
+        uint32_t get_packets_received_count() const;
 
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
@@ -253,6 +260,17 @@ class spi
         void clear_mode_fault_flag() const;
         void clear_overrun_flag() const;
 };
+
+
+inline uint32_t spi::get_packets_requested_count() const
+{
+   return packets_requested_count;
+}
+
+inline uint32_t spi::get_packets_received_count() const
+{
+    return packets_received_count;
+}
 
 inline spi::procedure_status_t spi::lock_module() const
 {

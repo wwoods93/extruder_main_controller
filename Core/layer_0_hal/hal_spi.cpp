@@ -594,53 +594,19 @@ void spi::close_isr(transaction_t arg_transaction_type)
 
 void spi::transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data)
 {
-    uint8_t *rx_ptr = static_cast<uint8_t *>(malloc(arg_packet_size * sizeof(uint8_t)));
-    spi_transmit_receive_interrupt(arg_tx_data, rx_ptr, arg_packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
+    std::unique_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
+
+    spi_transmit_receive_interrupt(arg_tx_data, rx_pointer_tmp.get(), arg_packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
+    module->rx_pointer = std::move(rx_pointer_tmp);
     while (!module->rx_data_ready_flag);
     module->rx_data_ready_flag = 0U;
 
     for (uint8_t index = 0U; index < arg_packet_size; ++index)
     {
-        rx_result[index] = *rx_ptr;
-        if (index < arg_packet_size - 1U)
-        {
-            rx_ptr++;
-        }
+        rx_result[index] = module->rx_pointer[index];
+        module->rx_pointer[index] = 0;
     }
-
-    for (uint8_t index = 0U; index < arg_packet_size; ++index)
-    {
-        *rx_ptr = 0U;
-        if (index < arg_packet_size - 1U)
-        {
-            rx_ptr--;
-        }
-    }
-    free(rx_ptr);
 }
-
-//void spi::add_rx_bytes_to_rx_array(uint8_t arg_packet_size, uint8_t* arg_rx_ptr)
-//{
-//    for (uint8_t index = 0U; index < arg_packet_size; ++index)
-//    {
-//        rx_result[index] = *arg_rx_ptr;
-//        if (index < arg_packet_size - 1U)
-//        {
-//            arg_rx_ptr++;
-//        }
-//    }
-//
-//    for (uint8_t index = 0U; index < arg_packet_size; ++index)
-//    {
-//        *arg_rx_ptr = 0U;
-//        if (index < arg_packet_size - 1U)
-//        {
-//            arg_rx_ptr--;
-//        }
-//    }
-//
-//}
-
 
 spi::procedure_status_t spi::create_channel(id_number_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
 {
@@ -753,6 +719,7 @@ spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(id_number_t ar
     packet.chip_select.port = channel.chip_select.port;
     packet.chip_select.pin = channel.chip_select.pin;
     send_buffer_push(packet);
+    ++packets_requested_count;
 
     return PROCEDURE_STATUS_OK;
 }
@@ -1033,7 +1000,7 @@ void spi::process_send_buffer()
                 }
             }
         }
-
+        ++packets_received_count;
         send_buffer_pop();
         push_active_packet_to_return_buffer();
         reset_active_packet();

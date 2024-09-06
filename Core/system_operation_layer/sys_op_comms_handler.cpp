@@ -65,39 +65,40 @@ void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeD
 
 void timer_1_input_capture_zero_crossing_pulse_half_detected_callback(TIM_HandleTypeDef *htim)
 {
-//    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
-//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+
 }
 
 
 void timer_10_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
 {
-//    HAL_TIM_OC_Stop_IT(get_timer_10_handle(), TIM_CHANNEL_1);
 
-//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
 }
 
 void timer_13_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
 {
-//    HAL_TIM_OC_Stop_IT(get_timer_13_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+
 }
 
 void timer_14_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
 {
-//    HAL_TIM_OC_Stop_IT(get_timer_14_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+
 }
 
 
 
 typedef union
 {
-    uint8_t buffer[4];
-    float numeric_param_input;
-} FloatToBytes;
+    uint8_t byte[4];
+    float value;
+} converter_float_to_bytes_t;
+
+typedef union
+{
+    uint8_t byte[4];
+    uint32_t value;
+} converter_uint32_to_bytes_t;
+
+
 
 void TIM1_CC_IRQHandler(void)
 {
@@ -107,46 +108,18 @@ void TIM1_CC_IRQHandler(void)
 
 void TIM1_UP_TIM10_IRQHandler(void)
 {
-    /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 0 */
-
-    /* USER CODE END TIM1_UP_TIM10_IRQn 0 */
     HAL_TIM_IRQHandler(get_timer_1_handle());
     HAL_TIM_IRQHandler(get_timer_10_handle());
-
-
-
-
-
-
-    /* USER CODE BEGIN TIM1_UP_TIM10_IRQn 1 */
-
-    /* USER CODE END TIM1_UP_TIM10_IRQn 1 */
 }
 
 void TIM8_UP_TIM13_IRQHandler(void)
 {
-    /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 0 */
-
-    /* USER CODE END TIM8_UP_TIM13_IRQn 0 */
     HAL_TIM_IRQHandler(get_timer_13_handle());
-    /* USER CODE BEGIN TIM8_UP_TIM13_IRQn 1 */
-
-
-    /* USER CODE END TIM8_UP_TIM13_IRQn 1 */
 }
 
-/**
-  * @brief This function handles TIM8 trigger and commutation interrupts and TIM14 global interrupt.
-  */
 void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
-    /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 0 */
-
-    /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 0 */
     HAL_TIM_IRQHandler(get_timer_14_handle());
-    /* USER CODE BEGIN TIM8_TRG_COM_TIM14_IRQn 1 */
-
-    /* USER CODE END TIM8_TRG_COM_TIM14_IRQn 1 */
 }
 
 void SPI2_IRQHandler()
@@ -214,14 +187,7 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
     {
         Error_Handler();
     }
-//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
-//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 7710;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -247,14 +213,7 @@ void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
     {
         Error_Handler();
     }
-//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
-//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -280,14 +239,7 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
     {
         Error_Handler();
     }
-//    if (HAL_TIM_OC_Init(htim) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
-//    if (HAL_TIM_OnePulse_Init(htim, TIM_OPMODE_SINGLE) != HAL_OK)
-//    {
-//        Error_Handler();
-//    }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
@@ -297,14 +249,6 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
     {
         Error_Handler();
     }
-}
-
-
-
-namespace driver
-{
-//    dc_motor_controller motor_controller_1;
-//    rtd rtd_1;
 }
 
 namespace hal
@@ -317,7 +261,11 @@ namespace hal
     }
 }
 
-
+namespace driver
+{
+//    dc_motor_controller motor_controller_1;
+//    rtd rtd_1;
+}
 
 spi::module_t* get_spi_handle()
 {
@@ -333,25 +281,27 @@ uint32_t cnt = 0;
 uint32_t pulse_count = 0;
 uint8_t pulse_set = 0;
 
-//UART 2 transmission complete callback
+
+
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 //    memset(&user_data, '\0' , strlen(user_data)); //empty the transmission data buffer
 }
-//UART 2 receive complete callback
+
+
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
-    if(recvd_data == '\r') //when enter is pressed go to this condition
+    if(recvd_data == '\r')
     {
         data_buffer[cnt++]='\r';
-        HAL_UART_Transmit(huart, send_data, cnt,HAL_MAX_DELAY); //transmit the full sentence again
-        memset(data_buffer, 0, cnt); // enpty the data buffer
+        HAL_UART_Transmit(huart, send_data, cnt,HAL_MAX_DELAY);
+        memset(data_buffer, 0, cnt);
     }
     else
     {
-        data_buffer[cnt++] = recvd_data; // every time when interrput is happen, received 1 byte of data
+        data_buffer[cnt++] = recvd_data;
     }
-    HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //start next data receive interrupt
+    HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1);
 
 }
 
@@ -377,7 +327,8 @@ namespace sys_op::comms_handler
     common_float_data_t rtd_reading;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
     uint8_t i2c_data[5] = { 0, 0, 0, 0, 0 };
-    FloatToBytes converter;
+    converter_float_to_bytes_t float_converter;
+    converter_uint32_to_bytes_t uint32_converter;
     float test_temp = 27.16;
     uint8_t b0 = 0;
     uint8_t b1 = 0;
@@ -398,18 +349,12 @@ namespace sys_op::comms_handler
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
         char time_stamp[9];
-        uint8_t rtd_config_reg = 0x00 | 0x80;
-        uint8_t rtd_config_byte = 0xD3;
-        uint8_t tx_data_1[2] = { 0x01 & 0x7F, DUMMY_BYTE };
-        uint8_t tx_data_2[2] = { 0x02 & 0x7F, DUMMY_BYTE };
 
-        static uint32_t start_time = 0;
-        uint32_t delay = 1000000U;
-
-
+        uint8_t send_spi_packet_counts_interval = 9U;
+        uint8_t send_spi_packet_counts_counter = 0U;
         HAL_StatusTypeDef i2c_status;
+
         uint8_t packet_added = 0U;
-        uint32_t rtd_reading_count = 0;
 
         static uint8_t uart_counter = 0;
         static uint32_t buffer_access_counter = 0;
@@ -448,15 +393,10 @@ namespace sys_op::comms_handler
                 HAL_TIM_RegisterCallback(get_timer_13_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_13_output_compare_delay_elapsed_callback);
                 HAL_TIM_RegisterCallback(get_timer_14_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
 
-
                 HAL_TIM_Base_Start(get_timer_2_handle());
                 HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
 
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-
-//                HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
-//                HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
-//                HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
 
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
                 comms_handler_state = COMMS_HANDLER_STATE_RUN;
@@ -465,36 +405,11 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-//                if (start_time == 0)
-//                {
-//                    start_time = get_timer_2_handle()->Instance->CNT;
-//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-//                }
-//                while (get_timer_2_handle()->Instance->CNT - start_time < 200U);
-//                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-//                start_time = 0;
-//                if (pulse_count > 5 && pulse_set == 0)
-//                {
-//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
-//                    pulse_set = 1;
-//                }
-//
-//                if (pulse_count > 10)
-//                {
-//                    HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_RESET);
-//                    pulse_set = 0;
-//                    pulse_count = 0;
-//                }
-//                pulse_count++;
-
                     if (uart_counter > 50)
                     {
-
-
                         HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
                         HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
                         uart_counter = 0;
-
                      }
                     ++uart_counter;
 
@@ -514,8 +429,6 @@ namespace sys_op::comms_handler
                 osDelay(10);
                 hal::spi_2.process_send_buffer();
                 packet_added = 0U;
-
-
 
                 spi::packet_t spi_rx_packet;
 
@@ -566,7 +479,7 @@ namespace sys_op::comms_handler
 
                 if (osMessageQueueGet( i2c_tx_queue_handle, &rtd_reading, nullptr, 50) == osOK)
                 {
-                    converter.numeric_param_input = rtd_reading.value;
+                    float_converter.value = rtd_reading.value;
 
                     switch (rtd_reading.id)
                     {
@@ -587,10 +500,10 @@ namespace sys_op::comms_handler
                         }
                     }
 
-                    i2c_data[1] = converter.buffer[0];
-                    i2c_data[2] = converter.buffer[1];
-                    i2c_data[3] = converter.buffer[2];
-                    i2c_data[4] = converter.buffer[3];
+                    i2c_data[1] = float_converter.byte[0];
+                    i2c_data[2] = float_converter.byte[1];
+                    i2c_data[3] = float_converter.byte[2];
+                    i2c_data[4] = float_converter.byte[3];
 
                     i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
                     if (i2c_status != HAL_OK)
@@ -608,13 +521,6 @@ namespace sys_op::comms_handler
                             }
                             case HAL_ERROR:
                             {
-                                if ((get_i2c_2_handle()->Instance->SR1 & I2C_SR1_ARLO) == I2C_SR1_ARLO)
-                                {
-//                                    get_i2c_2_handle()->Instance->SR1 &= (~I2C_SR1_ARLO);
-//                                    get_i2c_2_handle()->Instance->SR2 |= I2C_SR2_MSL;
-//                                    get_i2c_2_handle()->Instance->CR1 |= I2C_CR1_SWRST;
-//                                    get_i2c_2_handle()->Instance->CR1 &= ~I2C_CR1_SWRST;
-                                }
                                 i2c_error_count++;
                                 break;
                             }
@@ -630,16 +536,89 @@ namespace sys_op::comms_handler
                         }
                     }
 
-                    if (i2c_busy_count > 500000 && i2c_error_count > 500000 && i2c_timeout_count > 500000)
+                    if (send_spi_packet_counts_counter > send_spi_packet_counts_interval)
                     {
-                        rtd_reading.id = 10;
-                    }
-                    else
-                    {
-                        rtd_reading.id = 0;
-                        rtd_reading.value = 0;
+                        uint32_converter.value = hal::spi_2.get_packets_requested_count();
+                        i2c_data[0] = 0x07;
+                        i2c_data[1] = uint32_converter.byte[0];
+                        i2c_data[2] = uint32_converter.byte[1];
+                        i2c_data[3] = uint32_converter.byte[2];
+                        i2c_data[4] = uint32_converter.byte[3];
+                        i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+
+                        if (i2c_status != HAL_OK)
+                        {
+                            switch (i2c_status)
+                            {
+                                case HAL_OK:
+                                {
+                                    break;
+                                }
+                                case HAL_BUSY:
+                                {
+                                    i2c_busy_count++;
+                                    break;
+                                }
+                                case HAL_ERROR:
+                                {
+                                    i2c_error_count++;
+                                    break;
+                                }
+                                case HAL_TIMEOUT:
+                                {
+                                    i2c_timeout_count++;
+                                    break;
+                                }
+                                default:
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
+                        uint32_converter.value = hal::spi_2.get_packets_received_count();
+                        i2c_data[0] = 0x09;
+                        i2c_data[1] = uint32_converter.byte[0];
+                        i2c_data[2] = uint32_converter.byte[1];
+                        i2c_data[3] = uint32_converter.byte[2];
+                        i2c_data[4] = uint32_converter.byte[3];
+                        i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+
+                        if (i2c_status != HAL_OK)
+                        {
+                            switch (i2c_status)
+                            {
+                                case HAL_OK:
+                                {
+                                    break;
+                                }
+                                case HAL_BUSY:
+                                {
+                                    i2c_busy_count++;
+                                    break;
+                                }
+                                case HAL_ERROR:
+                                {
+                                    i2c_error_count++;
+                                    break;
+                                }
+                                case HAL_TIMEOUT:
+                                {
+                                    i2c_timeout_count++;
+                                    break;
+                                }
+                                default:
+                                {
+                                    break;
+                                }
+                            }
+                        }
+
                     }
 
+
+                    rtd_reading.id = 0;
+                    rtd_reading.value = 0;
                 }
 
                 break;

@@ -25,6 +25,8 @@ extern "C" {
 void error_handler(void);
 void Error_Handler(void);
 
+SPI_HandleTypeDef* get_spi_1_handle(void);
+
 RTC_HandleTypeDef* get_rtc_handle(void);
 TIM_HandleTypeDef* get_timer_1_handle(void);
 TIM_HandleTypeDef* get_timer_2_handle(void);

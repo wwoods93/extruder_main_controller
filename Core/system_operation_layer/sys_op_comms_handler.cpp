@@ -46,6 +46,7 @@
 #define COMMS_HANDLER_STATE_RUN             1
 
 spi::module_t spi_2_handle;
+spi::module_t spi_1_handle;
 i2c::handle_t i2c_2_handle;
 
 
@@ -124,6 +125,12 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
 {
     HAL_TIM_IRQHandler(get_timer_14_handle());
 }
+
+void SPI1_IRQHandler(void)
+{
+    HAL_SPI_IRQHandler(get_spi_1_handle());
+}
+
 
 void SPI2_IRQHandler()
 {

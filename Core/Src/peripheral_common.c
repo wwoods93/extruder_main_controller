@@ -28,13 +28,18 @@ WWDG_HandleTypeDef hwwdg;
 UART_HandleTypeDef huart2;
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
-
+SPI_HandleTypeDef hspi1;
 RTC_HandleTypeDef hrtc;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim13;
 TIM_HandleTypeDef htim14;
+
+SPI_HandleTypeDef* get_spi_1_handle(void)
+{
+    return &hspi1;
+}
 
 RTC_HandleTypeDef* get_rtc_handle(void)
 {

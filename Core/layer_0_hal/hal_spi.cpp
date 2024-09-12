@@ -557,24 +557,8 @@ void spi::close_isr(transaction_t arg_transaction_type)
         else if (arg_transaction_type == TX_RX)
         {
             module->status = MODULE_STATUS_READY;
-            module->callbacks[TX_RX_COMPLETE_CALLBACK_ID](this);
+            complete_transaction_tx_rx_success();
         }
-    }
-}
-
-void spi::transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data)
-{
-    std::unique_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
-
-    spi_transmit_receive_interrupt(arg_tx_data, rx_pointer_tmp.get(), arg_packet_size, active_packet.chip_select.port, active_packet.chip_select.pin);
-    module->rx_pointer = std::move(rx_pointer_tmp);
-    while (!module->rx_data_ready_flag);
-    module->rx_data_ready_flag = 0U;
-
-    for (uint8_t index = 0U; index < arg_packet_size; ++index)
-    {
-        rx_result[index] = module->rx_pointer[index];
-        module->rx_pointer[index] = 0;
     }
 }
 
@@ -796,6 +780,59 @@ void spi::pending_buffer_get_front(spi::packet_t& arg_packet)
     }
 }
 
+void spi::push_pending_packet_to_return_buffer()
+{
+    pending_buffer_get_front(pending_packet);
+
+    switch(pending_packet.channel_id)
+    {
+        case CHANNEL_0:
+        {
+            return_buffer_0.push(pending_packet);
+            break;
+        }
+        case CHANNEL_1:
+        {
+            return_buffer_1.push(pending_packet);
+            break;
+        }
+        case CHANNEL_2:
+        {
+            return_buffer_2.push(pending_packet);
+            break;
+        }
+        case CHANNEL_3:
+        {
+            return_buffer_3.push(pending_packet);
+            break;
+        }
+        case CHANNEL_4:
+        {
+            return_buffer_4.push(pending_packet);
+            break;
+        }
+        case CHANNEL_5:
+        {
+            return_buffer_5.push(pending_packet);
+            break;
+        }
+        case CHANNEL_6:
+        {
+            return_buffer_6.push(pending_packet);
+            break;
+        }
+        case CHANNEL_7:
+        {
+            return_buffer_7.push(pending_packet);
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+}
+
 void spi::set_active_packet_from_send_buffer()
 {
     send_buffer_get_front(active_packet);
@@ -984,7 +1021,7 @@ void spi::process_send_buffer()
         uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
 
-        push_active_packet_to_pending_buffer();
+//        push_active_packet_to_pending_buffer();
 
         for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {
@@ -998,10 +1035,45 @@ void spi::process_send_buffer()
                 }
             }
         }
+
         ++packets_received_count;
         send_buffer_pop();
 
         push_active_packet_to_return_buffer();
         reset_active_packet();
     }
+}
+
+void spi::transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data)
+{
+    std::unique_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
+    spi_transmit_receive_interrupt(arg_tx_data, rx_pointer_tmp.get(), arg_current_transaction_size, active_packet.chip_select.port, active_packet.chip_select.pin);
+    while (!module->rx_data_ready_flag);
+    module->rx_data_ready_flag = 0U;
+
+    for (uint8_t index = 0U; index < arg_current_transaction_size; ++index)
+    {
+        rx_result[index] = rx_pointer_tmp[index];
+//        rx_pointer_tmp[index] = 0;
+    }
+}
+
+void spi::complete_transaction_tx_rx_success()
+{
+    if (hal::gpio_read_pin(module->chip_select_port, module->chip_select_pin) == GPIO_PIN_RESET)
+    {
+        hal::gpio_write_pin(module->chip_select_port, module->chip_select_pin, GPIO_PIN_SET);
+    }
+
+    module->rx_data_ready_flag = 1U;
+}
+
+uint32_t spi::get_packets_requested_count() const
+{
+    return packets_requested_count;
+}
+
+uint32_t spi::get_packets_received_count() const
+{
+    return packets_received_count;
 }

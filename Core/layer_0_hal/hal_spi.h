@@ -128,7 +128,7 @@ class spi
 
         typedef struct
         {
-            int16_t     channel_id;
+            int16_t         channel_id;
             chip_select_t   chip_select;
         } channel_t;
 
@@ -164,32 +164,32 @@ class spi
             lock_t                      lock;
             hal::gpio_t*                chip_select_port;
             uint16_t                    chip_select_pin;
-            std::unique_ptr<uint8_t[]>  rx_pointer;
             void (* callbacks[SPI_REGISTER_CALLBACK_COUNT]) (spi *arg_object);
         } module_t;
 
         typedef void (*spi_callback_ptr_t)(spi *arg_object);
 
-        module_t*               module;
-        packet_t                active_packet;
-        TIM_HandleTypeDef*      timeout_time_base;
-        uint32_t                timeout_time_base_frequency = 0U;
-        uint8_t                 rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
-        int16_t                 next_available_channel_id = 0U;
-        int16_t                 next_available_packet_id = 0U;
-        uint32_t                packets_requested_count = 0U;
-        uint32_t                packets_received_count = 0U;
+        module_t*                   module;
+        packet_t                    active_packet;
+        packet_t                    pending_packet;
+        TIM_HandleTypeDef*          timeout_time_base;
+        uint32_t                    timeout_time_base_frequency = 0U;
+        uint8_t                     rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
+        int16_t                     next_available_channel_id = 0U;
+        int16_t                     next_available_packet_id = 0U;
+        uint32_t                    packets_requested_count = 0U;
+        uint32_t                    packets_received_count = 0U;
 
-        std::queue<packet_t>    send_buffer;
-        std::queue<packet_t>    pending_buffer;
-        std::queue<packet_t>    return_buffer_0;
-        std::queue<packet_t>    return_buffer_1;
-        std::queue<packet_t>    return_buffer_2;
-        std::queue<packet_t>    return_buffer_3;
-        std::queue<packet_t>    return_buffer_4;
-        std::queue<packet_t>    return_buffer_5;
-        std::queue<packet_t>    return_buffer_6;
-        std::queue<packet_t>    return_buffer_7;
+        std::queue<packet_t>        send_buffer;
+        std::queue<packet_t>        pending_buffer;
+        std::queue<packet_t>        return_buffer_0;
+        std::queue<packet_t>        return_buffer_1;
+        std::queue<packet_t>        return_buffer_2;
+        std::queue<packet_t>        return_buffer_3;
+        std::queue<packet_t>        return_buffer_4;
+        std::queue<packet_t>        return_buffer_5;
+        std::queue<packet_t>        return_buffer_6;
+        std::queue<packet_t>        return_buffer_7;
 
         struct
         {
@@ -223,7 +223,8 @@ class spi
         void pending_buffer_pop();
         void pending_buffer_get_front(spi::packet_t& arg_packet);
         void push_active_packet_to_pending_buffer();
-        void transmit_and_get_result(uint8_t arg_packet_size, uint8_t* arg_tx_data);
+        void push_pending_packet_to_return_buffer();
+        void transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
         uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         procedure_status_t reset_active_packet();
@@ -231,6 +232,7 @@ class spi
         void chip_select_set_inactive(uint8_t arg_channel_id);
         [[nodiscard]] uint32_t get_packets_requested_count() const;
         [[nodiscard]] uint32_t get_packets_received_count() const;
+        void complete_transaction_tx_rx_success();
 
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
@@ -261,17 +263,6 @@ class spi
         void clear_mode_fault_flag() const;
         void clear_overrun_flag() const;
 };
-
-
-inline uint32_t spi::get_packets_requested_count() const
-{
-   return packets_requested_count;
-}
-
-inline uint32_t spi::get_packets_received_count() const
-{
-    return packets_received_count;
-}
 
 inline spi::procedure_status_t spi::lock_module() const
 {

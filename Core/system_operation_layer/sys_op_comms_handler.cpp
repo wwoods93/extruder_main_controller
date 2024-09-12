@@ -48,6 +48,9 @@
 spi::module_t spi_2_handle;
 i2c::handle_t i2c_2_handle;
 
+
+
+uint32_t spi_packet_data_32 = 0U;
 void MX_TIM10_reinit(TIM_HandleTypeDef *htim);
 void MX_TIM13_reinit(TIM_HandleTypeDef *htim);
 void MX_TIM14_reinit(TIM_HandleTypeDef *htim);
@@ -280,7 +283,8 @@ uint8_t data_buffer[100]; // data buffer
 uint32_t cnt = 0;
 uint32_t pulse_count = 0;
 uint8_t pulse_set = 0;
-
+uint8_t current_i2c_state = 0U;
+uint8_t i2c_count = 0U;
 
 
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
@@ -339,6 +343,9 @@ namespace sys_op::comms_handler
     volatile uint32_t i2c_error_count = 0;
     volatile uint32_t i2c_timeout_count = 0;
 
+    uint8_t send_spi_packet_counts_interval = 9U;
+    uint8_t send_spi_packet_counts_counter = 0U;
+
     void task_intitialize()
     {
 
@@ -350,8 +357,7 @@ namespace sys_op::comms_handler
 
         char time_stamp[9];
 
-        uint8_t send_spi_packet_counts_interval = 9U;
-        uint8_t send_spi_packet_counts_counter = 0U;
+
         HAL_StatusTypeDef i2c_status;
 
         uint8_t packet_added = 0U;
@@ -477,148 +483,111 @@ namespace sys_op::comms_handler
                 hal::rtc_get_time_stamp(time_stamp);
 
 
-                if (osMessageQueueGet( i2c_tx_queue_handle, &rtd_reading, nullptr, 50) == osOK)
+                switch (current_i2c_state)
                 {
-                    float_converter.value = rtd_reading.value;
-
-                    switch (rtd_reading.id)
+                    case 0:
                     {
-                        case 0:
-                        {
-                            i2c_data[0] = 0x01;
-                            break;
-                        }
-                        case 1:
-                        {
-                            i2c_data[0] = 0x03;
-                            break;
-                        }
-                        case 2:
-                        {
-                            i2c_data[0] = 0x05;
-                            break;
-                        }
+                        uint32_converter.value = hal::spi_2.get_packets_received_count();
+
+                        i2c_data[0] = 0x06;
+                        i2c_data[1] = uint32_converter.byte[0];
+                        i2c_data[2] = uint32_converter.byte[1];
+                        i2c_data[3] = uint32_converter.byte[2];
+                        i2c_data[4] = uint32_converter.byte[3];
+                        HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+                        current_i2c_state = 1U;
+                        break;
                     }
-
-                    i2c_data[1] = float_converter.byte[0];
-                    i2c_data[2] = float_converter.byte[1];
-                    i2c_data[3] = float_converter.byte[2];
-                    i2c_data[4] = float_converter.byte[3];
-
-                    i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
-                    if (i2c_status != HAL_OK)
-                    {
-                        switch (i2c_status)
-                        {
-                            case HAL_OK:
-                            {
-                                break;
-                            }
-                            case HAL_BUSY:
-                            {
-                                i2c_busy_count++;
-                                break;
-                            }
-                            case HAL_ERROR:
-                            {
-                                i2c_error_count++;
-                                break;
-                            }
-                            case HAL_TIMEOUT:
-                            {
-                                i2c_timeout_count++;
-                                break;
-                            }
-                            default:
-                            {
-                                break;
-                            }
-                        }
-                    }
-
-                    if (send_spi_packet_counts_counter > send_spi_packet_counts_interval)
+                    case 1:
                     {
                         uint32_converter.value = hal::spi_2.get_packets_requested_count();
+
                         i2c_data[0] = 0x07;
                         i2c_data[1] = uint32_converter.byte[0];
                         i2c_data[2] = uint32_converter.byte[1];
                         i2c_data[3] = uint32_converter.byte[2];
                         i2c_data[4] = uint32_converter.byte[3];
-                        i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
-
-                        if (i2c_status != HAL_OK)
-                        {
-                            switch (i2c_status)
-                            {
-                                case HAL_OK:
-                                {
-                                    break;
-                                }
-                                case HAL_BUSY:
-                                {
-                                    i2c_busy_count++;
-                                    break;
-                                }
-                                case HAL_ERROR:
-                                {
-                                    i2c_error_count++;
-                                    break;
-                                }
-                                case HAL_TIMEOUT:
-                                {
-                                    i2c_timeout_count++;
-                                    break;
-                                }
-                                default:
-                                {
-                                    break;
-                                }
-                            }
-                        }
-
-                        uint32_converter.value = hal::spi_2.get_packets_received_count();
-                        i2c_data[0] = 0x09;
-                        i2c_data[1] = uint32_converter.byte[0];
-                        i2c_data[2] = uint32_converter.byte[1];
-                        i2c_data[3] = uint32_converter.byte[2];
-                        i2c_data[4] = uint32_converter.byte[3];
-                        i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
-
-                        if (i2c_status != HAL_OK)
-                        {
-                            switch (i2c_status)
-                            {
-                                case HAL_OK:
-                                {
-                                    break;
-                                }
-                                case HAL_BUSY:
-                                {
-                                    i2c_busy_count++;
-                                    break;
-                                }
-                                case HAL_ERROR:
-                                {
-                                    i2c_error_count++;
-                                    break;
-                                }
-                                case HAL_TIMEOUT:
-                                {
-                                    i2c_timeout_count++;
-                                    break;
-                                }
-                                default:
-                                {
-                                    break;
-                                }
-                            }
-                        }
-
+                        HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+                        current_i2c_state = 2;
+                        break;
                     }
+                    case 2:
+                    {
+                        if (osMessageQueueGet( i2c_tx_queue_handle, &rtd_reading, nullptr, 50) == osOK)
+                        {
+                            float_converter.value = rtd_reading.value;
 
+                            switch (rtd_reading.id)
+                            {
+                                case 0:
+                                {
+                                    i2c_data[0] = 0x00;
+                                    break;
+                                }
+                                case 1:
+                                {
+                                    i2c_data[0] = 0x01;
+                                    break;
+                                }
+                                case 2:
+                                {
+                                    i2c_data[0] = 0x02;
+                                    break;
+                                }
+                            }
 
-                    rtd_reading.id = 0;
-                    rtd_reading.value = 0;
+                            i2c_data[1] = float_converter.byte[0];
+                            i2c_data[2] = float_converter.byte[1];
+                            i2c_data[3] = float_converter.byte[2];
+                            i2c_data[4] = float_converter.byte[3];
+
+                            i2c_status = HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
+                            if (i2c_status != HAL_OK)
+                            {
+                                switch (i2c_status)
+                                {
+                                    case HAL_OK:
+                                    {
+                                        break;
+                                    }
+                                    case HAL_BUSY:
+                                    {
+                                        i2c_busy_count++;
+                                        break;
+                                    }
+                                    case HAL_ERROR:
+                                    {
+                                        i2c_error_count++;
+                                        break;
+                                    }
+                                    case HAL_TIMEOUT:
+                                    {
+                                        i2c_timeout_count++;
+                                        break;
+                                    }
+                                    default:
+                                    {
+                                        break;
+                                    }
+                                }
+                            }
+
+                            if (i2c_count > 5)
+                            {
+                                i2c_count = 0U;
+                                current_i2c_state = 0U;
+                            }
+
+                            ++i2c_count;
+                            rtd_reading.id = 0;
+                            rtd_reading.value = 0;
+                        }
+                        break;
+                    }
+                    default:
+                    {
+                        break;
+                    }
                 }
 
                 break;

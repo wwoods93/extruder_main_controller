@@ -15,10 +15,10 @@
 #include <cmath>
 #include "stm32f4xx.h"
 #include "cmsis_os2.h"
-#include "peripheral_common.h"
-#include "mcu_clock_timers.h"
+#include "../layer_0_hal/hal_peripheral.h"
+#include "../layer_0_hal/hal_timer.h"
 #include "../layer_0_hal/hal_spi.h"
-#include "driver_rtd.h"
+#include "device_rtd.h"
 #include "../layer_1_rtosal/rtosal.h"
 #include "../layer_0_hal/hal_callback.h"
 #include "../meta_structure/meta_structure_system_manager.h"

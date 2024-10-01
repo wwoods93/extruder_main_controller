@@ -1,14 +1,17 @@
 /***********************************************************************************************************************
  * Main_Controller
- * hal_gpio.cpp
+ * device_band_heater.h
  *
  * wilson
- * 3/3/23
- * 11:55 PM
+ * 9/17/24
+ * 10:39 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
+
+#ifndef MAIN_CONTROLLER_DEVICE_BAND_HEATER_H
+#define MAIN_CONTROLLER_DEVICE_BAND_HEATER_H
 
 /* c/c++ includes */
 
@@ -28,5 +31,15 @@
 
 /* layer_n_meta_structure includes */
 
-/* hal_gpio header */
-#include "hal_gpio.h"
+
+
+
+class device_band_heater
+{
+    public:
+
+    private:
+};
+
+
+#endif //MAIN_CONTROLLER_DEVICE_BAND_HEATER_H

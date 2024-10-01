@@ -9,11 +9,27 @@
  * Description:
  *
  **********************************************************************************************************************/
-#include "stdint.h"
-#include "stm32f4xx.h"
 
-#include "peripheral_common.h"
-#include "mcu_clock_timers.h"
+/* c/c++ includes */
+#include "stdint.h"
+/* stm32 includes */
+#include "stm32f4xx.h"
+/* third-party includes */
+
+/* layer_0_hal includes */
+#include "hal_peripheral.h"
+#include "hal_timer.h"
+/* layer_1_rtosal includes */
+
+/* layer_2_device includes */
+
+/* layer_3_control includes */
+
+/* layer_4_sys_op includes */
+
+/* layer_n_meta_structure includes */
+
+/* hal_timer header */
 
 #define TIMER_RESET             0
 #define MS_PER_1_SECOND         1000

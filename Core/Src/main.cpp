@@ -10,20 +10,39 @@
  *
  **********************************************************************************************************************/
 
-#include "extruder_main.h"
-#include "main.h"
+/* c/c++ includes */
+
+/* stm32 includes */
+#include "stm32f4xx.h"
+/* third-party includes */
 #include "cmsis_os.h"
 #include "cmsis_os2.h"
-#include "task.h"
-#include "peripheral_common.h"
-#include "mcu_clock_timers.h"
+/* layer_0_hal includes */
+#include "../layer_0_hal/hal_peripheral.h"
+#include "../layer_0_hal/hal_timer.h"
+/* layer_1_rtosal includes */
 #include "../layer_1_rtosal/rtosal_globals.h"
 #include "../layer_1_rtosal/rtosal.h"
-#include "../system_operation_layer/sys_op_initialization.h"
-#include "../system_operation_layer/sys_op_comms_handler.h"
-#include "../system_operation_layer/sys_op_preparation_process.h"
-#include "../system_operation_layer/sys_op_extrusion_process.h"
-#include "../system_operation_layer/sys_op_spooling_process.h"
+/* layer_2_device includes */
+
+/* layer_3_control includes */
+
+/* layer_4_sys_op includes */
+#include "../layer_4_sys_op/sys_op_initialization.h"
+#include "../layer_4_sys_op/sys_op_comms_handler.h"
+#include "../layer_4_sys_op/sys_op_preparation_process.h"
+#include "../layer_4_sys_op/sys_op_extrusion_process.h"
+#include "../layer_4_sys_op/sys_op_spooling_process.h"
+/* layer_n_meta_structure includes */
+
+/* main header */
+#include "main.h"
+#include "extruder_main.h"
+
+#include "task.h"
+
+
+
 
 const osEventFlagsAttr_t initialization_event_flags_attributes = { .name = "initialization_event_flags" };
 

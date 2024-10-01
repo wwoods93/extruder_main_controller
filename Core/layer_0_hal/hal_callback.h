@@ -19,19 +19,22 @@
 
 /* third-party includes */
 
-/* hal includes */
+/* layer_0_hal includes */
 #include "hal_spi.h"
-/* driver includes */
+/* layer_1_rtosal includes */
 
-/* rtos abstraction includes */
+/* layer_2_device includes */
 
-/* sys op includes */
+/* layer_3_control includes */
 
-/* meta structure includes */
+/* layer_4_sys_op includes */
 
+/* layer_n_meta_structure includes */
 
-void hal_callback_spi_rx_tx_complete(spi *arg_object);
-void hal_callback_spi_error(spi *arg_object);
+void hal_callback_spi_1_tx_rx_complete(spi *arg_object);
+void hal_callback_spi_2_tx_rx_complete(spi *arg_object);
+void hal_callback_spi_1_error(spi *arg_object);
+void hal_callback_spi_2_error(spi *arg_object);
 
 void hal_callback_i2c_controller_tx_complete(I2C_HandleTypeDef *hi2c);
 void hal_callback_i2c_controller_error(I2C_HandleTypeDef *hi2c);

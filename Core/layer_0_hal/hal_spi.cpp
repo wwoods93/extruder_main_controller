@@ -17,16 +17,18 @@
 
 /* third-party includes */
 
-/* hal includes */
+/* layer_0_hal includes */
 #include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
-/* driver includes */
+/* layer_1_rtosal includes */
 
-/* rtosal includes */
+/* layer_2_device includes */
 
-/* sys op includes */
+/* layer_3_control includes */
 
-/* meta structure includes */
+/* layer_4_sys_op includes */
+
+/* layer_n_meta_structure includes */
 
 /* hal_spi header */
 #include "hal_spi.h"
@@ -54,10 +56,10 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
     module->settings.crc_polynomial = 0U;
 
-    hal::gpio_write_pin(GPIO_PORT_B, PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
-    hal::gpio_write_pin(GPIO_PORT_B, PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
-    hal::gpio_write_pin(GPIO_PORT_B, PIN_1,  (GPIO_PinState) CHIP_SELECT_RESET);
-
+//    hal::gpio_write_pin(GPIO_PORT_B, PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
+//    hal::gpio_write_pin(GPIO_PORT_B, PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
+//    hal::gpio_write_pin(GPIO_PORT_B, PIN_1,  (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(GPIO_PORT_A, PIN_10,  (GPIO_PinState) CHIP_SELECT_RESET);
     if (module == nullptr)                                                              { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
         && module->instance != SPI_3 && module->instance != SPI_4)                      { status = PROCEDURE_STATUS_ERROR; }

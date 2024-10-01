@@ -9,8 +9,8 @@
  * Description:
  *
  **********************************************************************************************************************/
-#ifndef MAIN_CONTROLLER_DRIVER_RTD_H
-#define MAIN_CONTROLLER_DRIVER_RTD_H
+#ifndef MAIN_CONTROLLER_DEVICE_RTD_H
+#define MAIN_CONTROLLER_DEVICE_RTD_H
 
 #include <cstdint>
 #include "stm32f4xx.h"
@@ -223,4 +223,4 @@ class rtd : public user
 
 
 
-#endif //MAIN_CONTROLLER_DRIVER_RTD_H
+#endif //MAIN_CONTROLLER_DEVICE_RTD_H

@@ -1,10 +1,10 @@
 /***********************************************************************************************************************
  * Main_Controller
- * hal_defs.cpp
+ * device_band_heater.cpp
  *
  * wilson
- * 6/17/24
- * 5:20 AM
+ * 9/17/24
+ * 10:39 PM
  *
  * Description:
  *
@@ -16,15 +16,17 @@
 
 /* third-party includes */
 
-/* hal includes */
+/* layer_0_hal includes */
 
-/* driver includes */
+/* layer_1_rtosal includes */
 
-/* rtos abstraction includes */
+/* layer_2_device includes */
 
-/* sys op includes */
+/* layer_3_control includes */
 
-/* meta structure includes */
+/* layer_4_sys_op includes */
 
-/* hal_defs header */
-#include "hal_defs.h"
+/* layer_n_meta_structure includes */
+
+/* device_band_heater header */
+#include "device_band_heater.h"

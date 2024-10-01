@@ -17,15 +17,17 @@
 //#include "stm32f4xx.h"
 ///* third-party includes */
 //
-///* hal includes */
-//#include "peripheral_common.h"
-///* driver includes */
+///* layer_0_hal includes */
+//#include "hal_peripheral.h"
+///* layer_1_rtosal includes */
 //
-///* rtos abstraction includes */
+///* layer_2_device includes */
 //
-///* sys op includes */
+///* layer_3_control includes */
 //
-///* meta structure includes */
+///* layer_4_sys_op includes */
+//
+///* layer_n_meta_structure includes */
 //#include "../meta_structure/meta_structure_resource.h"
 ///* hal_i2c header */
 //#include "hal_i2c.h"

@@ -14,8 +14,7 @@
 #include "cmsis_os2.h"
 #include "../layer_1_rtosal/rtosal_globals.h"
 #include "../layer_1_rtosal/rtosal.h"
-#include "../layer_2_driver/driver_rtd.h"
-#include "../layer_2_driver/driver_dc_motor_controller.h"
+#include "../layer_2_device/device_rtd.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
@@ -23,7 +22,7 @@
 #define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
 #define EXTRUSION_PROCESS_STATE_RUN                                 3
 
-namespace driver
+namespace device
 {
     rtd rtd_zone_0;
     rtd rtd_zone_1;
@@ -36,7 +35,6 @@ namespace driver
     uint8_t value_updated_zone_0 = 0;
     uint8_t value_updated_zone_1 = 0;
     uint8_t value_updated_zone_2 = 0;
-//    dc_motor_controller motor_controller_1;
 }
 
 namespace sys_op::extrusion
@@ -56,9 +54,6 @@ namespace sys_op::extrusion
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
     common_float_data_t rtd_reading;
-
-
-//    osMutexId_t extrusion_process_spi_tx_data_buffer_mutex = nullptr;
 
 
 
@@ -98,15 +93,13 @@ namespace sys_op::extrusion
                 spi_rx_queue_handle = get_spi_rx_queue_handle();
                 i2c_tx_queue_handle = get_i2c_tx_queue_handle();
 
-//                driver::motor_controller_1.initialize_controller(0x0C, dc_motor_controller::F_3921Hz, true, false);
-                driver::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
-                driver::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
-                driver::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 2);
-                driver::rtd_zone_0.start_read_requests();
-                driver::rtd_zone_1.start_read_requests();
-                driver::rtd_zone_2.start_read_requests();
+                device::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
+                device::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
+                device::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 2);
+                device::rtd_zone_0.start_read_requests();
+                device::rtd_zone_1.start_read_requests();
+                device::rtd_zone_2.start_read_requests();
 
-//                driver::motor_controller_1.set_speed(dc_motor_controller::M1, 150);
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;
             }
@@ -115,51 +108,36 @@ namespace sys_op::extrusion
 
                 if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 5U /*kernel_tick_frequency_hz*/)
                 {
-                    driver::rtd_zone_0.handle_sensor_state();
-                    driver::rtd_zone_1.handle_sensor_state();
-                    driver::rtd_zone_2.handle_sensor_state();
+                    device::rtd_zone_0.handle_sensor_state();
+                    device::rtd_zone_1.handle_sensor_state();
+                    device::rtd_zone_2.handle_sensor_state();
                     extrusion_process_iteration_tick = osKernelGetTickCount();
-//                    if (counter > 100)
-//                    {
-//                        if (flag == 0U)
-//                        {
-//                            driver::motor_controller_1.set_speed(dc_motor_controller::M1, 50);
-//                            flag = 1U;
-//                        }
-//                        else
-//                        {
-//                            driver::motor_controller_1.set_speed(dc_motor_controller::M1, 200);
-//                            flag = 1U;
-//                        }
-//                        counter = 0;
-//                    }
-//                    ++counter;
                 }
 
-                if (driver::rtd_zone_0.send_request_if_flag_set(tx_common_packet))
+                if (device::rtd_zone_0.send_request_if_flag_set(tx_common_packet))
                 {
                     if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
-                    driver::rtd_zone_0.clear_send_new_request_flag();
+                    device::rtd_zone_0.clear_send_new_request_flag();
                 }
 
-                if (driver::rtd_zone_1.send_request_if_flag_set(tx_common_packet))
+                if (device::rtd_zone_1.send_request_if_flag_set(tx_common_packet))
                 {
                     if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
-                    driver::rtd_zone_1.clear_send_new_request_flag();
+                    device::rtd_zone_1.clear_send_new_request_flag();
                 }
-                if (driver::rtd_zone_2.send_request_if_flag_set(tx_common_packet))
+                if (device::rtd_zone_2.send_request_if_flag_set(tx_common_packet))
                 {
                     if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
-                    driver::rtd_zone_2.clear_send_new_request_flag();
+                    device::rtd_zone_2.clear_send_new_request_flag();
                 }
 
                 rx_buffer_accessed = 0U;
@@ -170,23 +148,23 @@ namespace sys_op::extrusion
                     {
                         case 0:
                         {
-                            driver::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
-                            driver::average_temp_zone_0 = driver::rtd_zone_0.compute_temperature_moving_average();
-                            driver::value_updated_zone_0 = 1;
+                            device::rtd_zone_0.read_rtd_and_calculate_temperature(rx_common_packet);
+                            device::average_temp_zone_0 = device::rtd_zone_0.compute_temperature_moving_average();
+                            device::value_updated_zone_0 = 1;
                             break;
                         }
                         case 1:
                         {
-                            driver::rtd_zone_1.read_rtd_and_calculate_temperature(rx_common_packet);
-                            driver::average_temp_zone_1 = driver::rtd_zone_1.compute_temperature_moving_average();
-                            driver::value_updated_zone_1 = 1;
+                            device::rtd_zone_1.read_rtd_and_calculate_temperature(rx_common_packet);
+                            device::average_temp_zone_1 = device::rtd_zone_1.compute_temperature_moving_average();
+                            device::value_updated_zone_1 = 1;
                             break;
                         }
                         case 2:
                         {
-                            driver::rtd_zone_2.read_rtd_and_calculate_temperature(rx_common_packet);
-                            driver::average_temp_zone_2 = driver::rtd_zone_2.compute_temperature_moving_average();
-                            driver::value_updated_zone_2 = 1;
+                            device::rtd_zone_2.read_rtd_and_calculate_temperature(rx_common_packet);
+                            device::average_temp_zone_2 = device::rtd_zone_2.compute_temperature_moving_average();
+                            device::value_updated_zone_2 = 1;
                             break;
                         }
                         default:
@@ -199,43 +177,43 @@ namespace sys_op::extrusion
                     rx_buffer_accessed = 1U;
                 }
 
-                if (driver::value_updated_zone_0 == 1U)
+                if (device::value_updated_zone_0 == 1U)
                 {
                     rtd_reading.id = 0;
-                    rtd_reading.value = driver::average_temp_zone_0;
+                    rtd_reading.value = device::average_temp_zone_0;
                     if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
                     rtd_reading.id = 0;
                     rtd_reading.value = 0;
-                    driver::value_updated_zone_0 = 0U;
+                    device::value_updated_zone_0 = 0U;
                 }
 
-                if (driver::value_updated_zone_1 == 1U)
+                if (device::value_updated_zone_1 == 1U)
                 {
                     rtd_reading.id = 1;
-                    rtd_reading.value = driver::average_temp_zone_1;
+                    rtd_reading.value = device::average_temp_zone_1;
                     if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
                     rtd_reading.id = 0;
                     rtd_reading.value = 0;
-                    driver::value_updated_zone_1 = 0U;
+                    device::value_updated_zone_1 = 0U;
                 }
 
-                if (driver::value_updated_zone_2 == 1U)
+                if (device::value_updated_zone_2 == 1U)
                 {
                     rtd_reading.id = 2;
-                    rtd_reading.value = driver::average_temp_zone_2;
+                    rtd_reading.value = device::average_temp_zone_2;
                     if (osMessageQueuePut(i2c_tx_queue_handle, &rtd_reading, 0, 0U) == osOK)
                     {
                         ++success_counter;
                     }
                     rtd_reading.id = 0;
                     rtd_reading.value = 0;
-                    driver::value_updated_zone_2 = 0U;
+                    device::value_updated_zone_2 = 0U;
                 }
 
                 break;

@@ -10,18 +10,29 @@
  *
  **********************************************************************************************************************/
 
+/* c/c++ includes */
+
+/* stm32 includes */
 #include "stm32f4xx.h"
+/* third-party includes */
+
+/* layer_0_hal includes */
+#include "hal_peripheral.h"
+#include "hal_timer.h"
+/* layer_1_rtosal includes */
+
+/* layer_2_device includes */
+
+/* layer_3_control includes */
+
+/* layer_4_sys_op includes */
+
+/* layer_n_meta_structure includes */
+
 #include "system_clock.h"
 #include "gpio.h"
-#include "mcu_clock_timers.h"
 #include "pwm.h"
-#include "icap.h"
-#include "adc.h"
-#include "uart.h"
-#include "can.h"
-#include "spi.h"
-#include "quad_spi.h"
-#include "peripheral_common.h"
+
 
 CAN_HandleTypeDef hcan1;
 WWDG_HandleTypeDef hwwdg;

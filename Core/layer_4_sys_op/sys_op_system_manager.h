@@ -27,7 +27,7 @@
 /* rtos abstraction includes */
 
 /* system includes */
-#include "../system_operation_layer/sys_op_general.h"
+#include "../layer_4_sys_op/sys_op_general.h"
 
 
 //#define MAX_DRIVER_LEVEL_USERS      32U

@@ -16,22 +16,24 @@
 #include "stm32f4xx_hal.h"
 /* third-party includes */
 
-/* hal includes */
+/* layer_0_hal includes */
 #include "hal_general.h"
-/* driver includes */
+/* layer_1_rtosal includes */
 
-/* rtos abstraction includes */
+/* layer_2_device includes */
 
-/* sys op includes */
+/* layer_3_control includes */
 
-/* meta structure includes */
+/* layer_4_sys_op includes */
+
+/* layer_n_meta_structure includes */
 
 /* hal_callbacks header */
 #include "hal_callback.h"
 
 static uint32_t consecutive_i2c_bus_error_count = 0;
 
-void hal_callback_spi_rx_tx_complete(spi *arg_object)
+void hal_callback_spi_1_tx_rx_complete(spi *arg_object)
 {
 
     if (hal::gpio_read_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin) == GPIO_PIN_RESET)
@@ -43,7 +45,29 @@ void hal_callback_spi_rx_tx_complete(spi *arg_object)
 
 }
 
-void hal_callback_spi_error(spi *arg_object)
+void hal_callback_spi_1_error(spi *arg_object)
+{
+    if (hal::gpio_read_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin) == GPIO_PIN_RESET)
+    {
+        hal::gpio_write_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin, GPIO_PIN_SET);
+    }
+
+    arg_object->module->rx_data_ready_flag = 1U;
+}
+
+void hal_callback_spi_2_tx_rx_complete(spi *arg_object)
+{
+
+    if (hal::gpio_read_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin) == GPIO_PIN_RESET)
+    {
+        hal::gpio_write_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin, GPIO_PIN_SET);
+    }
+
+    arg_object->module->rx_data_ready_flag = 1U;
+
+}
+
+void hal_callback_spi_2_error(spi *arg_object)
 {
     if (hal::gpio_read_pin(arg_object->module->chip_select_port, arg_object->module->chip_select_pin) == GPIO_PIN_RESET)
     {

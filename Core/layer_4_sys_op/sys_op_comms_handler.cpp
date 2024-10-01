@@ -25,14 +25,13 @@
 #include "../layer_0_hal/hal_wrapper.h"
 #include "../layer_0_hal/hal_spi.h"
 #include "../layer_0_hal/hal_i2c.h"
-#include "../Inc/peripheral_common.h"
-#include "mcu_clock_timers.h"
+#include "../layer_0_hal/hal_peripheral.h"
+#include "../layer_0_hal/hal_timer.h"
 #include "system_clock.h"
 #include "gpio.h"
 #include "spi.h"
 /* driver includes */
-#include "../layer_2_driver/driver_dc_motor_controller.h"
-#include "../layer_2_driver/driver_rtd.h"
+#include "../layer_2_device/device_rtd.h"
 /* system includes */
 /* rtos includes */
 #include "../layer_1_rtosal/rtosal_globals.h"
@@ -128,13 +127,13 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
 
 void SPI1_IRQHandler(void)
 {
-    HAL_SPI_IRQHandler(get_spi_1_handle());
+    spi_irq_handler(hal::get_spi_1_object());
 }
 
 
 void SPI2_IRQHandler()
 {
-    spi_irq_handler(hal::spi_object_ptr());
+    spi_irq_handler(hal::get_spi_2_object());
 }
 
 void USART2_IRQHandler(void)
@@ -264,8 +263,14 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
 namespace hal
 {
     spi spi_2;
+    spi spi_1;
 
-    spi* spi_object_ptr()
+    spi* get_spi_1_object()
+    {
+        return &spi_1;
+    }
+
+    spi* get_spi_2_object()
     {
         return &spi_2;
     }
@@ -333,8 +338,16 @@ namespace sys_op::comms_handler
     int16_t rtd_0_channel_id = ID_INVALID;
     int16_t rtd_1_channel_id = ID_INVALID;
     int16_t rtd_2_channel_id = ID_INVALID;
+
+    int16_t spi_1_test_channel_id = ID_INVALID;
+    common_packet_t spi_1_test_packet;
+    uint8_t spi_1_test_tx_bytes[8] = { 0x01, 0x03, 0x05, 0x07, 0x00, 0x00, 0x00, 0x00  };
+    uint8_t spi_t_test_bytes_per_tx[8] = {4, 0, 0, 0, 0, 0, 0, 0 };
+    uint8_t spi_1_test_rx_result_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
+
+
     common_float_data_t rtd_reading;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
     uint8_t i2c_data[5] = { 0, 0, 0, 0, 0 };
@@ -385,11 +398,16 @@ namespace sys_op::comms_handler
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2, get_timer_2_handle(), FREQUENCY_1_MHZ);
-                hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_rx_tx_complete);
-                hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_error);
+                hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
+                hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
                 hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14);
                 hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15);
                 hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1);
+
+                hal::spi_1.initialize(&spi_1_handle, SPI_1, get_timer_2_handle(), FREQUENCY_1_MHZ);
+                hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
+                hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
+                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
 
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
@@ -418,7 +436,7 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-                    if (uart_counter > 50)
+                    if (uart_counter > 10)
                     {
                         HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
                         HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
@@ -433,6 +451,8 @@ namespace sys_op::comms_handler
 
                 if (common_array_accessed)
                 {
+//                    hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_t_test_bytes_per_tx, spi_1_test_tx_bytes);
+
                     hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_transaction);
                     common_array_accessed = false;
                 }
@@ -440,11 +460,13 @@ namespace sys_op::comms_handler
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
                 osDelay(10);
+                hal::spi_1.process_send_buffer();
                 hal::spi_2.process_send_buffer();
                 packet_added = 0U;
 
                 spi::packet_t spi_rx_packet;
-
+                spi::packet_t spi_1_test_rx_packet;
+                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array);
                 buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
 
                 if (buffer_accessed)

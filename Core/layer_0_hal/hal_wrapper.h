@@ -19,16 +19,17 @@
 #include "stm32f4xx.h"
 /* third-party includes */
 
-/* hal includes */
+/* layer_0_hal includes */
 
-/* rtosal includes */
+/* layer_1_rtosal includes */
 
-/* driver includes */
+/* layer_2_device includes */
 
-/* sys op includes */
+/* layer_3_control includes */
 
-/* meta structure includes */
+/* layer_4_sys_op includes */
 
+/* layer_n_meta_structure includes */
 
 
 typedef enum

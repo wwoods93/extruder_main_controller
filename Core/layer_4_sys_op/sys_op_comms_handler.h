@@ -15,12 +15,13 @@
 
 #include "../layer_0_hal/hal_spi.h"
 #include "../layer_0_hal/hal_i2c.h"
-#include "../layer_2_driver/driver_rtd.h"
+#include "../layer_2_device/device_rtd.h"
 
 
 namespace hal
 {
-    spi* spi_object_ptr();
+    spi* get_spi_1_object();
+    spi* get_spi_2_object();
 }
 
 spi::module_t* get_spi_handle();

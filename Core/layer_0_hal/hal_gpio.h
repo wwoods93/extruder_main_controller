@@ -13,22 +13,23 @@
 //#ifndef MAIN_CONTROLLER_HAL_GPIO_H
 //#define MAIN_CONTROLLER_HAL_GPIO_H
 //
-//
-///* c/c++ includes */
+/* c/c++ includes */
 //
 ///* stm32 includes */
 //#include "stm32f4xx_hal_def.h"
 ///* third-party includes */
 //
-///* hal includes */
+///* layer_0_hal includes */
 //
-///* driver includes */
+///* layer_1_rtosal includes */
 //
-///* rtos abstraction includes */
+///* layer_2_device includes */
 //
-///* sys op includes */
+///* layer_3_control includes */
 //
-///* meta structure includes */
+///* layer_4_sys_op includes */
+//
+///* layer_n_meta_structure includes */
 //
 //
 //

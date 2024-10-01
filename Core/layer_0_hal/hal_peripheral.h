@@ -10,18 +10,33 @@
  *
  **********************************************************************************************************************/
 
-//
-// Created by wilson on 6/30/22.
-//
 
-#ifndef MAIN_CONTROLLER_PERIPHERAL_COMMON_H
-#define MAIN_CONTROLLER_PERIPHERAL_COMMON_H
+#ifndef MAIN_CONTROLLER_HAL_PERIPHERAL_H
+#define MAIN_CONTROLLER_HAL_PERIPHERAL_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#include "../../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h"
+/* c/c++ includes */
+
+/* stm32 includes */
+#include "stm32f4xx_hal_uart.h"
+/* third-party includes */
+
+/* layer_0_hal includes */
+
+/* layer_1_rtosal includes */
+
+/* layer_2_device includes */
+
+/* layer_3_control includes */
+
+/* layer_4_sys_op includes */
+
+/* layer_n_meta_structure includes */
+
+
 void error_handler(void);
 void Error_Handler(void);
 
@@ -58,4 +73,4 @@ void MX_TIM14_Init(void);
 }
 #endif
 
-#endif //MAIN_CONTROLLER_PERIPHERAL_COMMON_H
+#endif //MAIN_CONTROLLER_HAL_PERIPHERAL_H

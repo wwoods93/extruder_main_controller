@@ -18,20 +18,21 @@
 #include "stm32f4xx.h"
 /* third-party includes */
 
-/* hal includes */
-#include "../Inc/peripheral_common.h"
-/* rtosal includes */
+/* layer_0_hal includes */
+#include "hal_peripheral.h"
+/* layer_1_rtosal includes */
 
-/* driver includes */
+/* layer_2_device includes */
 
+/* layer_3_control includes */
 
+/* layer_4_sys_op includes */
 
-/* sys op includes */
-
-/* meta structure includes */
+/* layer_n_meta_structure includes */
 
 /* hal_wrapper header */
 #include "hal_wrapper.h"
+
 
 namespace hal
 {

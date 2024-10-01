@@ -16,7 +16,7 @@
 
 #include "stm32f4xx.h"
 
-#include "peripheral_common.h"
+#include "../layer_0_hal/hal_peripheral.h"
 
 #include "adc.h"
 

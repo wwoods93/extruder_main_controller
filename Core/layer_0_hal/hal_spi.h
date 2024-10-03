@@ -40,6 +40,7 @@ class spi
     public:
 
         #define TX_SIZE_MAX                                         8U
+        static constexpr uint8_t MESSAGE_QUEUE_COUNT_MAX = 8U;
 
         static constexpr uint32_t   FLAG_TIMEOUT                    = 50U;
         static constexpr uint32_t   TRANSACTION_TIMEOUT             = 100U;
@@ -179,9 +180,11 @@ class spi
         uint8_t                     rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
         int16_t                     next_available_channel_id = 0U;
         int16_t                     next_available_packet_id = 0U;
+        int16_t                     message_queue_count = 0U;
         uint32_t                    packets_requested_count = 0U;
         uint32_t                    packets_received_count = 0U;
 
+        rtosal::message_queue_id_t message_queue_ids[MESSAGE_QUEUE_COUNT_MAX];
         std::queue<packet_t>        send_buffer;
         std::queue<packet_t>        pending_buffer;
         std::queue<packet_t>        return_buffer_0;
@@ -205,6 +208,7 @@ class spi
             channel_t channel_7;
         } channel_list;
 
+        void register_intertask_message_queue(rtosal::message_queue_id_t arg_message_queue_id);
         void send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet);
         void receive_inter_task_transaction_request(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
 

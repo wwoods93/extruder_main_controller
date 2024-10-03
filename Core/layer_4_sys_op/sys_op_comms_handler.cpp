@@ -388,8 +388,8 @@ namespace sys_op::comms_handler
             {
                 initialization_event_flags_handle   = get_initialization_event_flags_handle();
                 initialization_queue_handle         = get_initialization_task_queue_handle();
-                spi_tx_queue_handle                 = get_spi_tx_queue_handle();
-                spi_rx_queue_handle                 = get_spi_rx_queue_handle();
+                spi_tx_queue_handle                 = get_spi_2_extrusion_task_tx_queue_handle();
+                spi_rx_queue_handle                 = get_spi_2_extrusion_task_rx_queue_handle();
                 i2c_tx_queue_handle                 = get_i2c_tx_queue_handle();
 
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
@@ -410,7 +410,6 @@ namespace sys_op::comms_handler
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
                 comms_handler_iteration_tick = 0U;
                 rtos_kernel_tick_frequency_hz = osKernelGetTickFreq();
-                rtos_kernel_tick_frequency_hz = rtos_kernel_tick_frequency_hz;
                 buffer_accessed = false;
                 common_array_accessed = false;
 
@@ -452,7 +451,7 @@ namespace sys_op::comms_handler
 
 
 
-//                osDelay(100);
+
 
                 hal::spi_2.receive_inter_task_transaction_request(spi_tx_queue_handle, tx_common_packet);
 

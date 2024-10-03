@@ -89,8 +89,8 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_CONFIGURE_USERS:
             {
-                spi_tx_queue_handle = get_spi_tx_queue_handle();
-                spi_rx_queue_handle = get_spi_rx_queue_handle();
+                spi_tx_queue_handle = get_spi_2_extrusion_task_tx_queue_handle();
+                spi_rx_queue_handle = get_spi_2_extrusion_task_rx_queue_handle();
                 i2c_tx_queue_handle = get_i2c_tx_queue_handle();
 
                 device::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);

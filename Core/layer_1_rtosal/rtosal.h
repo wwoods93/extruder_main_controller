@@ -13,15 +13,21 @@
 #ifndef MAIN_CONTROLLER_RTOSAL_H
 #define MAIN_CONTROLLER_RTOSAL_H
 
+#include <cstdint>
 #include "../meta_structure/meta_structure_system_manager.h"
 
+#include "rtosal_wrapper.h"
+
 #define USE_FREERTROS                       1U
-#define USE_CMSIS_OS2                       1U
+
 
 #define BINARY_SEMPAHORE_MAX_COUNT          1U
 #define BINARY_SEMAPHORE_INITIAL_COUNT      0U
 #define TRANSACTION_BYTE_COUNT_MAX          8U
 #define COMMON_PACKET_ARRAY_LENGTH_MAX      32U
+
+osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle();
+osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle();
 
 
 typedef struct
@@ -43,6 +49,14 @@ typedef struct
 
 namespace rtosal
 {
+    typedef struct
+    {
+        message_queue_id_t message_queue_id;
+        int16_t id;
+
+    } message_queue_t;
+
+    void rtosal_initializa();
     uint32_t get_rtos_kernel_tick_count();
     uint32_t get_rtos_kernel_tick_frequency();
 

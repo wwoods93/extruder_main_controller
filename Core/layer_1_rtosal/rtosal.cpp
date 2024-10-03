@@ -22,7 +22,7 @@
 /* driver includes */
 
 /* rtos abstraction includes */
-
+#include "rtosal_globals.h"
 /* sys op includes */
 
 /* meta structure includes */
@@ -40,9 +40,29 @@ static uint8_t array_packet_counter = 0;
 static uint8_t packet_valid = false;
 static common_packet_t spi_common_packet_array[COMMON_PACKET_ARRAY_LENGTH_MAX];
 
+osMessageQueueId_t spi_2_extrusion_task_tx_queue_handle;
+osMessageQueueId_t spi_2_extrusion_task_rx_queue_handle;
+
+const osMessageQueueAttr_t spi_2_extrusion_task_tx_queue_attributes = { .name = "spi_2_extrusion_task_tx_queue" };
+const osMessageQueueAttr_t spi_2_extrusion_task_rx_queue_attributes = { .name = "spi_2_extrusion_task_rx_queue" };
+
+osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
+{
+    return spi_2_extrusion_task_tx_queue_handle;
+}
+
+osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle()
+{
+    return spi_2_extrusion_task_rx_queue_handle;
+}
 
 namespace rtosal
 {
+    void rtosal_initializa()
+    {
+        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
+        spi_2_extrusion_task_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_rx_queue_attributes);
+    }
 
     #if (USE_CMSIS_OS2 == 1U)
         uint32_t get_rtos_kernel_tick_frequency()
@@ -55,6 +75,8 @@ namespace rtosal
             return osKernelGetTickCount();
         }
     #endif
+
+
     void set_spi_tx_buffer_mutex_initialized_flag(uint8_t _flag)
     {
         spi_tx_buffer_mutex_initialized_flag = _flag;
@@ -67,14 +89,6 @@ namespace rtosal
 
 
 
-    void initializae_spi_common_packet_array()
-    {
-        for (uint8_t index = 0; index < COMMON_PACKET_ARRAY_LENGTH_MAX; ++index)
-        {
-            memset(&spi_common_packet_array[index], '\0', sizeof(common_packet_t));
-            spi_common_packet_array[index].status = 0xFF;
-        }
-    }
 
     void build_common_packet(common_packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_bytes)[8], uint8_t (&arg_bytes_per_tx)[8])
     {
@@ -85,70 +99,11 @@ namespace rtosal
         memcpy(&arg_packet.bytes, arg_bytes, sizeof(arg_packet.bytes));
     }
 
-    uint8_t add_packet_to_common_packet_array(common_packet_t& _packet)
-    {
-        memset(&spi_common_packet_array[packet_add_index], '\0', sizeof(common_packet_t));
-        memcpy(&spi_common_packet_array[packet_add_index], &_packet, sizeof(common_packet_t));
-        packet_added = true;
-        return packet_added;
-    }
-
-    void increment_packet_add_index()
-    {
-        if (packet_added == true)
-        {
-            ++array_packet_counter;
-            ++packet_add_index;
-            if (packet_add_index >= COMMON_PACKET_ARRAY_LENGTH_MAX) { packet_add_index = 0; }
-            packet_added = false;
-        }
-    }
 
 
-    uint8_t remove_packet_from_common_packet_array(common_packet_t& _packet)
-    {
-        if (array_packet_counter > 0)
-        {
-            if (spi_common_packet_array[packet_remove_index].status != 0xFF)
-            {
-                memset(&_packet, '\0', sizeof(common_packet_t));
-                memcpy(&_packet, &spi_common_packet_array[packet_remove_index], sizeof(common_packet_t));
-                packet_valid = true;
-            }
-            else
-            {
-                packet_valid = false;
-            }
 
-            memset(&spi_common_packet_array[packet_remove_index], '\0', sizeof(common_packet_t));
-            spi_common_packet_array[packet_remove_index].status = 0xFF;
-            packet_removed = true;
-        }
-        return packet_removed;
-    }
 
-    void increment_packet_remove_index()
-    {
-        if (packet_removed == true)
-        {
-            if (array_packet_counter > 0)
-            {
-                --array_packet_counter;
-            }
-            else
-            {
-                array_packet_counter = 0;
-            }
-            ++packet_remove_index;
-            if (packet_remove_index >= COMMON_PACKET_ARRAY_LENGTH_MAX) { packet_remove_index = 0; }
-            packet_removed = false;
-        }
-    }
 
-    uint8_t common_packet_is_valid()
-    {
-        return packet_valid;
-    }
 
 
 }

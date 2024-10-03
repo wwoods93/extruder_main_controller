@@ -50,11 +50,11 @@ osEventFlagsId_t initialization_event_flags_handle;
 osMessageQueueId_t initialization_task_queue_handle;
 const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "initialization_task_queue" };
 
-osMessageQueueId_t spi_tx_queue_handle;
-osMessageQueueId_t spi_rx_queue_handle;
+//osMessageQueueId_t spi_tx_queue_handle;
+//osMessageQueueId_t spi_rx_queue_handle;
 osMessageQueueId_t i2c_tx_queue_handle;
-const osMessageQueueAttr_t spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
-const osMessageQueueAttr_t spi_rx_queue_attributes = { .name = "extrusion_task_spi_rx_queue" };
+//const osMessageQueueAttr_t spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
+//const osMessageQueueAttr_t spi_rx_queue_attributes = { .name = "extrusion_task_spi_rx_queue" };
 const osMessageQueueAttr_t i2c_tx_queue_attributes = { .name = "touchscreen_i2c_tx_queue" };
 
 
@@ -89,9 +89,10 @@ int main()
 
     initialization_event_flags_handle = osEventFlagsNew(&initialization_event_flags_attributes);
 
+    rtosal::rtosal_initializa();
     initialization_task_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &initialization_task_queue_attributes);
-    spi_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_tx_queue_attributes);
-    spi_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_rx_queue_attributes);
+
+
     i2c_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &i2c_tx_queue_attributes);
 
     initialization_taskHandle       = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
@@ -196,15 +197,15 @@ osMessageQueueId_t get_initialization_task_queue_handle()
     return initialization_task_queue_handle;
 }
 
-osMessageQueueId_t get_spi_tx_queue_handle()
-{
-    return spi_tx_queue_handle;
-}
+//osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
+//{
+//    return spi_tx_queue_handle;
+//}
 
-osMessageQueueId_t get_spi_rx_queue_handle()
-{
-    return spi_rx_queue_handle;
-}
+//osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle()
+//{
+//    return spi_rx_queue_handle;
+//}
 
 osMessageQueueId_t get_i2c_tx_queue_handle()
 {

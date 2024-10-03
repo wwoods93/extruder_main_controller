@@ -1132,6 +1132,12 @@ uint32_t spi::get_packets_received_count() const
     return packets_received_count;
 }
 
+void spi::register_intertask_message_queue(rtosal::message_queue_id_t arg_message_queue_id)
+{
+    message_queue_ids[message_queue_count] = arg_message_queue_id;
+    ++message_queue_count;
+}
+
 void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet)
 {
     common_packet_t rx_common_packet;

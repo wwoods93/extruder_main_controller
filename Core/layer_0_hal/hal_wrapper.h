@@ -85,6 +85,7 @@ namespace hal
     void gpio_write_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin, uint8_t arg_pin_state);
     uint8_t gpio_read_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin);
     void rtc_get_time_stamp(char arg_time_stamp_string[9]);
+    void spi_1_msp_initialize();
     void spi_2_msp_initialize();
 }
 

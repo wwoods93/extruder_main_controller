@@ -35,6 +35,7 @@
 /* system includes */
 /* rtos includes */
 #include "../layer_1_rtosal/rtosal_globals.h"
+#include "../layer_1_rtosal/rtosal_wrapper.h"
 #include "../layer_1_rtosal/rtosal.h"
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
@@ -125,11 +126,10 @@ void TIM8_TRG_COM_TIM14_IRQHandler(void)
     HAL_TIM_IRQHandler(get_timer_14_handle());
 }
 
-void SPI1_IRQHandler(void)
+void SPI1_IRQHandler()
 {
     spi_irq_handler(hal::get_spi_1_object());
 }
-
 
 void SPI2_IRQHandler()
 {
@@ -324,10 +324,10 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 namespace sys_op::comms_handler
 {
     osEventFlagsId_t  initialization_event_flags_handle = nullptr;
-    osMessageQueueId_t initialization_queue_handle = nullptr;
-    osMessageQueueId_t spi_tx_queue_handle = nullptr;
-    osMessageQueueId_t spi_rx_queue_handle = nullptr;
-    osMessageQueueId_t i2c_tx_queue_handle = nullptr;
+    rtosal::message_queue_id_t initialization_queue_handle = nullptr;
+    rtosal::message_queue_id_t spi_tx_queue_handle = nullptr;
+    rtosal::message_queue_id_t spi_rx_queue_handle = nullptr;
+    rtosal::message_queue_id_t i2c_tx_queue_handle = nullptr;
 
     static uint32_t comms_handler_iteration_tick;
     uint32_t rtos_kernel_tick_frequency_hz;
@@ -346,7 +346,6 @@ namespace sys_op::comms_handler
     uint8_t spi_1_test_rx_result_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     common_packet_t tx_common_packet;
     common_packet_t rx_common_packet;
-
 
     common_float_data_t rtd_reading;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
@@ -376,38 +375,36 @@ namespace sys_op::comms_handler
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
         char time_stamp[9];
-
-
         HAL_StatusTypeDef i2c_status;
 
-        uint8_t packet_added = 0U;
-
         static uint8_t uart_counter = 0;
-        static uint32_t buffer_access_counter = 0;
 
+        spi::packet_t spi_rx_packet;
+        spi::packet_t spi_1_test_rx_packet;
 
         switch (comms_handler_state)
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
             {
                 initialization_event_flags_handle   = get_initialization_event_flags_handle();
+                initialization_queue_handle         = get_initialization_task_queue_handle();
                 spi_tx_queue_handle                 = get_spi_tx_queue_handle();
                 spi_rx_queue_handle                 = get_spi_rx_queue_handle();
                 i2c_tx_queue_handle                 = get_i2c_tx_queue_handle();
-                initialization_queue_handle         = get_initialization_task_queue_handle();
+
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-                hal::spi_2.initialize(&spi_2_handle, SPI_2, get_timer_2_handle(), FREQUENCY_1_MHZ);
+                hal::spi_1.initialize(&spi_1_handle, SPI_1_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
+                hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
+                hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
+                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
+
+                hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
                 hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
                 hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14);
                 hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15);
                 hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1);
-
-                hal::spi_1.initialize(&spi_1_handle, SPI_1, get_timer_2_handle(), FREQUENCY_1_MHZ);
-                hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
-                hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
-                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
 
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
@@ -436,81 +433,47 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
 
-                    if (uart_counter > 10)
-                    {
-                        HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
-                        HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
-                        uart_counter = 0;
-                     }
-                    ++uart_counter;
-
-                if (osMessageQueueGet( spi_tx_queue_handle, &tx_common_packet, nullptr, 50) == osOK)
+                if (uart_counter > 10)
                 {
-                    common_array_accessed = true;
-                }
+                    HAL_UART_Transmit_IT(get_usart_2_handle(), (uint8_t *) user_data,strlen(user_data)); //Transmit data in interrupt mode
+                    HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1); //receive data from data buffer interrupt mode
+                    uart_counter = 0;
+                 }
+                ++uart_counter;
 
-                if (common_array_accessed)
-                {
-//                    hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_t_test_bytes_per_tx, spi_1_test_tx_bytes);
+                hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_1_test_tx_bytes, spi_t_test_bytes_per_tx);
+                hal::spi_1.process_send_buffer();
+                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array);
 
-                    hal::spi_2.create_packet_and_add_to_send_buffer(tx_common_packet.channel_id, tx_common_packet.tx_byte_count, tx_common_packet.bytes, tx_common_packet.bytes_per_transaction);
-                    common_array_accessed = false;
-                }
+
+
 
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 
-                osDelay(10);
-                hal::spi_1.process_send_buffer();
+
+
+//                osDelay(100);
+
+                hal::spi_2.receive_inter_task_transaction_request(spi_tx_queue_handle, tx_common_packet);
+
                 hal::spi_2.process_send_buffer();
-                packet_added = 0U;
 
-                spi::packet_t spi_rx_packet;
-                spi::packet_t spi_1_test_rx_packet;
-                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array);
-                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
-
-                if (buffer_accessed)
+                if (hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d))
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
-                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
-                    {
-                        packet_added = 1U;
-                    }
-
-                    buffer_access_counter++;
-                    buffer_accessed = 0U;
+                    hal::spi_2.send_inter_task_transaction_result(spi_rx_queue_handle, spi_rx_packet);
                 }
 
-                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d);
-
-                if (buffer_accessed)
+                if (hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d))
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
-                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
-                    {
-                        packet_added = 1U;
-                    }
-
-                    buffer_access_counter++;
-                    buffer_accessed = 0U;
+                    hal::spi_2.send_inter_task_transaction_result(spi_rx_queue_handle, spi_rx_packet);
                 }
 
-                buffer_accessed = hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d);
-
-                if (buffer_accessed)
+                if (hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d))
                 {
-                    rtosal::build_common_packet(rx_common_packet, spi_rx_packet.channel_id, spi_rx_packet.rx_bytes, spi_rx_packet.bytes_per_transaction);
-                    if (osMessageQueuePut(spi_rx_queue_handle, &rx_common_packet, 0, 0U) == osOK)
-                    {
-                        packet_added = 1U;
-                    }
-
-                    buffer_access_counter++;
-                    buffer_accessed = 0U;
+                    hal::spi_2.send_inter_task_transaction_result(spi_rx_queue_handle, spi_rx_packet);
                 }
 
                 hal::rtc_get_time_stamp(time_stamp);
-
 
                 switch (current_i2c_state)
                 {

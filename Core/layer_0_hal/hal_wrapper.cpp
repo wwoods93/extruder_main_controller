@@ -96,6 +96,24 @@ namespace hal
         sprintf(arg_time_stamp_string, "%s%s%s%s%s", hours_str, colon, minutes_str, colon, seconds_str);
     }
 
+    void spi_1_msp_initialize()
+    {
+        GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+        __HAL_RCC_SPI1_CLK_ENABLE();
+        __HAL_RCC_GPIOB_CLK_ENABLE();
+        GPIO_InitStruct.Pin = GPIO_PIN_3|GPIO_PIN_4|GPIO_PIN_5;
+        GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;
+        GPIO_InitStruct.Pull = GPIO_NOPULL;
+        GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
+        GPIO_InitStruct.Alternate = GPIO_AF5_SPI1;
+        HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+        HAL_NVIC_SetPriority(SPI1_IRQn, 5, 0);
+        HAL_NVIC_EnableIRQ(SPI1_IRQn);
+}
+
+
     void spi_2_msp_initialize()
     {
         GPIO_InitTypeDef GPIO_InitStruct = {0};

@@ -73,6 +73,11 @@ typedef struct
 #define SPI_3                               ((hal_spi_t *) SPI_3_BASE_ADDRESS)
 #define SPI_4                               ((hal_spi_t *) SPI_4_BASE_ADDRESS)
 
+static constexpr uint8_t SPI_1_ID = 1U;
+static constexpr uint8_t SPI_2_ID = 2U;
+static constexpr uint8_t SPI_3_ID = 3U;
+static constexpr uint8_t SPI_4_ID = 4U;
+
 // spi cr1 map
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_PHASE                                       = 0x00000001U;
 static constexpr uint32_t SPI_CR1_BIT_CLOCK_POLARITY                                    = 0x00000002U;

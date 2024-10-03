@@ -21,7 +21,8 @@
 #include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
 /* layer_1_rtosal includes */
-
+#include "../layer_1_rtosal/rtosal.h"
+#include "../layer_1_rtosal/rtosal_wrapper.h"
 /* layer_2_device includes */
 
 /* layer_3_control includes */
@@ -34,15 +35,48 @@
 #include "hal_spi.h"
 
 
-spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
+spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
+
+    module = arg_module;
+
+    switch (arg_instance_id)
+    {
+        case SPI_1_ID:
+        {
+            module->instance = SPI_1;
+            module->settings.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_4;
+            break;
+        }
+        case SPI_2_ID:
+        {
+            module->instance = SPI_2;
+            module->settings.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_16;
+            break;
+        }
+        case SPI_3_ID:
+        {
+            module->instance = SPI_3;
+            break;
+        }
+        case SPI_4_ID:
+        {
+            module->instance = SPI_4;
+            break;
+        }
+        default:
+        {
+            break;
+        }
+    }
+
 
     timeout_time_base = arg_timeout_time_base;
     timeout_time_base_frequency = arg_timeout_time_base_frequency;
 
-    module = arg_module;
-    module->instance = arg_instance;
+
+
     module->rx_data_ready_flag = 0U;
     module->settings.mode = SPI_CONFIG_MODE_CONTROLLER;
     module->settings.direction = SPI_CONFIG_DIRECTION_2_LINE;
@@ -50,7 +84,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
     module->settings.clock_polarity = SPI_CONFIG_CLOCK_POLARITY_LOW;
     module->settings.clock_phase = SPI_CONFIG_CLOCK_PHASE_TRAILING_EDGE;
     module->settings.chip_select_setting = SPI_CONFIG_CHIP_SELECT_SOFTWARE;
-    module->settings.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_16;
+
     module->settings.first_bit_setting = SPI_CONFIG_DATA_MSB_FIRST;
     module->settings.ti_mode = SPI_CONFIG_TI_MODE_DISABLE;
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
@@ -103,7 +137,25 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, hal_spi_t* arg_ins
         module->callbacks[ERROR_CALLBACK_ID]                = nullptr;
         module->callbacks[ABORT_CALLBACK_ID]                = nullptr;
 
-        hal::spi_2_msp_initialize();
+        switch (arg_instance_id)
+        {
+            case SPI_1_ID:
+            {
+                hal::spi_1_msp_initialize();
+                break;
+            }
+            case SPI_2_ID:
+            {
+                hal::spi_2_msp_initialize();
+                break;
+            }
+            default:
+            {
+                break;
+            }
+        }
+
+
     }
 
     module->status = MODULE_STATUS_BUSY;
@@ -1078,4 +1130,26 @@ uint32_t spi::get_packets_requested_count() const
 uint32_t spi::get_packets_received_count() const
 {
     return packets_received_count;
+}
+
+void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet)
+{
+    common_packet_t rx_common_packet;
+    rtosal::build_common_packet(rx_common_packet, arg_packet.channel_id, arg_packet.rx_bytes, arg_packet.bytes_per_transaction);
+    if (rtosal::message_queue_send(arg_message_queue_id, &rx_common_packet, 0) == rtosal::OS_OK)
+    {
+        // success
+    }
+    else
+    {
+        // error
+    }
+}
+
+void spi::receive_inter_task_transaction_request(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
+{
+    if (rtosal::message_queue_receive(arg_message_queue_id, &arg_tx_common_packet, 50) == rtosal::OS_OK)
+    {
+        create_packet_and_add_to_send_buffer(arg_tx_common_packet.channel_id, arg_tx_common_packet.tx_byte_count, arg_tx_common_packet.bytes, arg_tx_common_packet.bytes_per_transaction);
+    }
 }

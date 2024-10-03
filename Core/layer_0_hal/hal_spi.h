@@ -24,7 +24,8 @@
 #include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
 /* layer_1_rtosal includes */
-
+#include "../layer_1_rtosal/rtosal.h"
+#include "../layer_1_rtosal/rtosal_wrapper.h"
 /* layer_2_device includes */
 
 /* layer_3_control includes */
@@ -204,9 +205,12 @@ class spi
             channel_t channel_7;
         } channel_list;
 
+        void send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet);
+        void receive_inter_task_transaction_request(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
 
 
-        procedure_status_t initialize(module_t* arg_module, hal_spi_t* arg_instance, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency);
+
+        procedure_status_t initialize(module_t* arg_module, uint8_t arg_instance_t, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency);
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
 

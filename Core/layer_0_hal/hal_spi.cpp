@@ -952,7 +952,7 @@ spi::procedure_status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
+uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX], rtosal::message_queue_id_t arg_message_queue_id)
 {
     uint8_t buffer_accessed = 0U;
 
@@ -1057,6 +1057,10 @@ uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, ui
     if (buffer_accessed)
     {
         memcpy(&arg_rx_array, &arg_packet.rx_bytes, sizeof(arg_rx_array));
+        if (arg_message_queue_id != nullptr)
+        {
+            send_inter_task_transaction_result(arg_message_queue_id, arg_packet);
+        }
     }
 
     return buffer_accessed;
@@ -1075,7 +1079,6 @@ void spi::process_send_buffer()
         uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
 
-//        push_active_packet_to_pending_buffer();
 
         for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {

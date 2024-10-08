@@ -235,7 +235,7 @@ class spi
         void push_pending_packet_to_return_buffer();
         void transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
-        uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
+        uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX], rtosal::message_queue_id_t arg_message_queue_id);
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);

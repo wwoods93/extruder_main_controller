@@ -32,13 +32,6 @@
 
 
 static uint8_t spi_tx_buffer_mutex_initialized_flag = false;
-static uint8_t packet_add_index = 0;
-static uint8_t packet_remove_index = 0;
-static uint8_t packet_added = false;
-static uint8_t packet_removed = false;
-static uint8_t array_packet_counter = 0;
-static uint8_t packet_valid = false;
-static common_packet_t spi_common_packet_array[COMMON_PACKET_ARRAY_LENGTH_MAX];
 
 osMessageQueueId_t spi_2_extrusion_task_tx_queue_handle;
 osMessageQueueId_t spi_2_extrusion_task_rx_queue_handle;

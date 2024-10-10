@@ -31,10 +31,6 @@
 
 /* hal_timer header */
 
-#define TIMER_RESET             0
-#define MS_PER_1_SECOND         1000
-#define US_DELAY_FACTOR         11
-
 TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim7;
 TIM_HandleTypeDef htim11;
@@ -42,8 +38,6 @@ TIM_HandleTypeDef htim11;
 static TIM_HandleTypeDef ms_timer_base_timer_handle;
 static TIM_HandleTypeDef us_base_timer_handle;
 
-static uint32_t ms_count = 0;
-static uint32_t us_count = 0;
 
 void MX_TIM6_Init(void)
 {
@@ -112,41 +106,4 @@ void timers_initialize(void)
     MX_TIM6_Init();
     MX_TIM7_Init();
     MX_TIM11_Init();
-}
-
-void us_timer_enable(void)
-{
-    __HAL_TIM_MOE_ENABLE(&us_base_timer_handle);
-    __HAL_TIM_ENABLE(&us_base_timer_handle);
-}
-
-void us_timer_disable(void)
-{
-    __HAL_TIM_DISABLE(&us_base_timer_handle);
-}
-
-void us_timer_start(void)
-{
-    HAL_TIM_Base_Start(&us_base_timer_handle);
-}
-
-void us_timer_stop(void)
-{
-    HAL_TIM_Base_Stop(&us_base_timer_handle);
-}
-
-void us_timer_reset(void)
-{
-    us_base_timer_handle.Instance->CNT = TIMER_RESET;
-}
-
-uint32_t us_timer_get_count(void)
-{
-    return us_base_timer_handle.Instance->CNT;
-}
-
-void us_delay(uint16_t microseconds)
-{
-    uint16_t delay = microseconds * US_DELAY_FACTOR;
-    for (uint16_t i = 0; i <= delay; ++i);
 }

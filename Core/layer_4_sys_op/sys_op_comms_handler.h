@@ -16,12 +16,18 @@
 #include "../layer_0_hal/hal_spi.h"
 #include "../layer_0_hal/hal_i2c.h"
 #include "../layer_2_device/device_rtd.h"
+#include "../layer_2_device/heating_element.h"
 
 
 namespace hal
 {
     spi* get_spi_1_object();
     spi* get_spi_2_object();
+}
+
+namespace device
+{
+    heating_element* get_heating_element_object();
 }
 
 spi::module_t* get_spi_handle();

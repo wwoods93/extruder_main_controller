@@ -14,9 +14,9 @@
 #define MAIN_CONTROLLER_DEVICE_SERIAL_MONITOR_H
 
 /* c/c++ includes */
-
+#include <cstdint>
 /* stm32 includes */
-
+#include "stm32f4xx.h"
 /* third-party includes */
 
 /* layer_0_hal includes */
@@ -37,6 +37,10 @@
 class serial_monitor
 {
     public:
+        uint32_t initialize(UART_HandleTypeDef arg_uart_module);
+        uint32_t print(char arg_output_string);
+
+
 
     private:
 };

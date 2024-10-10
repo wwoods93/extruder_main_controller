@@ -32,6 +32,7 @@
 #include "spi.h"
 /* driver includes */
 #include "../layer_2_device/device_rtd.h"
+#include "../layer_2_device/heating_element.h"
 /* system includes */
 /* rtos includes */
 #include "../layer_1_rtosal/rtosal_globals.h"
@@ -40,6 +41,7 @@
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
+#include "../application/extruder.h"
 #include "../meta_structure/meta_structure_system_manager.h"
 
 #define COMMS_HANDLER_STATE_INITIALIZE      0
@@ -49,9 +51,33 @@ spi::module_t spi_2_handle;
 spi::module_t spi_1_handle;
 i2c::handle_t i2c_2_handle;
 
+namespace hal
+{
+
+    spi spi_1;
+    spi spi_2;
 
 
-uint32_t spi_packet_data_32 = 0U;
+    spi* get_spi_1_object()
+    {
+        return &spi_1;
+    }
+
+    spi* get_spi_2_object()
+    {
+        return &spi_2;
+    }
+}
+
+namespace device
+{
+    heating_element band_heater;
+
+    heating_element* get_heating_element_object();
+
+}
+uint32_t timer_14_count = 0U;
+uint32_t timer_14_period = 8300U;
 void MX_TIM10_reinit(TIM_HandleTypeDef *htim);
 void MX_TIM13_reinit(TIM_HandleTypeDef *htim);
 void MX_TIM14_reinit(TIM_HandleTypeDef *htim);
@@ -59,9 +85,12 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim);
 void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
 {
     HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
-    MX_TIM10_reinit(get_timer_10_handle());
-    MX_TIM13_reinit(get_timer_13_handle());
-    MX_TIM14_reinit(get_timer_14_handle());
+//    MX_TIM10_reinit(get_timer_10_handle());
+//    MX_TIM13_reinit(get_timer_13_handle());
+//    MX_TIM14_reinit(get_timer_14_handle());
+    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_1, 1000);
+    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_2, 4500);
+    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_3, 1000);
     HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
     HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
     HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
@@ -69,9 +98,14 @@ void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeD
 
 void timer_1_input_capture_zero_crossing_pulse_half_detected_callback(TIM_HandleTypeDef *htim)
 {
-
+//    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+//    MX_TIM10_reinit(get_timer_10_handle());
+//    MX_TIM13_reinit(get_timer_13_handle());
+//    MX_TIM14_reinit(get_timer_14_handle());
+//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
+//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
 }
-
 
 void timer_10_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
 {
@@ -186,12 +220,12 @@ void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
 {
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    htim->Instance = TIM10;
-    htim->Init.Prescaler = 64-1;
-    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+//    htim->Instance = TIM10;
+//    htim->Init.Prescaler = 64-1;
+//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
     htim->Init.Period = 8100;
-    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
     {
         Error_Handler();
@@ -212,12 +246,12 @@ void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
 {
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    htim->Instance = TIM13;
-    htim->Init.Prescaler = 32-1;
-    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+//    htim->Instance = TIM13;
+//    htim->Init.Prescaler = 32-1;
+//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
     htim->Init.Period = 1000;
-    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
     {
         Error_Handler();
@@ -237,20 +271,22 @@ void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
 void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
 {
     TIM_OC_InitTypeDef sConfigOC = {0};
+    uint32_t period = 7000;
 
-    htim->Instance = TIM14;
-    htim->Init.Prescaler = 32-1;
-    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 1000;
-    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+//    htim->Instance = TIM14;
+//    htim->Init.Prescaler = 32-1;
+//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
+    htim->Init.Period = period;
+//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
     if (HAL_TIM_Base_Init(htim) != HAL_OK)
     {
         Error_Handler();
     }
 
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 750;
+//    sConfigOC.Pulse = 0;
+    sConfigOC.Pulse = period - 250;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
@@ -260,21 +296,7 @@ void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
     }
 }
 
-namespace hal
-{
-    spi spi_2;
-    spi spi_1;
 
-    spi* get_spi_1_object()
-    {
-        return &spi_1;
-    }
-
-    spi* get_spi_2_object()
-    {
-        return &spi_2;
-    }
-}
 
 spi::module_t* get_spi_handle()
 {
@@ -368,10 +390,10 @@ namespace sys_op::comms_handler
 
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-//                hal::spi_1.initialize(&spi_1_handle, SPI_1_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
-//                hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
-//                hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
-//                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
+                hal::spi_1.initialize(&spi_1_handle, SPI_1_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
+                hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
+                hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
+                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
@@ -383,12 +405,12 @@ namespace sys_op::comms_handler
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
 
-                HAL_TIM_RegisterCallback(get_timer_1_handle(), HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
-                HAL_TIM_RegisterCallback(get_timer_1_handle(), HAL_TIM_IC_CAPTURE_HALF_CB_ID, timer_1_input_capture_zero_crossing_pulse_half_detected_callback);
-
-                HAL_TIM_RegisterCallback(get_timer_10_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_10_output_compare_delay_elapsed_callback);
-                HAL_TIM_RegisterCallback(get_timer_13_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_13_output_compare_delay_elapsed_callback);
-                HAL_TIM_RegisterCallback(get_timer_14_handle(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
+                device::band_heater.initialize(TIMER_1_ID, TIMER_10_ID, TIMER_13_ID, TIMER_14_ID);
+                HAL_TIM_RegisterCallback(device::band_heater.get_zero_crossing_pulse_timer_module(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
+                HAL_TIM_RegisterCallback(device::band_heater.get_zero_crossing_pulse_timer_module(),  HAL_TIM_IC_CAPTURE_HALF_CB_ID, timer_1_input_capture_zero_crossing_pulse_half_detected_callback);
+                HAL_TIM_RegisterCallback(device::band_heater.get_zone_1_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_10_output_compare_delay_elapsed_callback);
+                HAL_TIM_RegisterCallback(device::band_heater.get_zone_2_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_13_output_compare_delay_elapsed_callback);
+                HAL_TIM_RegisterCallback(device::band_heater.get_zone_3_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
 
                 HAL_TIM_Base_Start(get_timer_2_handle());
                 HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
@@ -410,9 +432,9 @@ namespace sys_op::comms_handler
                  }
                 ++uart_counter;
 
-//                hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_1_test_tx_bytes, spi_t_test_bytes_per_tx);
-//                hal::spi_1.process_send_buffer();
-//                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array, nullptr);
+                hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_1_test_tx_bytes, spi_t_test_bytes_per_tx);
+                hal::spi_1.process_send_buffer();
+                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array, nullptr);
 
                 hal::spi_2.receive_inter_task_transaction_request(spi_tx_queue_handle, tx_common_packet);
                 hal::spi_2.process_send_buffer();

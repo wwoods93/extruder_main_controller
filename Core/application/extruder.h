@@ -1,20 +1,20 @@
 /***********************************************************************************************************************
  * Main_Controller
- * device_band_heater.h
+ * application.h
  *
  * wilson
- * 9/17/24
- * 10:39 PM
+ * 10/9/24
+ * 6:59 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_DEVICE_BAND_HEATER_H
-#define MAIN_CONTROLLER_DEVICE_BAND_HEATER_H
+#ifndef MAIN_CONTROLLER_EXTRUDER_H
+#define MAIN_CONTROLLER_EXTRUDER_H
 
 /* c/c++ includes */
-
+#include <cstdint>
 /* stm32 includes */
 
 /* third-party includes */
@@ -32,14 +32,12 @@
 /* layer_n_meta_structure includes */
 
 
+static constexpr uint8_t TEMPERATURE_ZONE_1 = 1U;
+static constexpr uint8_t TEMPERATURE_ZONE_2 = 2U;
+static constexpr uint8_t TEMPERATURE_ZONE_3 = 3U;
 
 
-class device_band_heater
-{
-    public:
-
-    private:
-};
 
 
-#endif //MAIN_CONTROLLER_DEVICE_BAND_HEATER_H
+
+#endif //MAIN_CONTROLLER_EXTRUDER_H

@@ -30,3 +30,15 @@
 
 /* device_serial_monitor header */
 #include "device_serial_monitor.h"
+
+
+uint32_t serial_monitor::initialize(UART_HandleTypeDef arg_uart_module)
+{
+    return 0;
+}
+
+
+uint32_t serial_monitor::print(char arg_output_string)
+{
+    return 0;
+}

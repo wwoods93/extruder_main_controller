@@ -31,6 +31,10 @@
 
 /* layer_n_meta_structure includes */
 
+static constexpr uint8_t TIMER_1_ID = 1U;
+static constexpr uint8_t TIMER_10_ID = 10U;
+static constexpr uint8_t TIMER_13_ID = 13U;
+static constexpr uint8_t TIMER_14_ID = 14U;
 
 static constexpr uint32_t   FREQUENCY_1_KHZ         = 1000U;
 static constexpr uint32_t   FREQUENCY_1_MHZ         = 1000000U;

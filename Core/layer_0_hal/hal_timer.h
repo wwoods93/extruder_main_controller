@@ -1,4 +1,4 @@
-/***********************************************************************************************************************
+ /***********************************************************************************************************************
  * Main_Controller
  * mcu_clock_timers.h
  *
@@ -43,14 +43,6 @@ void MX_TIM7_Init(void);
 void MX_TIM11_Init(void);
 
 void timers_initialize(void);
-
-void us_timer_enable(void);
-void us_timer_disable(void);
-void us_timer_start(void);
-void us_timer_stop(void);
-void us_timer_reset(void);
-uint32_t us_timer_get_count(void);
-void us_delay(uint16_t microseconds);
 
 
 

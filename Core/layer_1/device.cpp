@@ -1,29 +1,26 @@
 /***********************************************************************************************************************
  * Main_Controller
- * application.h
+ * device.cpp
  *
  * wilson
- * 10/9/24
- * 6:59 PM
+ * 10/12/24
+ * 10:49 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_EXTRUDER_H
-#define MAIN_CONTROLLER_EXTRUDER_H
-
 /* c/c++ includes */
-#include <cstdint>
+
 /* stm32 includes */
 
 /* third-party includes */
 
-/* layer_0 includes */
+/* layer_0_hal includes */
 
 /* layer_1_rtosal includes */
 
-/* layer_1 includes */
+/* layer_2_device includes */
 
 /* layer_3_control includes */
 
@@ -31,13 +28,5 @@
 
 /* layer_n_meta_structure includes */
 
-
-static constexpr uint8_t TEMPERATURE_ZONE_1 = 1U;
-static constexpr uint8_t TEMPERATURE_ZONE_2 = 2U;
-static constexpr uint8_t TEMPERATURE_ZONE_3 = 3U;
-
-
-
-
-
-#endif //MAIN_CONTROLLER_EXTRUDER_H
+/* device header */
+#include "device.h"

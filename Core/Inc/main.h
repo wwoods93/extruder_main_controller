@@ -5,10 +5,6 @@
 #ifndef __MAIN_H
 #define __MAIN_H
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 /* Includes ------------------------------------------------------------------*/
 #include "stm32f4xx_hal.h"
 
@@ -31,7 +27,7 @@ extern "C" {
 void HAL_TIM_MspPostInit(TIM_HandleTypeDef *htim);
 
 /* Exported functions prototypes ---------------------------------------------*/
-void Error_Handler(void);
+
 //
 ///* USER CODE BEGIN EFP */
 ///* USER CODE END EFP */
@@ -66,8 +62,5 @@ void Error_Handler(void);
 ///* USER CODE BEGIN Private defines */
 ///* USER CODE END Private defines */
 
-#ifdef __cplusplus
-}
-#endif
 
 #endif /* __MAIN_H */

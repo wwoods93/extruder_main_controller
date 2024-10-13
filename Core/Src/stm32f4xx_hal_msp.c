@@ -55,6 +55,15 @@
 /* USER CODE END ExternalFunctions */
 
 /* USER CODE BEGIN 0 */
+void Error_Handler();
+
+void Error_Handler()
+{
+    __disable_irq();
+    while (1)
+    {
+    }
+}
 
 /* USER CODE END 0 */
 

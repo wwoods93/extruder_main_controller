@@ -12,8 +12,6 @@
 
 #include "stm32f4xx.h"
 
-#include "../layer_0_hal/hal_peripheral.h"
-
 #include "can.h"
 
 //CAN_HandleTypeDef hcan1;

@@ -1,22 +1,22 @@
 /***********************************************************************************************************************
  * Main_Controller
- * application.h
+ * device_serial_monitor.h
  *
  * wilson
- * 10/9/24
- * 6:59 PM
+ * 10/8/24
+ * 12:02 AM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_EXTRUDER_H
-#define MAIN_CONTROLLER_EXTRUDER_H
+#ifndef MAIN_CONTROLLER_DEVICE_SERIAL_MONITOR_H
+#define MAIN_CONTROLLER_DEVICE_SERIAL_MONITOR_H
 
 /* c/c++ includes */
 #include <cstdint>
 /* stm32 includes */
-
+#include "stm32f4xx.h"
 /* third-party includes */
 
 /* layer_0 includes */
@@ -32,12 +32,18 @@
 /* layer_n_meta_structure includes */
 
 
-static constexpr uint8_t TEMPERATURE_ZONE_1 = 1U;
-static constexpr uint8_t TEMPERATURE_ZONE_2 = 2U;
-static constexpr uint8_t TEMPERATURE_ZONE_3 = 3U;
+
+
+class serial_monitor
+{
+    public:
+        uint32_t initialize(UART_HandleTypeDef arg_uart_module);
+        uint32_t print(char arg_output_string);
 
 
 
+    private:
+};
 
 
-#endif //MAIN_CONTROLLER_EXTRUDER_H
+#endif //MAIN_CONTROLLER_DEVICE_SERIAL_MONITOR_H

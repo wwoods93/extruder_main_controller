@@ -16,8 +16,6 @@
 
 #include "stm32f4xx.h"
 
-#include "../layer_0_hal/hal_peripheral.h"
-
 #include "adc.h"
 
 //ADC_HandleTypeDef hadc1;

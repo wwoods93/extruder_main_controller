@@ -10,11 +10,11 @@
  *
  **********************************************************************************************************************/
 
-#include "stm32f4xx.h"
-
-#include "../layer_0_hal/hal_peripheral.h"
-
-#include "quad_spi.h"
+//#include "stm32f4xx.h"
+//
+//#include "../layer_0/hal_peripheral.h"
+//
+//#include "quad_spi.h"
 
 //QSPI_HandleTypeDef hqspi;
 

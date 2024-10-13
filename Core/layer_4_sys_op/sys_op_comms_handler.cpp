@@ -20,24 +20,25 @@
 /* 3rd-party includes */
 #include "cmsis_os2.h"
 /* hal includes */
-#include "../layer_0_hal/hal_general.h"
-#include "../layer_0_hal/hal_callback.h"
-#include "../layer_0_hal/hal_wrapper.h"
-#include "../layer_0_hal/hal_spi.h"
-#include "../layer_0_hal/hal_i2c.h"
-#include "../layer_0_hal/hal_peripheral.h"
-#include "../layer_0_hal/hal_timer.h"
+#include "../layer_0/hal_general.h"
+#include "../layer_0/hal_callback.h"
+#include "../layer_0/hal_wrapper.h"
+#include "../layer_0/hal_spi.h"
+#include "../layer_0/hal_i2c.h"
+#include "../layer_0/hal.h"
+#include "../layer_0/hal_irq.h"
+#include "../layer_0/hal_timer.h"
 #include "system_clock.h"
 #include "gpio.h"
 #include "spi.h"
 /* driver includes */
-#include "../layer_2_device/device_rtd.h"
-#include "../layer_2_device/heating_element.h"
+#include "../layer_1/device_rtd.h"
+#include "../layer_1/band_heater.h"
 /* system includes */
 /* rtos includes */
-#include "../layer_1_rtosal/rtosal_globals.h"
-#include "../layer_1_rtosal/rtosal_wrapper.h"
-#include "../layer_1_rtosal/rtosal.h"
+#include "../layer_0/rtosal_globals.h"
+#include "../layer_0/rtosal_wrapper.h"
+#include "../layer_0/rtosal.h"
 /* system_operation_comms_handler header */
 #include "sys_op_comms_handler.h"
 
@@ -51,78 +52,20 @@ spi::module_t spi_2_handle;
 spi::module_t spi_1_handle;
 i2c::handle_t i2c_2_handle;
 
-namespace hal
-{
-
-    spi spi_1;
-    spi spi_2;
-
-
-    spi* get_spi_1_object()
-    {
-        return &spi_1;
-    }
-
-    spi* get_spi_2_object()
-    {
-        return &spi_2;
-    }
-}
-
 namespace device
 {
-    heating_element band_heater;
-
-    heating_element* get_heating_element_object();
-
+    band_heater zone_1_band_heater;
+    band_heater zone_2_band_heater;
+    band_heater zone_3_band_heater;
 }
-uint32_t timer_14_count = 0U;
-uint32_t timer_14_period = 8300U;
-void MX_TIM10_reinit(TIM_HandleTypeDef *htim);
-void MX_TIM13_reinit(TIM_HandleTypeDef *htim);
-void MX_TIM14_reinit(TIM_HandleTypeDef *htim);
 
 void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
 {
-    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
-//    MX_TIM10_reinit(get_timer_10_handle());
-//    MX_TIM13_reinit(get_timer_13_handle());
-//    MX_TIM14_reinit(get_timer_14_handle());
-    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_1, 1000);
-    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_2, 4500);
-    output_pulse_restart(&device::band_heater, TEMPERATURE_ZONE_3, 1000);
-    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
-    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
-    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
+    device::band_heater::zero_crossing_pulse_restart();
+    output_pulse_restart(&device::zone_1_band_heater, 1000);
+    output_pulse_restart(&device::zone_2_band_heater, 4500);
+    output_pulse_restart(&device::zone_3_band_heater, 800);
 }
-
-void timer_1_input_capture_zero_crossing_pulse_half_detected_callback(TIM_HandleTypeDef *htim)
-{
-//    HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
-//    MX_TIM10_reinit(get_timer_10_handle());
-//    MX_TIM13_reinit(get_timer_13_handle());
-//    MX_TIM14_reinit(get_timer_14_handle());
-//    HAL_TIM_OC_Start_IT(get_timer_10_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_13_handle(), TIM_CHANNEL_1);
-//    HAL_TIM_OC_Start_IT(get_timer_14_handle(), TIM_CHANNEL_1);
-}
-
-void timer_10_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
-{
-
-}
-
-void timer_13_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
-{
-
-}
-
-void timer_14_output_compare_delay_elapsed_callback(TIM_HandleTypeDef *htim)
-{
-
-}
-
-
 
 typedef union
 {
@@ -135,166 +78,6 @@ typedef union
     uint8_t byte[4];
     uint32_t value;
 } converter_uint32_to_bytes_t;
-
-
-
-void TIM1_CC_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(get_timer_1_handle());
-
-}
-
-void TIM1_UP_TIM10_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(get_timer_1_handle());
-    HAL_TIM_IRQHandler(get_timer_10_handle());
-}
-
-void TIM8_UP_TIM13_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(get_timer_13_handle());
-}
-
-void TIM8_TRG_COM_TIM14_IRQHandler(void)
-{
-    HAL_TIM_IRQHandler(get_timer_14_handle());
-}
-
-void SPI1_IRQHandler()
-{
-    spi_irq_handler(hal::get_spi_1_object());
-}
-
-void SPI2_IRQHandler()
-{
-    spi_irq_handler(hal::get_spi_2_object());
-}
-
-void USART2_IRQHandler(void)
-{
-    HAL_UART_IRQHandler(get_usart_2_handle());
-}
-
-void CAN1_TX_IRQHandler(void)
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_RX0_IRQHandler(void)
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_RX1_IRQHandler(void)
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_SCE_IRQHandler(void)
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void I2C1_EV_IRQHandler(void)
-{
-    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
-}
-
-void I2C1_ER_IRQHandler(void)
-{
-    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
-}
-
-void I2C2_EV_IRQHandler(void)
-{
-    HAL_I2C_EV_IRQHandler(get_i2c_2_handle());
-}
-
-void I2C2_ER_IRQHandler(void)
-{
-    HAL_I2C_ER_IRQHandler(get_i2c_2_handle());
-}
-
-
-void MX_TIM10_reinit(TIM_HandleTypeDef *htim)
-{
-    TIM_OC_InitTypeDef sConfigOC = {0};
-
-//    htim->Instance = TIM10;
-//    htim->Init.Prescaler = 64-1;
-//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 8100;
-//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(htim) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 7710;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
-
-void MX_TIM13_reinit(TIM_HandleTypeDef *htim)
-{
-    TIM_OC_InitTypeDef sConfigOC = {0};
-
-//    htim->Instance = TIM13;
-//    htim->Init.Prescaler = 32-1;
-//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = 1000;
-//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(htim) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    sConfigOC.OCMode = TIM_OCMODE_PWM2;
-    sConfigOC.Pulse = 750;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
-
-void MX_TIM14_reinit(TIM_HandleTypeDef *htim)
-{
-    TIM_OC_InitTypeDef sConfigOC = {0};
-    uint32_t period = 7000;
-
-//    htim->Instance = TIM14;
-//    htim->Init.Prescaler = 32-1;
-//    htim->Init.CounterMode = TIM_COUNTERMODE_DOWN;
-    htim->Init.Period = period;
-//    htim->Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-//    htim->Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(htim) != HAL_OK)
-    {
-        Error_Handler();
-    }
-
-    sConfigOC.OCMode = TIM_OCMODE_PWM2;
-//    sConfigOC.Pulse = 0;
-    sConfigOC.Pulse = period - 250;
-    sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
-    sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
-    sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
-    if (HAL_TIM_OC_ConfigChannel(htim, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
 
 
 
@@ -333,6 +116,8 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
     HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1);
 
 }
+
+TIM_HandleTypeDef* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
 
 namespace sys_op::comms_handler
 {
@@ -405,15 +190,14 @@ namespace sys_op::comms_handler
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
 
-                device::band_heater.initialize(TIMER_1_ID, TIMER_10_ID, TIMER_13_ID, TIMER_14_ID);
-                HAL_TIM_RegisterCallback(device::band_heater.get_zero_crossing_pulse_timer_module(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
-                HAL_TIM_RegisterCallback(device::band_heater.get_zero_crossing_pulse_timer_module(),  HAL_TIM_IC_CAPTURE_HALF_CB_ID, timer_1_input_capture_zero_crossing_pulse_half_detected_callback);
-                HAL_TIM_RegisterCallback(device::band_heater.get_zone_1_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_10_output_compare_delay_elapsed_callback);
-                HAL_TIM_RegisterCallback(device::band_heater.get_zone_2_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_13_output_compare_delay_elapsed_callback);
-                HAL_TIM_RegisterCallback(device::band_heater.get_zone_3_output_pulse_timer_module(), HAL_TIM_OC_DELAY_ELAPSED_CB_ID, timer_14_output_compare_delay_elapsed_callback);
+                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID);
+                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID);
+                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID);
+                HAL_TIM_RegisterCallback(get_timer_1_handle(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
+                HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
 
                 HAL_TIM_Base_Start(get_timer_2_handle());
-                HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
+
 
                 HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 
@@ -513,4 +297,81 @@ namespace sys_op::comms_handler
         }
 
     }
+}
+
+void TIM1_CC_IRQHandler()
+{
+    HAL_TIM_IRQHandler(get_timer_1_handle());
+
+}
+
+void TIM1_UP_TIM10_IRQHandler()
+{
+    HAL_TIM_IRQHandler(get_timer_1_handle());
+    HAL_TIM_IRQHandler(get_timer_10_handle());
+}
+
+void TIM8_UP_TIM13_IRQHandler()
+{
+    HAL_TIM_IRQHandler(get_timer_13_handle());
+}
+
+void TIM8_TRG_COM_TIM14_IRQHandler()
+{
+    HAL_TIM_IRQHandler(get_timer_14_handle());
+}
+
+void SPI1_IRQHandler()
+{
+    spi_irq_handler(hal::get_spi_1_object());
+}
+
+void SPI2_IRQHandler()
+{
+    spi_irq_handler(hal::get_spi_2_object());
+}
+
+void USART2_IRQHandler()
+{
+    HAL_UART_IRQHandler(get_usart_2_handle());
+}
+
+void CAN1_TX_IRQHandler()
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_RX0_IRQHandler()
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_RX1_IRQHandler()
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void CAN1_SCE_IRQHandler()
+{
+    HAL_CAN_IRQHandler(get_can_1_handle());
+}
+
+void I2C1_EV_IRQHandler()
+{
+    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
+}
+
+void I2C1_ER_IRQHandler()
+{
+    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
+}
+
+void I2C2_EV_IRQHandler()
+{
+    HAL_I2C_EV_IRQHandler(get_i2c_2_handle());
+}
+
+void I2C2_ER_IRQHandler()
+{
+    HAL_I2C_ER_IRQHandler(get_i2c_2_handle());
 }

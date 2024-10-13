@@ -11,10 +11,25 @@
  **********************************************************************************************************************/
 
 #include <cstdint>
+
+#include "stm32f4xx.h"
+#include "stm32f4xx_it.h"
 #include "cmsis_os2.h"
-#include "../layer_1_rtosal/rtosal_globals.h"
-#include "../layer_1_rtosal/rtosal.h"
-#include "../layer_2_device/device_rtd.h"
+
+#include "../layer_0/hal_timer.h"
+#include "system_clock.h"
+#include "gpio.h"
+
+#include "../layer_0/hal_general.h"
+#include "../layer_0/hal_wrapper.h"
+#include "../layer_0/hal_callback.h"
+#include "../layer_0/hal.h"
+#include "../layer_0/rtosal_globals.h"
+#include "../layer_0/rtosal.h"
+#include "../layer_1/device_rtd.h"
+#include "../layer_1/band_heater.h"
+
+#include "../application/extruder.h"
 #include "sys_op_extrusion_process.h"
 
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
@@ -28,6 +43,10 @@ namespace device
     rtd rtd_zone_1;
     rtd rtd_zone_2;
 
+//    band_heater zone_1_band_heater;
+//    band_heater zone_2_band_heater;
+//    band_heater zone_3_band_heater;
+
     float average_temp_zone_0 = 0;
     float average_temp_zone_1 = 0;
     float average_temp_zone_2 = 0;
@@ -36,6 +55,20 @@ namespace device
     uint8_t value_updated_zone_1 = 0;
     uint8_t value_updated_zone_2 = 0;
 }
+
+//void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
+//{
+//    device::band_heater::zero_crossing_pulse_restart();
+//    output_pulse_restart(&device::zone_1_band_heater, 1000);
+//    output_pulse_restart(&device::zone_2_band_heater, 4500);
+//    output_pulse_restart(&device::zone_3_band_heater, 800);
+//}
+
+//TIM_HandleTypeDef* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
+
+
+
+
 
 namespace sys_op::extrusion
 {
@@ -92,6 +125,12 @@ namespace sys_op::extrusion
                 spi_tx_queue_handle = get_spi_2_extrusion_task_tx_queue_handle();
                 spi_rx_queue_handle = get_spi_2_extrusion_task_rx_queue_handle();
                 i2c_tx_queue_handle = get_i2c_tx_queue_handle();
+
+//                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID);
+//                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID);
+//                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID);
+//                HAL_TIM_RegisterCallback(get_timer_1_handle(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
+//                HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
 
                 device::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
                 device::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);

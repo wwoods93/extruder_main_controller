@@ -22,7 +22,7 @@
 /* third-party includes */
 
 /* hal includes */
-#include "../layer_0_hal/hal_wrapper.h"
+#include "../layer_0/hal_wrapper.h"
 /* driver includes */
 
 /* rtos abstraction includes */

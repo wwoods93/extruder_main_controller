@@ -17,13 +17,13 @@
 /* third-party includes */
 #include "cmsis_os.h"
 #include "cmsis_os2.h"
-/* layer_0_hal includes */
-#include "../layer_0_hal/hal_peripheral.h"
-#include "../layer_0_hal/hal_timer.h"
+/* layer_0 includes */
+#include "../layer_0/hal.h"
+#include "../layer_0/hal_timer.h"
 /* layer_1_rtosal includes */
-#include "../layer_1_rtosal/rtosal_globals.h"
-#include "../layer_1_rtosal/rtosal.h"
-/* layer_2_device includes */
+#include "../layer_0/rtosal_globals.h"
+#include "../layer_0/rtosal.h"
+/* layer_1 includes */
 
 /* layer_3_control includes */
 
@@ -102,7 +102,6 @@ int main()
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
     heartbeat_taskHandle            = osThreadNew(start_heartbeat_task,             nullptr, &heartbeat_task_attributes);
 
-//    rtosal::initializae_spi_common_packet_array();
     osEventFlagsClear(initialization_event_flags_handle, 0xFFFFFFFF);
     osKernelStart();
     while (true);
@@ -216,6 +215,9 @@ osEventFlagsId_t get_initialization_event_flags_handle()
 {
     return initialization_event_flags_handle;
 }
+
+
+
 
 #ifdef  USE_FULL_ASSERT
 /**

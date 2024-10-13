@@ -131,7 +131,6 @@ namespace sys_op::comms_handler
     uint8_t spi_t_test_bytes_per_tx[8] = {4, 0, 0, 0, 0, 0, 0, 0 };
     uint8_t spi_1_test_rx_result_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
     common_packet_t tx_common_packet;
-    common_packet_t rx_common_packet;
 
     common_float_data_t rtd_reading;
     uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
@@ -172,14 +171,14 @@ namespace sys_op::comms_handler
                 hal::spi_1.initialize(&spi_1_handle, SPI_1_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_1.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_1_tx_rx_complete);
                 hal::spi_1.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_1_error);
-                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10);
+                hal::spi_1.create_channel(spi_1_test_channel_id, GPIO_PORT_A, GPIO_PIN_10, nullptr, nullptr);
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
                 hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
-                hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14);
-                hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15);
-                hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1);
+                hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1, spi_tx_queue_handle, spi_rx_queue_handle);
 
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
@@ -212,13 +211,13 @@ namespace sys_op::comms_handler
 
                 hal::spi_1.create_packet_and_add_to_send_buffer(0, 4, spi_1_test_tx_bytes, spi_t_test_bytes_per_tx);
                 hal::spi_1.process_send_buffer();
-                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array, nullptr);
+                hal::spi_1.process_return_buffer(spi_1_test_rx_packet, 0, spi_1_test_rx_result_array);
 
-                hal::spi_2.receive_inter_task_transaction_request(spi_tx_queue_handle, tx_common_packet);
+                hal::spi_2.receive_inter_task_transaction_requests(spi_tx_queue_handle, tx_common_packet);
                 hal::spi_2.process_send_buffer();
-                hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d,spi_rx_queue_handle);
-                hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d,spi_rx_queue_handle);
-                hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d,spi_rx_queue_handle);
+                hal::spi_2.process_return_buffer(spi_rx_packet, 0, rx_d);
+                hal::spi_2.process_return_buffer(spi_rx_packet, 1, rx_d);
+                hal::spi_2.process_return_buffer(spi_rx_packet, 2, rx_d);
 
                 HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
 

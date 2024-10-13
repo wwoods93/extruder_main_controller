@@ -40,7 +40,6 @@ class spi
     public:
 
         #define TX_SIZE_MAX                                         8U
-        static constexpr uint8_t MESSAGE_QUEUE_COUNT_MAX = 8U;
 
         static constexpr uint32_t   FLAG_TIMEOUT                    = 50U;
         static constexpr uint32_t   TRANSACTION_TIMEOUT             = 100U;
@@ -133,6 +132,9 @@ class spi
         {
             int16_t         channel_id;
             chip_select_t   chip_select;
+            rtosal::message_queue_id_t tx_message_queue;
+            rtosal::message_queue_id_t rx_message_queue;
+
         } channel_t;
 
         typedef struct
@@ -183,8 +185,10 @@ class spi
         int16_t                     message_queue_count = 0U;
         uint32_t                    packets_requested_count = 0U;
         uint32_t                    packets_received_count = 0U;
+        uint8_t                     channel_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
-        rtosal::message_queue_id_t message_queue_ids[MESSAGE_QUEUE_COUNT_MAX];
+
+
         std::queue<packet_t>        send_buffer;
         std::queue<packet_t>        pending_buffer;
         std::queue<packet_t>        return_buffer_0;
@@ -208,9 +212,8 @@ class spi
             channel_t channel_7;
         } channel_list;
 
-        void register_intertask_message_queue(rtosal::message_queue_id_t arg_message_queue_id);
         void send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet);
-        void receive_inter_task_transaction_request(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
+        void receive_inter_task_transaction_requests(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
 
 
 
@@ -218,7 +221,7 @@ class spi
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
 
-        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
+        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_id_t arg_tx_message_queue, rtosal::message_queue_id_t arg_rx_message_queue);
         void get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id);
         int16_t assign_next_available_channel_id();
         void process_send_buffer();
@@ -235,7 +238,7 @@ class spi
         void push_pending_packet_to_return_buffer();
         void transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
-        uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX], rtosal::message_queue_id_t arg_message_queue_id);
+        uint8_t process_return_buffer(packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_rx_array)[TX_SIZE_MAX]);
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);

@@ -616,19 +616,23 @@ void spi::close_isr(transaction_t arg_transaction_type)
     }
 }
 
-spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
+spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_id_t arg_tx_message_queue, rtosal::message_queue_id_t arg_rx_message_queue)
 {
     arg_channel_id = ID_INVALID;
 
     int16_t new_channel_id = assign_next_available_channel_id();
 
+
     if (new_channel_id != ID_INVALID)
     {
+        channel_array[new_channel_id] = 1U;
         channel_t new_channel;
         memset(&new_channel, '\0', sizeof(channel_t));
         new_channel.channel_id = new_channel_id;
         new_channel.chip_select.port = arg_chip_select_port;
         new_channel.chip_select.pin = arg_chip_select_pin;
+        new_channel.tx_message_queue = arg_tx_message_queue;
+        new_channel.rx_message_queue = arg_rx_message_queue;
 
         switch (new_channel_id)
         {
@@ -702,7 +706,7 @@ int16_t spi::assign_next_available_channel_id()
 {
     int16_t channel_id = ID_INVALID;
 
-    if (next_available_channel_id <= SPI_USER_CHANNELS_MAX)
+    if (next_available_channel_id <= SPI_CHANNELS_MAX)
     {
         channel_id = next_available_channel_id;
         next_available_channel_id++;
@@ -952,13 +956,14 @@ spi::procedure_status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, uint8_t (&arg_rx_array)[TX_SIZE_MAX], rtosal::message_queue_id_t arg_message_queue_id)
+uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
 {
     uint8_t buffer_accessed = 0U;
+    channel_t channel;
 
     memset(&arg_packet, '\0', sizeof(packet_t));
 
-    switch(arg_channel)
+    switch(arg_channel_id)
     {
         case CHANNEL_0:
         {
@@ -1057,9 +1062,10 @@ uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel, ui
     if (buffer_accessed)
     {
         memcpy(&arg_rx_array, &arg_packet.rx_bytes, sizeof(arg_rx_array));
-        if (arg_message_queue_id != nullptr)
+        get_channel_by_channel_id(channel, arg_channel_id);
+        if (channel.rx_message_queue != nullptr)
         {
-            send_inter_task_transaction_result(arg_message_queue_id, arg_packet);
+            send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
         }
     }
 
@@ -1135,12 +1141,6 @@ uint32_t spi::get_packets_received_count() const
     return packets_received_count;
 }
 
-void spi::register_intertask_message_queue(rtosal::message_queue_id_t arg_message_queue_id)
-{
-    message_queue_ids[message_queue_count] = arg_message_queue_id;
-    ++message_queue_count;
-}
-
 void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet)
 {
     common_packet_t rx_common_packet;
@@ -1155,10 +1155,20 @@ void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_mess
     }
 }
 
-void spi::receive_inter_task_transaction_request(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
+void spi::receive_inter_task_transaction_requests(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
 {
-    if (rtosal::message_queue_receive(arg_message_queue_id, &arg_tx_common_packet, 50) == rtosal::OS_OK)
+    channel_t channel;
+    common_packet_t common_packet;
+    for (uint8_t index = 0U; index < SPI_CHANNELS_MAX; ++index)
     {
-        create_packet_and_add_to_send_buffer(arg_tx_common_packet.channel_id, arg_tx_common_packet.tx_byte_count, arg_tx_common_packet.bytes, arg_tx_common_packet.bytes_per_transaction);
+        if (channel_array[index] == 1U)
+        {
+            get_channel_by_channel_id(channel, index);
+            if (rtosal::message_queue_receive(channel.tx_message_queue, &common_packet, 50) == rtosal::OS_OK)
+            {
+                create_packet_and_add_to_send_buffer(common_packet.channel_id, common_packet.tx_byte_count, common_packet.bytes, common_packet.bytes_per_transaction);
+            }
+        }
     }
+
 }

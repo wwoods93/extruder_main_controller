@@ -24,12 +24,18 @@
 /* layer_1_rtosal includes */
 
 /* layer_2_device includes */
-
+#include "band_heater.h"
 /* layer_3_control includes */
 
 /* layer_4_sys_op includes */
 
 /* layer_n_meta_structure includes */
 
+namespace device
+{
+    extern band_heater zone_1_band_heater;
+    extern band_heater zone_2_band_heater;
+    extern band_heater zone_3_band_heater;
+}
 
 #endif //MAIN_CONTROLLER_DEVICE_H

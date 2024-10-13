@@ -32,6 +32,7 @@
 #include "gpio.h"
 #include "spi.h"
 /* driver includes */
+#include "../layer_1/device.h"
 #include "../layer_1/device_rtd.h"
 #include "../layer_1/band_heater.h"
 /* system includes */
@@ -52,19 +53,12 @@ spi::module_t spi_2_handle;
 spi::module_t spi_1_handle;
 i2c::handle_t i2c_2_handle;
 
-namespace device
-{
-    band_heater zone_1_band_heater;
-    band_heater zone_2_band_heater;
-    band_heater zone_3_band_heater;
-}
-
 void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
 {
     device::band_heater::zero_crossing_pulse_restart();
-    output_pulse_restart(&device::zone_1_band_heater, 1000);
-    output_pulse_restart(&device::zone_2_band_heater, 4500);
-    output_pulse_restart(&device::zone_3_band_heater, 800);
+    output_pulse_restart(&device::zone_1_band_heater);
+    output_pulse_restart(&device::zone_2_band_heater);
+    output_pulse_restart(&device::zone_3_band_heater);
 }
 
 typedef union
@@ -190,9 +184,9 @@ namespace sys_op::comms_handler
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
 
-                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID);
-                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID);
-                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID);
+                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
+                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());
+                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID, get_zone_3_band_heater_mutex_handle());
                 HAL_TIM_RegisterCallback(get_timer_1_handle(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
                 HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
 

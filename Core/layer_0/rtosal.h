@@ -28,7 +28,10 @@
 
 osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle();
 osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle();
-osMessageQueueId_t get_band_heater_queue_handle();
+osMutexId_t get_zone_1_band_heater_mutex_handle();
+osMutexId_t get_zone_2_band_heater_mutex_handle();
+osMutexId_t get_zone_3_band_heater_mutex_handle();
+
 
 typedef struct
 {

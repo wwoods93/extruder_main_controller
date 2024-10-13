@@ -26,6 +26,7 @@
 #include "../layer_0/hal.h"
 #include "../layer_0/rtosal_globals.h"
 #include "../layer_0/rtosal.h"
+#include "../layer_1/device.h"
 #include "../layer_1/device_rtd.h"
 #include "../layer_1/band_heater.h"
 
@@ -144,6 +145,9 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_RUN:
             {
+                device::zone_1_band_heater.set_period(8000);
+                device::zone_2_band_heater.set_period(8000);
+                device::zone_3_band_heater.set_period(8000);
 
                 if (rtosal::get_rtos_kernel_tick_count() - extrusion_process_iteration_tick > 5U /*kernel_tick_frequency_hz*/)
                 {

@@ -21,7 +21,7 @@
 /* layer_1_rtosal includes */
 
 /* layer_2_device includes */
-
+#include "band_heater.h"
 /* layer_3_control includes */
 
 /* layer_4_sys_op includes */
@@ -30,3 +30,10 @@
 
 /* device header */
 #include "device.h"
+
+namespace device
+{
+    band_heater zone_1_band_heater;
+    band_heater zone_2_band_heater;
+    band_heater zone_3_band_heater;
+}

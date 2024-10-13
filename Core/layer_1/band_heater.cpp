@@ -127,9 +127,10 @@ period  image 1     image 2     image 3
 
 namespace device
 {
-    uint32_t band_heater::initialize(uint8_t arg_temperature_zone_id, uint8_t arg_output_pulse_timer_id)
+    uint32_t band_heater::initialize(uint8_t arg_temperature_zone_id, uint8_t arg_output_pulse_timer_id, osMutexId_t arg_mutex_handle)
     {
         output_pulse_timer_id = arg_output_pulse_timer_id;
+        mutex_handle = arg_mutex_handle;
         initialize_output_pulse_timer(output_pulse_timer_id);
 
         return 0;
@@ -166,6 +167,21 @@ namespace device
         return 0;
     }
 
+    uint32_t band_heater::set_period(uint16_t arg_period)
+    {
+        if (osMutexAcquire(mutex_handle, 0) == 0U)
+        {
+            new_period = arg_period;
+            osMutexRelease(mutex_handle);
+        }
+        else
+        {
+            // handle error
+        }
+
+        return 0;
+    }
+
     TIM_HandleTypeDef *band_heater::get_output_pulse_timer_module()
     {
         return output_pulse_timer_module;
@@ -179,11 +195,16 @@ namespace device
         }
     }
 
-    void output_pulse_restart(band_heater *arg_band_heater, uint16_t arg_period)
+    void output_pulse_restart(band_heater *arg_band_heater)
     {
+        if (osMutexAcquire(arg_band_heater->mutex_handle, 0) == 0U)
+        {
+            arg_band_heater->period = arg_band_heater->new_period;
+            osMutexRelease(arg_band_heater->mutex_handle);
+        }
         TIM_OC_InitTypeDef output_compare_init = { 0 };
 
-        arg_band_heater->output_pulse_timer_module->Init.Period = arg_period;
+        arg_band_heater->output_pulse_timer_module->Init.Period = arg_band_heater->period;
 
         if (HAL_TIM_Base_Init(arg_band_heater->output_pulse_timer_module) != HAL_OK)
         {
@@ -191,7 +212,7 @@ namespace device
         }
 
         output_compare_init.OCMode = TIM_OCMODE_PWM2;
-        output_compare_init.Pulse = arg_period - band_heater::OUTPUT_PULSE_WIDTH;
+        output_compare_init.Pulse = arg_band_heater->period - band_heater::OUTPUT_PULSE_WIDTH;
         output_compare_init.OCPolarity = TIM_OCPOLARITY_HIGH;
         output_compare_init.OCIdleState = TIM_OCIDLESTATE_RESET;
         output_compare_init.OCFastMode = TIM_OCFAST_DISABLE;
@@ -204,4 +225,6 @@ namespace device
 
         HAL_TIM_OC_Start_IT(arg_band_heater->output_pulse_timer_module, TIM_CHANNEL_1);
     }
+
+
 }

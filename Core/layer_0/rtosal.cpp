@@ -33,15 +33,23 @@
 
 static uint8_t spi_tx_buffer_mutex_initialized_flag = false;
 
+
+osMutexId_t zone_1_band_heater_mutex_handle;
+osMutexId_t zone_2_band_heater_mutex_handle;
+osMutexId_t zone_3_band_heater_mutex_handle;
+
+
 osMessageQueueId_t spi_2_extrusion_task_tx_queue_handle;
 osMessageQueueId_t spi_2_extrusion_task_rx_queue_handle;
 
-osMessageQueueId_t band_heater_queue_handle;
 
 const osMessageQueueAttr_t spi_2_extrusion_task_tx_queue_attributes = { .name = "spi_2_extrusion_task_tx_queue" };
 const osMessageQueueAttr_t spi_2_extrusion_task_rx_queue_attributes = { .name = "spi_2_extrusion_task_rx_queue" };
-const osMessageQueueAttr_t band_heater_queue_attributes = { .name = "band_heater_queue" };
 
+
+const osMutexAttr_t zone_1_band_heater_mutex_attr = { .name = "zone_1_band_heater_mutex" };
+const osMutexAttr_t zone_2_band_heater_mutex_attr = { .name = "zone_2_band_heater_mutex" };
+const osMutexAttr_t zone_3_band_heater_mutex_attr = { .name = "zone_3_band_heater_mutex" };
 
 osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
 {
@@ -53,9 +61,19 @@ osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle()
     return spi_2_extrusion_task_rx_queue_handle;
 }
 
-osMessageQueueId_t get_band_heater_queue_handle()
+osMutexId_t get_zone_1_band_heater_mutex_handle()
 {
-    return band_heater_queue_handle;
+    return zone_1_band_heater_mutex_handle;
+}
+
+osMutexId_t get_zone_2_band_heater_mutex_handle()
+{
+    return zone_2_band_heater_mutex_handle;
+}
+
+osMutexId_t get_zone_3_band_heater_mutex_handle()
+{
+    return zone_3_band_heater_mutex_handle;
 }
 
 namespace rtosal
@@ -64,6 +82,9 @@ namespace rtosal
     {
         spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
         spi_2_extrusion_task_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_rx_queue_attributes);
+        zone_1_band_heater_mutex_handle = osMutexNew(&zone_1_band_heater_mutex_attr);
+        zone_2_band_heater_mutex_handle = osMutexNew(&zone_2_band_heater_mutex_attr);
+        zone_3_band_heater_mutex_handle = osMutexNew(&zone_3_band_heater_mutex_attr);
     }
 
     #if (USE_CMSIS_OS2 == 1U)

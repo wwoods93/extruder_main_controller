@@ -37,7 +37,7 @@
 
 #define DEVICES_PER_USER_MAX                4U
 
-#define NAME_LENGTH_MAX                     20U
+#define META_STRUCTURE_NAME_LENGTH_MAX                     20U
 #define PIN_NULL                            0xFFFF
 #define ADDRESS_NULL_8_BIT                  0xFF
 
@@ -45,22 +45,22 @@
 #define ID_INVALID (-1)
 #endif
 
-const char default_name[NAME_LENGTH_MAX] = "default_name\0";
+const char default_name[META_STRUCTURE_NAME_LENGTH_MAX] = "default_name\0";
 
-extern char spi_0_name[NAME_LENGTH_MAX];
-extern char i2c_0_name[NAME_LENGTH_MAX];
+extern char spi_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char i2c_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
 
-extern char rtd_0_name[NAME_LENGTH_MAX];
-extern char rtd_1_name[NAME_LENGTH_MAX];
-extern char rtd_2_name[NAME_LENGTH_MAX];
-extern char dcm_0_name[NAME_LENGTH_MAX];
-extern char dcm_1_name[NAME_LENGTH_MAX];
+extern char rtd_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char rtd_1_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char rtd_2_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char dcm_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char dcm_1_name[META_STRUCTURE_NAME_LENGTH_MAX];
 
-extern char rtd_driver_0_name[NAME_LENGTH_MAX];
-extern char rtd_driver_1_name[NAME_LENGTH_MAX];
-extern char rtd_driver_2_name[NAME_LENGTH_MAX];
-extern char dcm_driver_0_name[NAME_LENGTH_MAX];
-extern char dcm_driver_1_name[NAME_LENGTH_MAX];
+extern char rtd_driver_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char rtd_driver_1_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char rtd_driver_2_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char dcm_driver_0_name[META_STRUCTURE_NAME_LENGTH_MAX];
+extern char dcm_driver_1_name[META_STRUCTURE_NAME_LENGTH_MAX];
 
 typedef enum
 {
@@ -95,7 +95,7 @@ typedef enum
 struct resource_config_t
 {
     int16_t resource_id = ID_INVALID;
-    char resource_name[NAME_LENGTH_MAX] = "default_name\0";
+    char resource_name[META_STRUCTURE_NAME_LENGTH_MAX] = "default_name\0";
     resource_t resource_type = RESOURCE_TYPE_NULL;
 };
 
@@ -103,7 +103,7 @@ struct device_config_t
 {
     int16_t device_id = ID_INVALID;
     int16_t channel_id = ID_INVALID;
-    char device_name[NAME_LENGTH_MAX] = "default_name\0";
+    char device_name[META_STRUCTURE_NAME_LENGTH_MAX] = "default_name\0";
     device_t device_type = DEVICE_TYPE_NULL;
     resource_t device_resource_type = RESOURCE_TYPE_NULL;
     uint8_t packet_size = 0U;
@@ -116,7 +116,7 @@ struct device_config_t
 struct user_config_t
 {
     int16_t user_id = ID_INVALID;
-    char user_name[NAME_LENGTH_MAX] = "default_name\0";
+    char user_name[META_STRUCTURE_NAME_LENGTH_MAX] = "default_name\0";
     user_t user_type = USER_TYPE_NULL;
     uint8_t device_count = 0;
     int16_t device_ids[DEVICES_PER_USER_MAX] = { ID_INVALID, ID_INVALID, ID_INVALID, ID_INVALID };

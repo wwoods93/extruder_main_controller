@@ -43,6 +43,7 @@ class spi
 
         static constexpr uint32_t   FLAG_TIMEOUT                    = 50U;
         static constexpr uint32_t   TRANSACTION_TIMEOUT             = 100U;
+        static constexpr uint32_t   PROCESS_SEND_BUFFER_TIMEOUT     = 50U;
         static constexpr uint16_t   FALLBACK_COUNTDOWN              = 1000U;
         static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE        = 0U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR   = 1U;
@@ -183,8 +184,9 @@ class spi
         int16_t                     next_available_channel_id = 0U;
         int16_t                     next_available_packet_id = 0U;
         int16_t                     message_queue_count = 0U;
-        uint32_t                    packets_requested_count = 0U;
-        uint32_t                    packets_received_count = 0U;
+        static uint32_t             packets_requested_count;
+        static uint32_t             packets_received_count;
+        uint32_t                    process_send_buffer_timeout_start;
         uint8_t                     channel_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
 

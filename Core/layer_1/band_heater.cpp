@@ -15,7 +15,7 @@
 /* stm32 includes */
 #include "stm32f4xx.h"
 /* third-party includes */
-
+#include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
 /* layer_0 includes */
 #include "../layer_0/hal_general.h"
 #include "../layer_0/hal.h"
@@ -169,7 +169,7 @@ namespace device
 
     uint32_t band_heater::set_period(uint16_t arg_period)
     {
-        if (osMutexAcquire(mutex_handle, 0) == 0U)
+        if (osMutexAcquire(mutex_handle, 100) == osOK)
         {
             new_period = arg_period;
             osMutexRelease(mutex_handle);
@@ -179,6 +179,16 @@ namespace device
             // handle error
         }
 
+        return 0;
+    }
+
+    uint32_t band_heater::update_period()
+    {
+        if (osMutexAcquire(mutex_handle, 100) == osOK)
+        {
+            period = new_period;
+            osMutexRelease(mutex_handle);
+        }
         return 0;
     }
 
@@ -197,11 +207,6 @@ namespace device
 
     void output_pulse_restart(band_heater *arg_band_heater)
     {
-        if (osMutexAcquire(arg_band_heater->mutex_handle, 0) == 0U)
-        {
-            arg_band_heater->period = arg_band_heater->new_period;
-            osMutexRelease(arg_band_heater->mutex_handle);
-        }
         TIM_OC_InitTypeDef output_compare_init = { 0 };
 
         arg_band_heater->output_pulse_timer_module->Init.Period = arg_band_heater->period;

@@ -31,20 +31,20 @@
 /* meta_structure_system_manager header */
 #include "meta_structure_system_manager.h"
 
-char spi_0_name[NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
-char i2c_0_name[NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
+char spi_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
+char i2c_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";
 
-char rtd_0_name[NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
-char rtd_1_name[NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
-char rtd_2_name[NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
-char dcm_0_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
-char dcm_1_name[NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
+char rtd_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "RTD_ZONE_0        \0";
+char rtd_1_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "RTD_ZONE_1        \0";
+char rtd_2_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "RTD_ZONE_2        \0";
+char dcm_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "DCM_DEVICE_0      \0";
+char dcm_1_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "DCM_DEVICE_1      \0";
 
-char rtd_driver_0_name[NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
-char rtd_driver_1_name[NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
-char rtd_driver_2_name[NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
-char dcm_driver_0_name[NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
-char dcm_driver_1_name[NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
+char rtd_driver_0_name[META_STRUCTURE_NAME_LENGTH_MAX] = "RTD_DRIVER_0      \0";
+char rtd_driver_1_name[META_STRUCTURE_NAME_LENGTH_MAX] = "RTD_DRIVER_1      \0";
+char rtd_driver_2_name[META_STRUCTURE_NAME_LENGTH_MAX] = "RTD_DRIVER_2      \0";
+char dcm_driver_0_name[META_STRUCTURE_NAME_LENGTH_MAX] = "DCM_DRIVER_0      \0";
+char dcm_driver_1_name[META_STRUCTURE_NAME_LENGTH_MAX] = "DCM_DRIVER_1      \0";
 
 namespace meta_structure
 {
@@ -88,7 +88,7 @@ namespace meta_structure
     {
         memset(&_resource_config, '\0', sizeof(resource_config_t));
         _resource_config.resource_id = claim_next_available_resource_id();
-        memcpy(&_resource_config.resource_name, _resource_name, NAME_LENGTH_MAX);
+        memcpy(&_resource_config.resource_name, _resource_name, META_STRUCTURE_NAME_LENGTH_MAX);
         _resource_config.resource_type = _type;
         resource_manifest.push_back(&_resource_config);
         return _resource_config.resource_id;
@@ -98,7 +98,7 @@ namespace meta_structure
     {
         memset(&_device_config, '\0', sizeof(device_config_t));
         _device_config.device_id = claim_next_available_device_id();
-        memcpy(&_device_config.device_name, _device_name, NAME_LENGTH_MAX);
+        memcpy(&_device_config.device_name, _device_name, META_STRUCTURE_NAME_LENGTH_MAX);
         _device_config.device_type = _device_type;
         _device_config.device_resource_type = _device_resource_type;
         _device_config.packet_size = _packet_size;
@@ -114,7 +114,7 @@ namespace meta_structure
     {
         memset(&_user_config, '\0', sizeof (user_config_t));
         _user_config.user_id = claim_next_available_user_id();
-        memcpy(&_user_config.user_name, _user_name, NAME_LENGTH_MAX);
+        memcpy(&_user_config.user_name, _user_name, META_STRUCTURE_NAME_LENGTH_MAX);
         _user_config.user_type = _type;
         _user_config.device_count = _device_count;
         _user_config.device_ids[0] = _device_id_0;

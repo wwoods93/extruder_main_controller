@@ -15,7 +15,7 @@
 
 #include "../layer_0/hal_spi.h"
 #include "../layer_0/hal_i2c.h"
-#include "../layer_1/device_rtd.h"
+#include "../layer_1/rtd.h"
 #include "../layer_1/band_heater.h"
 
 

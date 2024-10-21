@@ -35,6 +35,10 @@
 #include "hal_spi.h"
 
 
+uint32_t spi::packets_requested_count = 0U;
+uint32_t spi::packets_received_count = 0U;
+
+
 spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
@@ -90,9 +94,6 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
     module->settings.crc_polynomial = 0U;
 
-//    hal::gpio_write_pin(GPIO_PORT_B, PIN_14, (GPIO_PinState) CHIP_SELECT_RESET);
-//    hal::gpio_write_pin(GPIO_PORT_B, PIN_15, (GPIO_PinState) CHIP_SELECT_RESET);
-//    hal::gpio_write_pin(GPIO_PORT_B, PIN_1,  (GPIO_PinState) CHIP_SELECT_RESET);
     hal::gpio_write_pin(GPIO_PORT_A, PIN_10,  (GPIO_PinState) CHIP_SELECT_RESET);
     if (module == nullptr)                                                              { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
@@ -154,8 +155,6 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
                 break;
             }
         }
-
-
     }
 
     module->status = MODULE_STATUS_BUSY;
@@ -709,7 +708,7 @@ int16_t spi::assign_next_available_channel_id()
     if (next_available_channel_id <= SPI_CHANNELS_MAX)
     {
         channel_id = next_available_channel_id;
-        next_available_channel_id++;
+        ++next_available_channel_id;
     }
 
     return channel_id;
@@ -730,7 +729,7 @@ spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(int16_t arg_ch
     packet.chip_select.port = channel.chip_select.port;
     packet.chip_select.pin = channel.chip_select.pin;
     send_buffer_push(packet);
-    ++packets_requested_count;
+
 
     return PROCEDURE_STATUS_OK;
 }
@@ -963,109 +962,116 @@ uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel_id,
 
     memset(&arg_packet, '\0', sizeof(packet_t));
 
-    switch(arg_channel_id)
+    for (int16_t index = 0U; index < next_available_channel_id; ++index)
     {
-        case CHANNEL_0:
+        if (channel_array[index] == 1U)
         {
-            if (!return_buffer_0.empty())
+            switch (index)
             {
-                memcpy(&arg_packet, &return_buffer_0.front(), sizeof(packet_t));
-                return_buffer_0.pop();
-                buffer_accessed = 1U;
+                case CHANNEL_0:
+                {
+                    if (!return_buffer_0.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_0.front(), sizeof(packet_t));
+                        return_buffer_0.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_1:
+                {
+                    if (!return_buffer_1.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_1.front(), sizeof(packet_t));
+                        return_buffer_1.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_2:
+                {
+                    if (!return_buffer_2.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_2.front(), sizeof(packet_t));
+                        return_buffer_2.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_3:
+                {
+                    if (!return_buffer_3.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_3.front(), sizeof(packet_t));
+                        return_buffer_3.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_4:
+                {
+                    if (!return_buffer_4.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_4.front(), sizeof(packet_t));
+                        return_buffer_4.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_5:
+                {
+                    if (!return_buffer_5.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_5.front(), sizeof(packet_t));
+                        return_buffer_5.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_6:
+                {
+                    if (!return_buffer_6.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_6.front(), sizeof(packet_t));
+                        return_buffer_6.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                case CHANNEL_7:
+                {
+                    if (!return_buffer_7.empty())
+                    {
+                        memcpy(&arg_packet, &return_buffer_7.front(), sizeof(packet_t));
+                        return_buffer_7.pop();
+                        buffer_accessed = 1U;
+                    }
+
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
             }
 
-            break;
-        }
-        case CHANNEL_1:
-        {
-            if (!return_buffer_1.empty())
+            if (buffer_accessed)
             {
-                memcpy(&arg_packet, &return_buffer_1.front(), sizeof(packet_t));
-                return_buffer_1.pop();
-                buffer_accessed = 1U;
+                ++packets_received_count;
+                get_channel_by_channel_id(channel, index);
+//                if (channel.rx_message_queue != nullptr)
+//                {
+                    send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
+//                }
+                buffer_accessed = 0U;
             }
-
-            break;
-        }
-        case CHANNEL_2:
-        {
-            if (!return_buffer_2.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_2.front(), sizeof(packet_t));
-                return_buffer_2.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        case CHANNEL_3:
-        {
-            if (!return_buffer_3.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_3.front(), sizeof(packet_t));
-                return_buffer_3.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        case CHANNEL_4:
-        {
-            if (!return_buffer_4.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_4.front(), sizeof(packet_t));
-                return_buffer_4.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        case CHANNEL_5:
-        {
-            if (!return_buffer_5.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_5.front(), sizeof(packet_t));
-                return_buffer_5.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        case CHANNEL_6:
-        {
-            if (!return_buffer_6.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_6.front(), sizeof(packet_t));
-                return_buffer_6.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        case CHANNEL_7:
-        {
-            if (!return_buffer_7.empty())
-            {
-                memcpy(&arg_packet, &return_buffer_7.front(), sizeof(packet_t));
-                return_buffer_7.pop();
-                buffer_accessed = 1U;
-            }
-
-            break;
-        }
-        default:
-        {
-            break;
-        }
-    }
-
-    if (buffer_accessed)
-    {
-        memcpy(&arg_rx_array, &arg_packet.rx_bytes, sizeof(arg_rx_array));
-        get_channel_by_channel_id(channel, arg_channel_id);
-        if (channel.rx_message_queue != nullptr)
-        {
-            send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
         }
     }
 
@@ -1074,8 +1080,10 @@ uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel_id,
 
 void spi::process_send_buffer()
 {
-    if (!send_buffer.empty())
+    process_send_buffer_timeout_start = osKernelGetTickCount();
+    while (!send_buffer.empty() && osKernelGetTickCount() - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
     {
+        ++packets_requested_count;
         set_active_packet_from_send_buffer();
 
         module->chip_select.port = active_packet.chip_select.port;
@@ -1099,7 +1107,7 @@ void spi::process_send_buffer()
             }
         }
 
-        ++packets_received_count;
+
         send_buffer_pop();
 
         push_active_packet_to_return_buffer();
@@ -1164,7 +1172,7 @@ void spi::receive_inter_task_transaction_requests(rtosal::message_queue_id_t arg
         if (channel_array[index] == 1U)
         {
             get_channel_by_channel_id(channel, index);
-            if (rtosal::message_queue_receive(channel.tx_message_queue, &common_packet, 50) == rtosal::OS_OK)
+            if (rtosal::message_queue_receive(channel.tx_message_queue, &common_packet, 10U) == rtosal::OS_OK)
             {
                 create_packet_and_add_to_send_buffer(common_packet.channel_id, common_packet.tx_byte_count, common_packet.bytes, common_packet.bytes_per_transaction);
             }

@@ -9,8 +9,8 @@
  * Description:
  *
  **********************************************************************************************************************/
-#ifndef MAIN_CONTROLLER_DEVICE_RTD_H
-#define MAIN_CONTROLLER_DEVICE_RTD_H
+#ifndef MAIN_CONTROLLER_RTD_H
+#define MAIN_CONTROLLER_RTD_H
 
 #include <cstdint>
 #include "stm32f4xx.h"
@@ -172,7 +172,7 @@ class rtd : public user
 
         float temperature_celsius_current_reading = 0;
         float temperature_celsius_moving_average = 1;
-        uint8_t moving_average_sample_count = 5;
+        uint8_t moving_average_sample_count = 50U;
 
         double rtd_resistance_scaled_and_rounded{};
         sensor_state_t sensor_state = SENSOR_INITIALIZE;
@@ -223,4 +223,4 @@ class rtd : public user
 
 
 
-#endif //MAIN_CONTROLLER_DEVICE_RTD_H
+#endif //MAIN_CONTROLLER_RTD_H

@@ -18,7 +18,7 @@
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_timer.h"
 #include "../layer_0/hal_spi.h"
-#include "device_rtd.h"
+#include "rtd.h"
 #include "../layer_0/rtosal.h"
 #include "../layer_0/hal_callback.h"
 #include "../meta_structure/meta_structure_system_manager.h"
@@ -83,9 +83,10 @@ void rtd::start_read_requests()
 uint8_t rtd::send_request_if_flag_set(common_packet_t& _packet)
 {
     uint8_t new_request = 0U;
-    memset(&_packet, '\0', sizeof(_packet));
+
     if (send_new_request == 1U)
     {
+        memset(&_packet, '\0', sizeof(_packet));
         rtosal::build_common_packet(_packet, channel_id, complete_tx, bytes_per_tx);
 
         new_request = 1U;

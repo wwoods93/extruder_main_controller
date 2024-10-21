@@ -50,12 +50,8 @@ osEventFlagsId_t initialization_event_flags_handle;
 osMessageQueueId_t initialization_task_queue_handle;
 const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "initialization_task_queue" };
 
-//osMessageQueueId_t spi_tx_queue_handle;
-//osMessageQueueId_t spi_rx_queue_handle;
-osMessageQueueId_t i2c_tx_queue_handle;
-//const osMessageQueueAttr_t spi_tx_queue_attributes = { .name = "extrusion_task_spi_tx_queue" };
-//const osMessageQueueAttr_t spi_rx_queue_attributes = { .name = "extrusion_task_spi_rx_queue" };
-const osMessageQueueAttr_t i2c_tx_queue_attributes = { .name = "touchscreen_i2c_tx_queue" };
+
+
 
 
 osThreadId_t initialization_taskHandle;
@@ -66,9 +62,9 @@ osThreadId_t spooling_process_taskHandle;
 osThreadId_t heartbeat_taskHandle;
 
 const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityAboveNormal2, };
 const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityAboveNormal1, };
 const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t heartbeat_task_attributes      = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 
@@ -89,11 +85,10 @@ int main()
 
     initialization_event_flags_handle = osEventFlagsNew(&initialization_event_flags_attributes);
 
-    rtosal::rtosal_initializa();
+    rtosal::rtosal_initialize();
     initialization_task_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &initialization_task_queue_attributes);
 
 
-    i2c_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &i2c_tx_queue_attributes);
 
     initialization_taskHandle       = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
     comms_handler_taskHandle        = osThreadNew(start_comms_handler_task,         nullptr, &comms_handler_task_attributes);
@@ -206,10 +201,7 @@ osMessageQueueId_t get_initialization_task_queue_handle()
 //    return spi_rx_queue_handle;
 //}
 
-osMessageQueueId_t get_i2c_tx_queue_handle()
-{
-    return i2c_tx_queue_handle;
-}
+
 
 osEventFlagsId_t get_initialization_event_flags_handle()
 {

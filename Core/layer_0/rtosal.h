@@ -28,9 +28,12 @@
 
 osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle();
 osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle();
+osMessageQueueId_t get_comms_handler_output_data_queue_handle();
+osMessageQueueId_t get_serial_monitor_usart_queue_handle();
 osMutexId_t get_zone_1_band_heater_mutex_handle();
 osMutexId_t get_zone_2_band_heater_mutex_handle();
 osMutexId_t get_zone_3_band_heater_mutex_handle();
+osMutexId_t get_serial_monitor_usart_mutex_handle();
 
 
 typedef struct
@@ -59,7 +62,7 @@ namespace rtosal
 
     } message_queue_t;
 
-    void rtosal_initializa();
+    void rtosal_initialize();
     uint32_t get_rtos_kernel_tick_count();
     uint32_t get_rtos_kernel_tick_frequency();
 

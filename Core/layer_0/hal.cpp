@@ -44,11 +44,10 @@ SPI_HandleTypeDef hspi1;
 RTC_HandleTypeDef hrtc;
 TIM_HandleTypeDef htim1;
 TIM_HandleTypeDef htim2;
+TIM_HandleTypeDef htim6;
 TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim13;
 TIM_HandleTypeDef htim14;
-
-
 
 namespace hal
 {
@@ -85,7 +84,12 @@ TIM_HandleTypeDef* get_timer_1_handle()
 
 TIM_HandleTypeDef* get_timer_2_handle()
 {
-    return &htim1;
+    return &htim2;
+}
+
+TIM_HandleTypeDef* get_timer_6_handle()
+{
+    return &htim6;
 }
 
 TIM_HandleTypeDef* get_timer_10_handle()
@@ -153,6 +157,7 @@ void initialize_peripherals()
     MX_GPIO_Init();
     MX_RTC_Init();
     MX_TIM1_Init();
+//    MX_TIM2_Init();
     MX_TIM6_Init();
     MX_TIM7_Init();
     MX_TIM10_Init();
@@ -453,6 +458,27 @@ void MX_TIM2_Init()
 
     /* USER CODE END TIM2_Init 2 */
 
+}
+
+void MX_TIM6_Init()
+{
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    htim6.Instance = TIM6;
+    htim6.Init.Prescaler = 32000 - 1;
+    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim6.Init.Period = 65535;
+    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 void MX_TIM10_Init()

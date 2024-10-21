@@ -22,6 +22,7 @@
 
 /* layer_2_device includes */
 #include "band_heater.h"
+#include "serial_monitor.h"
 /* layer_3_control includes */
 
 /* layer_4_sys_op includes */
@@ -36,4 +37,7 @@ namespace device
     band_heater zone_1_band_heater;
     band_heater zone_2_band_heater;
     band_heater zone_3_band_heater;
+
+    serial_monitor debug_serial_monitor;
+
 }

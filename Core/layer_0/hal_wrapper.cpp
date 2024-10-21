@@ -90,10 +90,10 @@ namespace hal
         }
         else
         {
-            sprintf(minutes_str, "%d", seconds);
+            sprintf(seconds_str, "%d", seconds);
         }
 
-        sprintf(arg_time_stamp_string, "%s%s%s%s%s", hours_str, colon, minutes_str, colon, seconds_str);
+        sprintf(arg_time_stamp_string, "%s:%s:%s", hours_str, minutes_str, seconds_str);
     }
 
     void spi_1_msp_initialize()

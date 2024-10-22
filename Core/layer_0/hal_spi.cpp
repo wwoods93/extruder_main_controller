@@ -955,7 +955,7 @@ spi::procedure_status_t spi::reset_active_packet()
 }
 
 
-uint8_t spi::process_return_buffer(packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
+uint8_t spi::process_return_buffers(packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_rx_array)[TX_SIZE_MAX])
 {
     uint8_t buffer_accessed = 0U;
     channel_t channel;

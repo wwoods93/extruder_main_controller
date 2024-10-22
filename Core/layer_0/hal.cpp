@@ -52,14 +52,8 @@ TIM_HandleTypeDef htim14;
 namespace hal
 {
 
-    spi spi_1;
     spi spi_2;
 
-
-    spi* get_spi_1_object()
-    {
-        return &spi_1;
-    }
 
     spi* get_spi_2_object()
     {

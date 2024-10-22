@@ -35,10 +35,8 @@
 
 namespace hal
 {
-    extern spi spi_1;
     extern spi spi_2;
 
-    spi* get_spi_1_object();
     spi* get_spi_2_object();
 }
 

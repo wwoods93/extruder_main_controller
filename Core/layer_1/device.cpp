@@ -21,6 +21,7 @@
 /* layer_1_rtosal includes */
 
 /* layer_2_device includes */
+#include "rtd.h"
 #include "band_heater.h"
 #include "serial_monitor.h"
 /* layer_3_control includes */
@@ -34,6 +35,10 @@
 
 namespace device
 {
+    rtd rtd_zone_0;
+    rtd rtd_zone_1;
+    rtd rtd_zone_2;
+
     band_heater zone_1_band_heater;
     band_heater zone_2_band_heater;
     band_heater zone_3_band_heater;

@@ -39,38 +39,6 @@
 #define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
 #define EXTRUSION_PROCESS_STATE_RUN                                 3
 
-namespace device
-{
-    rtd rtd_zone_0;
-    rtd rtd_zone_1;
-    rtd rtd_zone_2;
-
-//    band_heater zone_1_band_heater;
-//    band_heater zone_2_band_heater;
-//    band_heater zone_3_band_heater;
-
-    float average_temp_zone_0 = 0;
-    float average_temp_zone_1 = 0;
-    float average_temp_zone_2 = 0;
-
-    uint8_t value_updated_zone_0 = 0;
-    uint8_t value_updated_zone_1 = 0;
-    uint8_t value_updated_zone_2 = 0;
-}
-
-//void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
-//{
-//    device::band_heater::zero_crossing_pulse_restart();
-//    output_pulse_restart(&device::zone_1_band_heater, 1000);
-//    output_pulse_restart(&device::zone_2_band_heater, 4500);
-//    output_pulse_restart(&device::zone_3_band_heater, 800);
-//}
-
-//TIM_HandleTypeDef* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
-
-
-
-
 
 namespace sys_op::extrusion
 {
@@ -131,10 +99,10 @@ namespace sys_op::extrusion
                 MX_TIM6_Init();
                 HAL_TIM_Base_Start(get_timer_6_handle());
 
-
                 device::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
                 device::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
                 device::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 2);
+
                 device::rtd_zone_0.start_read_requests();
                 device::rtd_zone_1.start_read_requests();
                 device::rtd_zone_2.start_read_requests();
@@ -148,7 +116,7 @@ namespace sys_op::extrusion
                 device::zone_2_band_heater.set_period(8000);
                 device::zone_3_band_heater.set_period(8000);
 
-                if (get_timer_6_handle()->Instance->CNT - extrusion_process_iteration_tick > 250U /*kernel_tick_frequency_hz*/)
+                if (get_timer_6_handle()->Instance->CNT - extrusion_process_iteration_tick > 500U)
                 {
                     device::rtd_zone_0.handle_sensor_state();
                     device::rtd_zone_1.handle_sensor_state();
@@ -215,7 +183,7 @@ namespace sys_op::extrusion
 
                     }
 
-                    if (osMessageQueuePut(comms_handler_output_data_queue_handle, &rtd_reading, 0, 0U) == osOK)
+                    if (osMessageQueuePut(comms_handler_output_data_queue_handle, &rtd_reading, 0, 50U) == osOK)
                     {
                         ++success_counter;
                     }

@@ -34,7 +34,7 @@
 #include "serial_monitor.h"
 
 
-uint32_t serial_monitor::initialize(UART_HandleTypeDef* arg_usart_module, rtosal::message_queue_id_t arg_message_queue_handle)
+uint32_t serial_monitor::initialize(UART_HandleTypeDef* arg_usart_module, rtosal::message_queue_handle_t arg_message_queue_handle)
 {
 
     usart_module = arg_usart_module;

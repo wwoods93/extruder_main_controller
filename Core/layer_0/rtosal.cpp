@@ -131,15 +131,6 @@ namespace rtosal
     #endif
 
 
-    void set_spi_tx_buffer_mutex_initialized_flag(uint8_t _flag)
-    {
-        spi_tx_buffer_mutex_initialized_flag = _flag;
-    }
-
-    uint8_t get_spi_tx_buffer_mutex_initialized_flag()
-    {
-        return spi_tx_buffer_mutex_initialized_flag;
-    }
 
 
 

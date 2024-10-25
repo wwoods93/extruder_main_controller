@@ -94,7 +94,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
     module->settings.crc_polynomial = 0U;
 
-    hal::gpio_write_pin(GPIO_PORT_A, PIN_10,  (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(PORT_A, PIN_10, (GPIO_PinState) CHIP_SELECT_RESET);
     if (module == nullptr)                                                              { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
         && module->instance != SPI_3 && module->instance != SPI_4)                      { status = PROCEDURE_STATUS_ERROR; }
@@ -615,7 +615,7 @@ void spi::close_isr(transaction_t arg_transaction_type)
     }
 }
 
-spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_id_t arg_tx_message_queue, rtosal::message_queue_id_t arg_rx_message_queue)
+spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_handle_t arg_tx_message_queue, rtosal::message_queue_handle_t arg_rx_message_queue)
 {
     arg_channel_id = ID_INVALID;
 
@@ -1149,7 +1149,7 @@ uint32_t spi::get_packets_received_count() const
     return packets_received_count;
 }
 
-void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet)
+void spi::send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet)
 {
     common_packet_t rx_common_packet;
     rtosal::build_common_packet(rx_common_packet, arg_packet.channel_id, arg_packet.rx_bytes, arg_packet.bytes_per_transaction);
@@ -1163,7 +1163,7 @@ void spi::send_inter_task_transaction_result(rtosal::message_queue_id_t arg_mess
     }
 }
 
-void spi::receive_inter_task_transaction_requests(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
+void spi::receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
 {
     channel_t channel;
     common_packet_t common_packet;

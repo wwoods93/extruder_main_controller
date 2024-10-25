@@ -57,18 +57,18 @@ class system_io_manager
         {
             int16_t id;
             char name[DEVICE_NAME_LENGTH_MAX];
-            rtosal::message_queue_id_t tx_buffer_handle;
+            rtosal::message_queue_handle_t tx_buffer_handle;
         } device_t;
 
 
-        uint32_t initialize(rtosal::message_queue_id_t arg_intertask_buffer_queue_handle);
-        uint32_t add_device(rtosal::message_queue_id_t arg_device_tx_buffer_queue_handle);
+        uint32_t initialize(rtosal::message_queue_handle_t arg_intertask_buffer_queue_handle);
+        uint32_t add_device(rtosal::message_queue_handle_t arg_device_tx_buffer_queue_handle);
         uint32_t process_device_tx_buffers();
 
 
 
     private:
-        rtosal::message_queue_id_t intertask_buffer_queue_handle;
+        rtosal::message_queue_handle_t intertask_buffer_queue_handle;
 
         int16_t next_available_device_id = 0U;
         device_t device_0;

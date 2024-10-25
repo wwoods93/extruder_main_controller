@@ -38,27 +38,15 @@ typedef enum
     BIT_SET = 0x01
 } bit_status_t;
 
-typedef enum
-{
-    PORT_A      = 0x00,
-    PORT_B      = 0x01,
-    PORT_C      = 0x02,
-    PORT_D      = 0x03,
-    PORT_E      = 0x04,
-    PORT_F      = 0x05,
-    PORT_G      = 0x06,
-    PORT_H      = 0x07,
-    PORT_NULL   = 0xFF,
-} port_name_t;
 
-#define GPIO_PORT_A (hal::gpio_t*)GPIOA
-#define GPIO_PORT_B (hal::gpio_t*)GPIOB
-#define GPIO_PORT_C (hal::gpio_t*)GPIOC
-#define GPIO_PORT_D (hal::gpio_t*)GPIOD
-#define GPIO_PORT_E (hal::gpio_t*)GPIOE
-#define GPIO_PORT_F (hal::gpio_t*)GPIOF
-#define GPIO_PORT_G (hal::gpio_t*)GPIOG
-#define GPIO_PORT_H (hal::gpio_t*)GPIOH
+#define PORT_A (hal::gpio_t*)GPIOA
+#define PORT_B (hal::gpio_t*)GPIOB
+#define PORT_C (hal::gpio_t*)GPIOC
+#define PORT_D (hal::gpio_t*)GPIOD
+#define PORT_E (hal::gpio_t*)GPIOE
+#define PORT_F (hal::gpio_t*)GPIOF
+#define PORT_G (hal::gpio_t*)GPIOG
+#define PORT_H (hal::gpio_t*)GPIOH
 
 #define PIN_0 GPIO_PIN_0
 #define PIN_1 GPIO_PIN_1
@@ -81,10 +69,16 @@ typedef enum
 
 namespace hal
 {
+    // gpio
     typedef GPIO_TypeDef gpio_t;
     void gpio_write_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin, uint8_t arg_pin_state);
     uint8_t gpio_read_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin);
+    void gpio_toggle_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin);
+
+    // rtc
     void rtc_get_time_stamp(char arg_time_stamp_string[9]);
+
+    // spi
     void spi_1_msp_initialize();
     void spi_2_msp_initialize();
 }

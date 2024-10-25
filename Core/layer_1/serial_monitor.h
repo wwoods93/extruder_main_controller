@@ -48,7 +48,7 @@ class serial_monitor
             char message[MESSAGE_LENGTH_MAX];
         } packet_t;
 
-        uint32_t initialize(UART_HandleTypeDef* arg_usart_module, rtosal::message_queue_id_t arg_message_queue_handle);
+        uint32_t initialize(UART_HandleTypeDef* arg_usart_module, rtosal::message_queue_handle_t arg_message_queue_handle);
         uint32_t print(const char* arg_output_string);
         uint32_t process_send_buffer();
 
@@ -59,8 +59,8 @@ class serial_monitor
         char message[MESSAGE_LENGTH_MAX];
         char time_stamp[9] = "";
         UART_HandleTypeDef* usart_module;
-        rtosal::message_queue_id_t usart_message_queue_send_handle;
-        rtosal::message_queue_id_t usart_message_queue_receive_handle;
+        rtosal::message_queue_handle_t usart_message_queue_send_handle;
+        rtosal::message_queue_handle_t usart_message_queue_receive_handle;
 };
 
 

@@ -28,22 +28,22 @@ namespace sys_op::initialization
     osEventFlagsId_t initialization_event_flags_handle = nullptr;
     osMessageQueueId_t initialization_messaging_queue_handle = nullptr;
 
-    resource_config_t   RESOURCE_SPI_2;
-    resource_config_t   I2C_0;
+//    resource_config_t   RESOURCE_SPI_2;
+//    resource_config_t   I2C_0;
+//
+//    device_config_t     RTD_0;
+//    device_config_t     RTD_1;
+//    device_config_t     RTD_2;
+//    device_config_t     DCM_0;
+//    device_config_t     DCM_1;
+//
+//    user_config_t       RTD_DRIVER_0;
+//    user_config_t       RTD_DRIVER_1;
+//    user_config_t       RTD_DRIVER_2;
+//    user_config_t       DCM_DRIVER_0;
+//    user_config_t       DCM_DRIVER_1;
 
-    device_config_t     RTD_0;
-    device_config_t     RTD_1;
-    device_config_t     RTD_2;
-    device_config_t     DCM_0;
-    device_config_t     DCM_1;
-
-    user_config_t       RTD_DRIVER_0;
-    user_config_t       RTD_DRIVER_1;
-    user_config_t       RTD_DRIVER_2;
-    user_config_t       DCM_DRIVER_0;
-    user_config_t       DCM_DRIVER_1;
-
-    device_config_t null_device;
+//    device_config_t null_device;
 
 //    char spi_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "SPI_RESOURCE_0    \0";
 //    char i2c_0_name[META_STRUCTURE_NAME_LENGTH_MAX]        = "I2C_RESOURCE_0    \0";

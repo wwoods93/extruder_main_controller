@@ -42,16 +42,15 @@
 
 namespace sys_op::extrusion
 {
-    osEventFlagsId_t initialization_event_flags_handle = nullptr;
-    osMessageQueueId_t spi_tx_queue_handle = nullptr;
-    osMessageQueueId_t spi_rx_queue_handle = nullptr;
-    osMessageQueueId_t comms_handler_output_data_queue_handle = nullptr;
+    rtosal::event_flag_handle_t initialization_event_flags_handle = nullptr;
+    rtosal::message_queue_handle_t spi_tx_queue_handle = nullptr;
+    rtosal::message_queue_handle_t spi_rx_queue_handle = nullptr;
+    rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
 
+    // TODO: rename
     static uint32_t extrusion_process_iteration_tick;
-    uint32_t kernel_tick_frequency_hz;
 
-    static uint8_t packet_added = false;
-    static uint8_t rx_buffer_accessed = 0U;
+    // TODO: get rid of this
     static uint16_t success_counter = 0;
 
     common_packet_t tx_common_packet;
@@ -79,14 +78,13 @@ namespace sys_op::extrusion
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
 
                 extrusion_process_iteration_tick = 0U;
-                kernel_tick_frequency_hz = rtosal::get_rtos_kernel_tick_frequency() * 2;
 
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION;
                 break;
             }
             case EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION:
             {
-                osEventFlagsWait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, osFlagsWaitAny, osWaitForever);
+                rtosal::event_flag_wait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, rtosal::OS_FLAGS_ANY, rtosal::OS_WAIT_FOREVER);
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_CONFIGURE_USERS;
                 break;
             }
@@ -96,13 +94,16 @@ namespace sys_op::extrusion
                 spi_rx_queue_handle = get_spi_2_extrusion_task_rx_queue_handle();
                 comms_handler_output_data_queue_handle = get_comms_handler_output_data_queue_handle();
 
+                // TODO: wrap / rename
                 MX_TIM6_Init();
+                // TODO: create wrapper
                 HAL_TIM_Base_Start(get_timer_6_handle());
 
                 device::rtd_zone_0.initialize(rtd::READ_RATE_10_HZ, 0);
                 device::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 1);
                 device::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 2);
 
+                // TODO: figure out this and handle_sensor_state()
                 device::rtd_zone_0.start_read_requests();
                 device::rtd_zone_1.start_read_requests();
                 device::rtd_zone_2.start_read_requests();
@@ -116,8 +117,10 @@ namespace sys_op::extrusion
                 device::zone_2_band_heater.set_period(8000);
                 device::zone_3_band_heater.set_period(8000);
 
+                // TODO: wrap Instance->CNT
                 if (get_timer_6_handle()->Instance->CNT - extrusion_process_iteration_tick > 500U)
                 {
+                    // TODO: figure out this and start_read_requests()
                     device::rtd_zone_0.handle_sensor_state();
                     device::rtd_zone_1.handle_sensor_state();
                     device::rtd_zone_2.handle_sensor_state();
@@ -126,7 +129,7 @@ namespace sys_op::extrusion
 
                 if (device::rtd_zone_0.send_request_if_flag_set(tx_common_packet))
                 {
-                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    if (rtosal::message_queue_send(spi_tx_queue_handle, &tx_common_packet, 0U) == rtosal::OS_OK)
                     {
                         ++success_counter;
                     }
@@ -135,7 +138,7 @@ namespace sys_op::extrusion
 
                 if (device::rtd_zone_1.send_request_if_flag_set(tx_common_packet))
                 {
-                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    if (rtosal::message_queue_send(spi_tx_queue_handle, &tx_common_packet, 0U) == rtosal::OS_OK)
                     {
                         ++success_counter;
                     }
@@ -143,16 +146,16 @@ namespace sys_op::extrusion
                 }
                 if (device::rtd_zone_2.send_request_if_flag_set(tx_common_packet))
                 {
-                    if (osMessageQueuePut(spi_tx_queue_handle, &tx_common_packet, 0, 0U) == osOK)
+                    if (rtosal::message_queue_send(spi_tx_queue_handle, &tx_common_packet, 0U) == rtosal::OS_OK)
                     {
                         ++success_counter;
                     }
                     device::rtd_zone_2.clear_send_new_request_flag();
                 }
 
-                rx_buffer_accessed = 0U;
+                // TODO: make this cleaner
                 uint8_t count = 0U;
-                while (osMessageQueueGet( spi_rx_queue_handle, &rx_common_packet, nullptr, 50U) == osOK && count < 3)
+                while (rtosal::message_queue_receive( spi_rx_queue_handle, &rx_common_packet, 50U) == rtosal::OS_OK && count < 3)
                 {
                     rtd_reading.id = rx_common_packet.channel_id;
 
@@ -183,12 +186,11 @@ namespace sys_op::extrusion
 
                     }
 
-                    if (osMessageQueuePut(comms_handler_output_data_queue_handle, &rtd_reading, 0, 50U) == osOK)
+                    if (rtosal::message_queue_send(comms_handler_output_data_queue_handle, &rtd_reading, 50U) == rtosal::OS_OK)
                     {
                         ++success_counter;
                     }
                     ++count;
-                    rx_buffer_accessed = 1U;
                 }
 
                 break;

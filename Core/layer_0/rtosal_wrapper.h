@@ -32,8 +32,8 @@
 
 #define USE_CMSIS_OS2       1U
 
-typedef osMessageQueueId_t cmsis_message_queue_id_t;
-typedef osEventFlagsId_t cmsis_os2_event_flag_id;
+//typedef osMessageQueueId_t cmsis_message_queue_id_t;
+//typedef osEventFlagsId_t cmsis_os2_event_flag_id;
 
 
 
@@ -42,7 +42,8 @@ typedef osEventFlagsId_t cmsis_os2_event_flag_id;
 
 namespace rtosal
 {
-    typedef std::conditional <USE_CMSIS_OS2 == 1U, osMessageQueueId_t, void*>::type message_queue_id_t;
+    typedef std::conditional <USE_CMSIS_OS2 == 1U, osMessageQueueId_t, void*>::type message_queue_handle_t;
+    typedef std::conditional <USE_CMSIS_OS2 == 1U, osEventFlagsId_t, void*>::type event_flag_handle_t;
 
     static constexpr int32_t OS_OK                 =  0;
     static constexpr int32_t OS_ERROR              = -1;
@@ -53,10 +54,15 @@ namespace rtosal
     static constexpr int32_t OS_ERROR_ISR          = -6;
     static constexpr int32_t OS_STATUS_RESERVED    = 0x7FFFFFFF;
 
-    int32_t message_queue_send(message_queue_id_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
-    int32_t message_queue_receive(message_queue_id_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
-    uint32_t event_flag_set(message_queue_id_t arg_event_flag_id, uint32_t arg_flags);
-    uint32_t event_flag_wait(message_queue_id_t arg_event_flag_id, uint32_t arg_flags, uint32_t arg_options, uint32_t arg_timeout);
+    static constexpr uint32_t OS_FLAGS_ANY = osFlagsWaitAny;
+    static constexpr uint32_t OS_FLAGS_ALL = osFlagsWaitAll;
+    static constexpr uint32_t OS_FLAGS_NO_CLEAR = osFlagsNoClear;
+    static constexpr uint32_t OS_WAIT_FOREVER = osWaitForever;
+
+    int32_t message_queue_send(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
+    int32_t message_queue_receive(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
+    uint32_t event_flag_set(message_queue_handle_t arg_event_flag_id, uint32_t arg_flags);
+    uint32_t event_flag_wait(message_queue_handle_t arg_event_flag_id, uint32_t arg_flags, uint32_t arg_options, uint32_t arg_timeout);
 }
 
 #endif //MAIN_CONTROLLER_RTOSAL_WRAPPER_H

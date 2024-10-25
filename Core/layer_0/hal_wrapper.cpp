@@ -46,6 +46,12 @@ namespace hal
         return (uint8_t)HAL_GPIO_ReadPin(arg_port_name, arg_gpio_pin);
     }
 
+    void gpio_toggle_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin)
+    {
+        HAL_GPIO_TogglePin((GPIO_TypeDef *)arg_port_name, arg_gpio_pin);
+    }
+
+
     void rtc_get_time_stamp(char arg_time_stamp_string[9])
     {
         RTC_DateTypeDef current_date;

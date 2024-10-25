@@ -61,6 +61,8 @@ uint32_t spi_process_send_buffer_tick_counts[200];
 uint16_t spi_timer_count = 0U;
 
 uint8_t converter_result[4] = { 0, 0, 0, 0 };
+
+// TODO: move to hal_callback
 void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeDef *htim)
 {
     device::band_heater::zero_crossing_pulse_restart();
@@ -69,11 +71,12 @@ void timer_1_input_capture_zero_crossing_pulse_detected_callback(TIM_HandleTypeD
     output_pulse_restart(&device::zone_3_band_heater);
 }
 
+// TODO: add to i2c wrapper
 void build_i2c_packet_array_from_converted_bytes(uint8_t* arg_i2c_packet_array, uint8_t arg_global_id, uint8_t* arg_converted_bytes);
 
 
 
-
+// TODO: get rid of this
 spi::module_t* get_spi_handle()
 {
     return &spi_2_handle;
@@ -83,11 +86,13 @@ uint32_t cnt = 0;
 
 static uint8_t i2c_count = 0U;
 
+// TODO: rename and move to hal_callback
 void HAL_UART_TxCpltCallback(UART_HandleTypeDef *huart)
 {
 //    memset(&user_data, '\0' , strlen(user_data)); //empty the transmission data buffer
 }
 
+// TODO: rename and move to hal_callback
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 //    if(recvd_data == '\r')
@@ -104,16 +109,17 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 
 }
 
+// TODO: create wrapper for TIM_HandleTypeDef
 TIM_HandleTypeDef* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
 
 namespace sys_op::comms_handler
 {
-    osEventFlagsId_t  initialization_event_flags_handle = nullptr;
-    rtosal::message_queue_id_t initialization_queue_handle = nullptr;
-    rtosal::message_queue_id_t spi_tx_queue_handle = nullptr;
-    rtosal::message_queue_id_t spi_rx_queue_handle = nullptr;
-    rtosal::message_queue_id_t comms_handler_output_data_queue_handle = nullptr;
-    rtosal::message_queue_id_t serial_monitor_usart_queue_handle = nullptr;
+    rtosal::event_flag_handle_t  initialization_event_flags_handle = nullptr;
+    rtosal::message_queue_handle_t initialization_queue_handle = nullptr;
+    rtosal::message_queue_handle_t spi_tx_queue_handle = nullptr;
+    rtosal::message_queue_handle_t spi_rx_queue_handle = nullptr;
+    rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
+    rtosal::message_queue_handle_t serial_monitor_usart_queue_handle = nullptr;
 
     static uint32_t i2c_iteration_tick;
 
@@ -146,6 +152,7 @@ namespace sys_op::comms_handler
         {
             case COMMS_HANDLER_STATE_INITIALIZE:
             {
+                // TODO: fix initialization procedure
                 initialization_event_flags_handle       = get_initialization_event_flags_handle();
                 initialization_queue_handle             = get_initialization_task_queue_handle();
 
@@ -156,6 +163,7 @@ namespace sys_op::comms_handler
 
                 i2c_iteration_tick = 0U;
 
+                // TODO: create wrapper in rtosal_wrapper
                 osEventFlagsWait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
                 device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
@@ -163,23 +171,27 @@ namespace sys_op::comms_handler
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
                 hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
-                hal::spi_2.create_channel(rtd_0_channel_id, GPIO_PORT_B, GPIO_PIN_14, spi_tx_queue_handle, spi_rx_queue_handle);
-                hal::spi_2.create_channel(rtd_1_channel_id, GPIO_PORT_B, GPIO_PIN_15, spi_tx_queue_handle, spi_rx_queue_handle);
-                hal::spi_2.create_channel(rtd_2_channel_id, GPIO_PORT_B, GPIO_PIN_1, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1, spi_tx_queue_handle, spi_rx_queue_handle);
 
+                // TODO: create wrapper in hal_wrapper
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_MASTER_TX_COMPLETE_CB_ID, hal_callback_i2c_controller_tx_complete);
                 HAL_I2C_RegisterCallback(get_i2c_2_handle(), HAL_I2C_ERROR_CB_ID,hal_callback_i2c_controller_error);
 
                 device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
                 device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());
                 device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID, get_zone_3_band_heater_mutex_handle());
+
+                // TODO: create wrapepr in hal_wrapper
                 HAL_TIM_RegisterCallback(get_timer_1_handle(),  HAL_TIM_IC_CAPTURE_CB_ID, timer_1_input_capture_zero_crossing_pulse_detected_callback);
+                // TODO: create wrapepr in hal_wrapper
                 HAL_TIM_IC_Start_IT(get_timer_1_handle(), TIM_CHANNEL_2);
 
+                // TODO: create wrapepr in hal_wrapper OR rename if appropriate
                 MX_TIM2_Init();
+                // TODO: create wrapepr in hal_wrapper
                 HAL_TIM_Base_Start(get_timer_2_handle());
-
-                HAL_GPIO_WritePin(GPIOA, GPIO_PIN_0, GPIO_PIN_SET);
 
                 osEventFlagsSet(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
 
@@ -198,18 +210,22 @@ namespace sys_op::comms_handler
                 hal::spi_2.process_send_buffer();
                 hal::spi_2.process_return_buffers(spi_rx_packet, 0, rx_d);
 
-                HAL_GPIO_TogglePin(LD2_GPIO_Port, LD2_Pin);
+                // TODO: move heartbeat led
+                hal::gpio_toggle_pin(PORT_A, PIN_5);
 
                 hal::rtc_get_time_stamp(time_stamp);
 
+                // TODO: use rtosal_wrapper
                 if (osMessageQueueGet(comms_handler_output_data_queue_handle, &rtd_reading, nullptr, 50) == osOK)
                 {
                     utility::convert_float_to_uint8_array(rtd_reading.value, converter_result);
                     build_i2c_packet_array_from_converted_bytes(i2c_data, rtd_reading.id, converter_result);
 
+                    // TODO: create wrapper in hal_wrapper
                     HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
                 }
 
+                // TODO: wrap Instance->CNT in hal_wrapper
                 if (get_timer_2_handle()->Instance->CNT - i2c_iteration_tick > 500000U)
                 {
                     if (i2c_count == 0U)
@@ -217,6 +233,7 @@ namespace sys_op::comms_handler
                         utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_requested_count(), converter_result);
                         build_i2c_packet_array_from_converted_bytes(i2c_data, 0x07, converter_result);
 
+                        // TODO: create wrapper in hal_wrapper
                         HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
                         i2c_count = 1U;
                     }
@@ -225,6 +242,7 @@ namespace sys_op::comms_handler
                         utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_received_count(), converter_result);
                         build_i2c_packet_array_from_converted_bytes(i2c_data, 0x06, converter_result);
 
+                        // TODO: create wrapper in hal_wrapper
                         HAL_I2C_Master_Transmit_IT(get_i2c_2_handle(), (0x14 << 1), i2c_data, 5);
                         i2c_count = 0U;
                         i2c_iteration_tick = get_timer_2_handle()->Instance->CNT;

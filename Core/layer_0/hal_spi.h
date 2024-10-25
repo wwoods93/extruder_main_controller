@@ -133,8 +133,8 @@ class spi
         {
             int16_t         channel_id;
             chip_select_t   chip_select;
-            rtosal::message_queue_id_t tx_message_queue;
-            rtosal::message_queue_id_t rx_message_queue;
+            rtosal::message_queue_handle_t tx_message_queue;
+            rtosal::message_queue_handle_t rx_message_queue;
 
         } channel_t;
 
@@ -214,8 +214,8 @@ class spi
             channel_t channel_7;
         } channel_list;
 
-        void send_inter_task_transaction_result(rtosal::message_queue_id_t arg_message_queue_id, packet_t& arg_packet);
-        void receive_inter_task_transaction_requests(rtosal::message_queue_id_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
+        void send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet);
+        void receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
 
 
 
@@ -223,7 +223,7 @@ class spi
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
 
-        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_id_t arg_tx_message_queue, rtosal::message_queue_id_t arg_rx_message_queue);
+        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_handle_t arg_tx_message_queue, rtosal::message_queue_handle_t arg_rx_message_queue);
         void get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id);
         int16_t assign_next_available_channel_id();
         void process_send_buffer();

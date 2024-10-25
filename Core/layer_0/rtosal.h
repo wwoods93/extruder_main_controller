@@ -57,7 +57,7 @@ namespace rtosal
 {
     typedef struct
     {
-        message_queue_id_t message_queue_id;
+        message_queue_handle_t message_queue_id;
         int16_t id;
 
     } message_queue_t;
@@ -67,14 +67,8 @@ namespace rtosal
     uint32_t get_rtos_kernel_tick_frequency();
 
 
-
-    void initializae_spi_common_packet_array();
     void build_common_packet(common_packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_bytes)[8], uint8_t (&arg_bytes_per_tx)[8]);
-    uint8_t add_packet_to_common_packet_array(common_packet_t& _packet);
-    uint8_t remove_packet_from_common_packet_array(common_packet_t& _packet);
-    void increment_packet_add_index();
-    void increment_packet_remove_index();
-    uint8_t common_packet_is_valid();
+
 }
 
 #endif //MAIN_CONTROLLER_RTOSAL_H

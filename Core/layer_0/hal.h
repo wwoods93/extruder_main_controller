@@ -67,6 +67,7 @@ void initialize_peripherals();
 void MX_CAN1_Init();
 void MX_I2C1_Init();
 void MX_I2C2_Init();
+void MX_IWDG_Init();
 void MX_WWDG_Init();
 void MX_USART2_UART_Init();
 

@@ -37,6 +37,7 @@
 
 CAN_HandleTypeDef hcan1;
 WWDG_HandleTypeDef hwwdg;
+IWDG_HandleTypeDef hiwdg;
 UART_HandleTypeDef huart2;
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
@@ -245,6 +246,29 @@ void MX_CAN1_Init()
     {
         Error_Handler();
     }
+}
+
+void MX_IWDG_Init()
+{
+
+    /* USER CODE BEGIN IWDG_Init 0 */
+
+    /* USER CODE END IWDG_Init 0 */
+
+    /* USER CODE BEGIN IWDG_Init 1 */
+
+    /* USER CODE END IWDG_Init 1 */
+    hiwdg.Instance = IWDG;
+    hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+    hiwdg.Init.Reload = 4095;
+    if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    /* USER CODE BEGIN IWDG_Init 2 */
+
+    /* USER CODE END IWDG_Init 2 */
+
 }
 
 void MX_WWDG_Init()

@@ -21,9 +21,6 @@
 #include "rtd.h"
 #include "../layer_0/rtosal.h"
 #include "../layer_0/hal_callback.h"
-#include "../meta_structure/meta_structure_system_manager.h"
-#include "../meta_structure/meta_structure_user.h"
-#include "../layer_0/rtosal_spi_shared_resources.h"
 
 // div2 = 8MHz
 // div4 = 4MHz

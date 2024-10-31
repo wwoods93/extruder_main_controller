@@ -32,9 +32,9 @@
 /* layer_n_meta_structure includes */
 
 
-static constexpr uint8_t TEMPERATURE_ZONE_1 = 1U;
-static constexpr uint8_t TEMPERATURE_ZONE_2 = 2U;
-static constexpr uint8_t TEMPERATURE_ZONE_3 = 3U;
+static constexpr uint8_t TEMPERATURE_ZONE_1 = 0U;
+static constexpr uint8_t TEMPERATURE_ZONE_2 = 1U;
+static constexpr uint8_t TEMPERATURE_ZONE_3 = 2U;
 
 
 

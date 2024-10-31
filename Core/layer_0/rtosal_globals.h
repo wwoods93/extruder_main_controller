@@ -31,6 +31,8 @@
 
 #define QUEUE_LENGTH_MAX    16
 
+
+
 static constexpr uint32_t READY_FOR_RESOURCE_INIT_FLAG  = 0x10000000;
 //static constexpr uint32_t READY_FOR_DEVICE_INIT_FLAG    = 0x001000000;
 static constexpr uint32_t READY_FOR_USER_INIT_FLAG      = 0x01000000;

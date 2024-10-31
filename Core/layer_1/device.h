@@ -27,6 +27,7 @@
 #include "rtd.h"
 #include "band_heater.h"
 #include "serial_monitor.h"
+#include "touch_screen.h"
 /* layer_3_control includes */
 
 /* layer_4_sys_op includes */
@@ -43,6 +44,7 @@ namespace device
     extern band_heater zone_2_band_heater;
     extern band_heater zone_3_band_heater;
     extern serial_monitor debug_serial_monitor;
+    extern touch_screen built_in_display;
 }
 
 #endif //MAIN_CONTROLLER_DEVICE_H

@@ -17,7 +17,6 @@
 #include "../meta_structure/meta_structure_system_manager.h"
 #include "../meta_structure/meta_structure_user.h"
 #include "../layer_0/hal_spi.h"
-#include "../layer_0/rtosal_spi_shared_resources.h"
 #include "../layer_0/rtosal.h"
 
 class rtd : public user

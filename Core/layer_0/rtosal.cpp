@@ -104,7 +104,7 @@ namespace rtosal
     {
         spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
         spi_2_extrusion_task_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_rx_queue_attributes);
-        comms_handler_output_data_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &i2c_tx_queue_attributes);
+        comms_handler_output_data_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_float_data_t), &i2c_tx_queue_attributes);
 
         serial_monitor_usart_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(serial_monitor::packet_t), &serial_monitor_usart_queue_attr);
         zone_1_band_heater_mutex_handle = osMutexNew(&zone_1_band_heater_mutex_attr);

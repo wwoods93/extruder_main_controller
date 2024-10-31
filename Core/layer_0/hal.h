@@ -66,7 +66,7 @@ UART_HandleTypeDef* get_usart_2_handle();
 void initialize_peripherals();
 void can_1_initialize();
 void MX_I2C1_Init();
-void MX_I2C2_Init();
+void i2c_2_initialize();
 void MX_IWDG_Init();
 void MX_WWDG_Init();
 void MX_USART2_UART_Init();

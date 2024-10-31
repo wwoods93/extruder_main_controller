@@ -198,7 +198,7 @@ void initialize_peripherals()
     MX_TIM14_Init();
     can_1_initialize();
     MX_USART2_UART_Init();
-    MX_I2C2_Init();
+    i2c_2_initialize();
 }
 
 //void MX_WWDG_Init(void)
@@ -305,7 +305,7 @@ void MX_I2C1_Init()
     }
 }
 
-void MX_I2C2_Init()
+void i2c_2_initialize()
 {
     hi2c2.Instance = I2C2;
     hi2c2.Init.ClockSpeed = 100000;

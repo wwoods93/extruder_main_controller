@@ -196,7 +196,7 @@ void initialize_peripherals()
     MX_TIM11_Init();
     MX_TIM13_Init();
     MX_TIM14_Init();
-    MX_CAN1_Init();
+    can_1_initialize();
     MX_USART2_UART_Init();
     MX_I2C2_Init();
 }
@@ -227,7 +227,7 @@ void initialize_peripherals()
 //}
 
 
-void MX_CAN1_Init()
+void can_1_initialize()
 {
     hcan1.Instance = CAN1;
     hcan1.Init.Prescaler = 16;
@@ -250,14 +250,6 @@ void MX_CAN1_Init()
 
 void MX_IWDG_Init()
 {
-
-    /* USER CODE BEGIN IWDG_Init 0 */
-
-    /* USER CODE END IWDG_Init 0 */
-
-    /* USER CODE BEGIN IWDG_Init 1 */
-
-    /* USER CODE END IWDG_Init 1 */
     hiwdg.Instance = IWDG;
     hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
     hiwdg.Init.Reload = 4095;
@@ -265,10 +257,6 @@ void MX_IWDG_Init()
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN IWDG_Init 2 */
-
-    /* USER CODE END IWDG_Init 2 */
-
 }
 
 void MX_WWDG_Init()

@@ -50,6 +50,12 @@ TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim13;
 TIM_HandleTypeDef htim14;
 
+TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim11;
+
+static TIM_HandleTypeDef ms_timer_base_timer_handle;
+static TIM_HandleTypeDef us_base_timer_handle;
+
 namespace hal
 {
 
@@ -120,9 +126,9 @@ TIM_HandleTypeDef* get_timer_2_handle()
     return &htim2;
 }
 
-TIM_HandleTypeDef* get_timer_6_handle()
+hal::timer_handle_t* get_timer_6_handle()
 {
-    return &htim6;
+    return static_cast<hal::timer_handle_t*>(&htim6);
 }
 
 TIM_HandleTypeDef* get_timer_10_handle()
@@ -165,6 +171,16 @@ uint32_t get_timer_2_count()
     return htim2.Instance->CNT;
 }
 
+uint32_t get_timer_6_count()
+{
+    return htim6.Instance->CNT;
+}
+
+uint32_t get_timer_count(hal::timer_handle_t* arg_timer_handle)
+{
+    return arg_timer_handle->Instance->CNT;
+}
+
 void error_handler()
 {
     __disable_irq();
@@ -190,7 +206,7 @@ void initialize_peripherals()
     MX_GPIO_Init();
     MX_RTC_Init();
     MX_TIM1_Init();
-    MX_TIM6_Init();
+    timer_6_initialize();
     MX_TIM7_Init();
     MX_TIM10_Init();
     MX_TIM11_Init();
@@ -392,7 +408,7 @@ void MX_TIM1_Init()
     }
 }
 
-void MX_TIM6_Init()
+void timer_6_initialize()
 {
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -450,6 +466,41 @@ void MX_TIM10_Init()
     }
 
     HAL_TIM_MspPostInit(&htim10);
+}
+
+void MX_TIM7_Init()
+{
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    us_base_timer_handle.Instance = TIM7;
+    us_base_timer_handle.Init.Prescaler = 32;
+    us_base_timer_handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+    us_base_timer_handle.Init.Period = 65535;
+    us_base_timer_handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void MX_TIM11_Init()
+{
+    htim11.Instance = TIM11;
+    htim11.Init.Prescaler = 64;
+    htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim11.Init.Period = 65535;
+    htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 void MX_TIM13_Init()

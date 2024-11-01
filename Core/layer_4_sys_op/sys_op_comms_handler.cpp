@@ -64,6 +64,16 @@ hal::timer_handle_t* device::band_heater::zero_crossing_pulse_timer_module = get
 namespace sys_op::comms_handler
 {
     rtosal::event_flag_handle_t  initialization_event_flags_handle = nullptr;
+
+    rtosal::message_queue_handle_t to_extrusion_task_queue_1_handle = nullptr;
+    rtosal::message_queue_handle_t to_extrusion_task_queue_2_handle = nullptr;
+    rtosal::message_queue_handle_t to_extrusion_task_queue_3_handle = nullptr;
+
+    rtosal::message_queue_handle_t from_extrusion_task_queue_1_handle = nullptr;
+    rtosal::message_queue_handle_t from_extrusion_task_queue_2_handle = nullptr;
+    rtosal::message_queue_handle_t from_extrusion_task_queue_3_handle = nullptr;
+
+
     rtosal::message_queue_handle_t spi_tx_queue_handle = nullptr;
     rtosal::message_queue_handle_t spi_rx_queue_handle = nullptr;
     rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
@@ -98,6 +108,15 @@ namespace sys_op::comms_handler
                 // TODO: fix initialization procedure
                 initialization_event_flags_handle       = get_initialization_event_flags_handle();
 
+                to_extrusion_task_queue_1_handle = get_comms_handler_to_extrusion_task_queue_1_handle();
+                to_extrusion_task_queue_2_handle = get_comms_handler_to_extrusion_task_queue_2_handle();
+                to_extrusion_task_queue_3_handle = get_comms_handler_to_extrusion_task_queue_3_handle();
+
+                from_extrusion_task_queue_1_handle = get_extrusion_task_to_comms_handler_queue_1_handle();
+                from_extrusion_task_queue_2_handle = get_extrusion_task_to_comms_handler_queue_2_handle();
+                from_extrusion_task_queue_3_handle = get_extrusion_task_to_comms_handler_queue_3_handle();
+
+
                 spi_tx_queue_handle                     = get_spi_2_extrusion_task_tx_queue_handle();
                 spi_rx_queue_handle                     = get_spi_2_extrusion_task_rx_queue_handle();
                 comms_handler_output_data_queue_handle  = get_comms_handler_output_data_queue_handle();
@@ -111,9 +130,9 @@ namespace sys_op::comms_handler
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle(), FREQUENCY_1_MHZ);
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
                 hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
-                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14, spi_tx_queue_handle, spi_rx_queue_handle);
-                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15, spi_tx_queue_handle, spi_rx_queue_handle);
-                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1, spi_tx_queue_handle, spi_rx_queue_handle);
+                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14, from_extrusion_task_queue_1_handle, to_extrusion_task_queue_1_handle);
+                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15, from_extrusion_task_queue_2_handle, to_extrusion_task_queue_2_handle);
+                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1, from_extrusion_task_queue_3_handle, to_extrusion_task_queue_3_handle);
 
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_CONTROLLER_TX_COMPLETE_CALLBACK_ID, hal_callback_i2c_controller_tx_complete);
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_ERROR_CALLBACK_ID, hal_callback_i2c_controller_error);

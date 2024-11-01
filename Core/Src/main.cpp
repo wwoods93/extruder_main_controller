@@ -80,7 +80,7 @@ void start_heartbeat_task(void *argument);
 int main()
 {
     initialize_peripherals();
-    timers_initialize();
+//    timers_initialize();
     osKernelInitialize();
 
     initialization_event_flags_handle = osEventFlagsNew(&initialization_event_flags_attributes);

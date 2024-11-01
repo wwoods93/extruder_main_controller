@@ -36,9 +36,9 @@
 
 namespace device
 {
-    rtd rtd_zone_0;
     rtd rtd_zone_1;
     rtd rtd_zone_2;
+    rtd rtd_zone_3;
 
     band_heater zone_1_band_heater;
     band_heater zone_2_band_heater;

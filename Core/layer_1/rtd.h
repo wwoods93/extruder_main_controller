@@ -19,13 +19,10 @@
 #include "../layer_0/hal_spi.h"
 #include "../layer_0/rtosal.h"
 
-class rtd : public user
+class rtd
 {
     public:
 
-//        static constexpr uint8_t DEVICE_0 = spi::DEVICE_0;
-//        static constexpr uint8_t DEVICE_1 = spi::DEVICE_1;
-//        static constexpr uint8_t DEVICE_2 = spi::DEVICE_2;
 
         typedef enum
         {
@@ -35,14 +32,6 @@ class rtd : public user
             READ_RATE_1_HZ = 0x03U
         } read_rate_t;
 
-        typedef enum
-        {
-            SENSOR_INITIALIZE = 0x00U,
-            SENSOR_IDLE = 0x01U,
-            SENSOR_SETUP_COMMAND_SENT = 0x02U,
-            SENSOR_READ_REGISTER_COMMAND_SENT = 0x03U,
-            SENSOR_DATA_RECEIVED = 0x04U,
-        } sensor_state_t;
 
         typedef struct
         {
@@ -53,14 +42,11 @@ class rtd : public user
             uint8_t notch_filter_setting;
         } rtd_sensor_t;
 
+        rtosal::message_queue_handle_t request_queue_handle;
+        rtosal::message_queue_handle_t result_queue_handle;
+        rtosal::message_queue_handle_t output_queue_handle;
 
-        GPIO_TypeDef* chip_select_1_port = GPIOB;
-        GPIO_TypeDef* chip_select_2_port = GPIOC;
-        GPIO_TypeDef* chip_select_3_port = GPIOC;
-
-        uint16_t chip_select_1_pin = GPIO_PIN_14;
-        uint16_t chip_select_2_pin = GPIO_PIN_7;
-        uint16_t chip_select_3_pin = GPIO_PIN_8;
+        common_float_data_t rtd_reading;
 
         int16_t channel_id = ID_INVALID;
 
@@ -71,6 +57,8 @@ class rtd : public user
         #define READ_REGISTER_ADDRESS_MASK      0x7F
         #define WRITE_REGISTER_ADDRESS_MASK     0x80
         #define DUMMY_BYTE                      0xFF
+
+        static constexpr uint32_t READING_PERIOD_MS = 500U;
 
         /* config register bytes */
         static constexpr uint8_t CONFIG_REGISTER_ADDRESS                        = 0x00;
@@ -167,50 +155,30 @@ class rtd : public user
         };
 
 
-        int16_t user_id{};
 
+        hal::timer_handle_t* reading_timer_handle;
         float temperature_celsius_current_reading = 0;
         float temperature_celsius_moving_average = 1;
         uint8_t moving_average_sample_count = 50U;
+        uint32_t reading_request_tick = 0U;
 
         double rtd_resistance_scaled_and_rounded{};
-        sensor_state_t sensor_state = SENSOR_INITIALIZE;
-        uint32_t read_rate_os_ticks = 0;
-        uint32_t tick_count_at_last_sensor_read = 0;
-        uint8_t setup_command_requested = false;
-        uint8_t read_command_requested = false;
-        uint32_t os_kernel_frequency = 0;
+
         uint8_t initialized = 0U;
-        uint8_t request_readings = 0U;
-        uint8_t send_new_request = 0U;
-        uint8_t tx_data[4] = { MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE };
+
         uint8_t complete_tx[8] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, 0, 0 };
         uint8_t bytes_per_tx[8] = {2, 4, 0, 0, 0, 0, 0, 0 };
 
         rtd();
 
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+        void initialize(read_rate_t _read_rate_hz, int16_t arg_channel_id, rtosal::message_queue_handle_t arg_request_queue_handle, rtosal::message_queue_handle_t arg_result_queue_handle, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle);
+        float read();
+        uint8_t request_reading();
+        float receive_reading_and_output_moving_average();
+        float calculate_and_send_moving_average();
 
-
-//        void read_rtd();
-
-
-
-        ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-        void initialize(read_rate_t _read_rate_hz, int16_t arg_channel_id);
-        void start_read_requests();
-        uint8_t send_request_if_flag_set(common_packet_t& _packet);
-        void clear_send_new_request_flag();
-        void pass_available_sensor_command_to_buffer(common_packet_t& _packet);
-        void handle_sensor_state();
-//        void rtd_begin() const;
-//        void write_register_8(uint8_t register_address, uint8_t data) const;
-//        [[nodiscard]] uint8_t read_register_8(uint8_t register_address) const;
-//        [[nodiscard]] uint16_t read_msb_and_lsb_registers_and_concatenate() const;
-//        [[nodiscard]] uint16_t read_rtd() const;
         uint16_t get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet);
-        float read_rtd_and_calculate_temperature(common_packet_t& arg_common_packet);
+
         float compute_temperature_moving_average();
         [[nodiscard]] float get_device_reading_degrees_celsius() const;
         uint32_t search_temperature_to_resistance_pt1000_lookup_table(uint32_t rtd_resistance);

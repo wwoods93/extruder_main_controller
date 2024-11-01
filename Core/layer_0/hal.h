@@ -52,12 +52,14 @@ SPI_HandleTypeDef* get_spi_1_handle();
 RTC_HandleTypeDef* get_rtc_handle();
 TIM_HandleTypeDef* get_timer_1_handle();
 TIM_HandleTypeDef* get_timer_2_handle();
-TIM_HandleTypeDef* get_timer_6_handle();
+hal::timer_handle_t* get_timer_6_handle();
 TIM_HandleTypeDef* get_timer_10_handle();
 TIM_HandleTypeDef* get_timer_13_handle();
 TIM_HandleTypeDef* get_timer_14_handle();
 
 uint32_t get_timer_2_count();
+uint32_t get_timer_6_count();
+uint32_t get_timer_count(hal::timer_handle_t* arg_timer_handle);
 
 CAN_HandleTypeDef* get_can_1_handle();
 I2C_HandleTypeDef* get_i2c_1_handle();
@@ -73,8 +75,10 @@ void MX_USART2_UART_Init();
 
 void MX_RTC_Init();
 void MX_TIM1_Init();
-void MX_TIM6_Init();
+void timer_6_initialize();
+void MX_TIM7_Init();
 void MX_TIM10_Init();
+void MX_TIM11_Init();
 void MX_TIM13_Init();
 void MX_TIM14_Init();
 

@@ -35,10 +35,9 @@
 
 
 //void MX_TIM6_Init(void);
-void MX_TIM7_Init(void);
-void MX_TIM11_Init(void);
 
-void timers_initialize(void);
+
+//void timers_initialize(void);
 
 
 

@@ -14,7 +14,6 @@
 #define MAIN_CONTROLLER_RTOSAL_H
 
 #include <cstdint>
-#include "../meta_structure/meta_structure_system_manager.h"
 
 #include "rtosal_wrapper.h"
 

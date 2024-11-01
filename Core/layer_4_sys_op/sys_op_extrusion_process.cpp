@@ -12,34 +12,20 @@
 
 #include <cstdint>
 
-#include "stm32f4xx.h"
 #include "stm32f4xx_it.h"
-#include "cmsis_os2.h"
-
-#include "../layer_0/hal_timer.h"
-#include "system_clock.h"
-#include "gpio.h"
-
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_general.h"
-#include "../layer_0/hal_wrapper.h"
-#include "../layer_0/hal_callback.h"
-#include "../layer_0/hal.h"
 #include "../layer_0/rtosal_globals.h"
 #include "../layer_0/rtosal.h"
 #include "../layer_1/device.h"
 #include "../layer_1/device_callback.h"
-#include "../layer_1/rtd.h"
-#include "../layer_1/band_heater.h"
 
 #include "../application/extruder.h"
 #include "sys_op_extrusion_process.h"
 
 
-#define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
-#define EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION      1
-#define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
-#define EXTRUSION_PROCESS_STATE_RUN                                 3
+static constexpr uint8_t EXTRUSION_PROCESS_STATE_INITIALIZE     = 0U;
+static constexpr uint8_t EXTRUSION_PROCESS_STATE_RUN            = 1U;
 
 namespace sys_op::extrusion
 {
@@ -67,18 +53,8 @@ namespace sys_op::extrusion
             case EXTRUSION_PROCESS_STATE_INITIALIZE:
             {
                 initialization_event_flags_handle = get_initialization_event_flags_handle();
-
-                extrusion_process_state = EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION;
-                break;
-            }
-            case EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION:
-            {
                 rtosal::event_flag_wait(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG, rtosal::OS_FLAGS_ANY, rtosal::OS_WAIT_FOREVER);
-                extrusion_process_state = EXTRUSION_PROCESS_STATE_CONFIGURE_USERS;
-                break;
-            }
-            case EXTRUSION_PROCESS_STATE_CONFIGURE_USERS:
-            {
+
                 to_comms_handler_queue_1_handle = get_extrusion_task_to_comms_handler_queue_1_handle();
                 to_comms_handler_queue_2_handle = get_extrusion_task_to_comms_handler_queue_2_handle();
                 to_comms_handler_queue_3_handle = get_extrusion_task_to_comms_handler_queue_3_handle();
@@ -92,9 +68,9 @@ namespace sys_op::extrusion
                 timer_6_initialize();
                 hal::timer_time_base_start(get_timer_6_handle());
 
-                device::rtd_zone_1.initialize(rtd::READ_RATE_10_HZ, 0, to_comms_handler_queue_1_handle, from_comms_handler_queue_1_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
-                device::rtd_zone_2.initialize(rtd::READ_RATE_10_HZ, 1, to_comms_handler_queue_2_handle, from_comms_handler_queue_2_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
-                device::rtd_zone_3.initialize(rtd::READ_RATE_10_HZ, 2, to_comms_handler_queue_3_handle, from_comms_handler_queue_3_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
+                device::rtd_zone_1.initialize(0U, to_comms_handler_queue_1_handle, from_comms_handler_queue_1_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
+                device::rtd_zone_2.initialize(1U, to_comms_handler_queue_2_handle, from_comms_handler_queue_2_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
+                device::rtd_zone_3.initialize(2U, to_comms_handler_queue_3_handle, from_comms_handler_queue_3_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
 
                 device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
                 device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());

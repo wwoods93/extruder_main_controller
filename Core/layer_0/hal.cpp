@@ -18,7 +18,6 @@
 
 /* layer_0 includes */
 #include "hal.h"
-#include "hal_timer.h"
 #include "hal_spi.h"
 /* layer_1_rtosal includes */
 

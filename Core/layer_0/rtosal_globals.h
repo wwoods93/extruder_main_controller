@@ -43,14 +43,14 @@ osMessageQueueId_t get_initialization_task_queue_handle();
 //osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle();
 //osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle();
 
-osMessageQueueId_t get_extrusion_task_i2c_tx_queue_handle();
-osMessageQueueId_t get_extrusion_task_i2c_rx_queue_handle();
-osMessageQueueId_t get_spooling_task_i2c_tx_queue_handle();
-osMessageQueueId_t get_spooling_task_i2c_rx_queue_handle();
+//osMessageQueueId_t get_extrusion_task_i2c_tx_queue_handle();
+//osMessageQueueId_t get_extrusion_task_i2c_rx_queue_handle();
+//osMessageQueueId_t get_spooling_task_i2c_tx_queue_handle();
+//osMessageQueueId_t get_spooling_task_i2c_rx_queue_handle();
 
 osEventFlagsId_t get_initialization_event_flags_handle();
 
-osMutexId_t get_spi_tx_buffer_mutex();
+//osMutexId_t get_spi_tx_buffer_mutex();
 
 
 #endif //MAIN_CONTROLLER_RTOSAL_GLOBALS_H

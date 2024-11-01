@@ -18,6 +18,7 @@
 /* third-party includes */
 
 /* layer_0 includes */
+#include "hal.h"
 #include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
 /* layer_1_rtosal includes */
@@ -39,7 +40,7 @@ uint32_t spi::packets_requested_count = 0U;
 uint32_t spi::packets_received_count = 0U;
 
 
-spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
+spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, hal::timer_handle_t* arg_timeout_timer_handle)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
 
@@ -75,12 +76,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
         }
     }
 
-
-    timeout_time_base = arg_timeout_time_base;
-    timeout_time_base_frequency = arg_timeout_time_base_frequency;
-
-
-
+    timeout_timer_handle = arg_timeout_timer_handle;
     module->rx_data_ready_flag = 0U;
     module->settings.mode = SPI_CONFIG_MODE_CONTROLLER;
     module->settings.direction = SPI_CONFIG_DIRECTION_2_LINE;
@@ -471,12 +467,12 @@ void spi::set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_d
 
 spi::procedure_status_t spi::flag_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status) const
 {
-    uint32_t start_time = timeout_time_base->Instance->CNT;
+    uint32_t start_time = get_timer_count(timeout_timer_handle);
     uint16_t fallback_countdown = FALLBACK_COUNTDOWN;
 
     while (get_status_register_bit(arg_status_reg_bit) != arg_bit_status)
     {
-        if (timeout_time_base->Instance->CNT - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
+        if (get_timer_count(timeout_timer_handle) - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
         {
             disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
 
@@ -1157,7 +1153,7 @@ void spi::send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_
     }
 }
 
-void spi::receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
+void spi::receive_inter_task_transaction_requests()
 {
     channel_t channel;
     common_packet_t common_packet;

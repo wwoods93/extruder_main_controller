@@ -26,7 +26,6 @@
 /* sys op includes */
 
 /* meta structure includes */
-#include "../meta_structure/meta_structure_system_manager.h"
 /* layer_1_rtosal header */
 #include "rtosal.h"
 

@@ -14,6 +14,7 @@
 #include <cstdint>
 #include <memory>
 #include <cstring>
+#include <cstdio>
 /* stm32 includes */
 
 /* third-party includes */

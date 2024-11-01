@@ -214,7 +214,7 @@ class spi
             channel_t channel_7;
         } channel_list;
 
-        void send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet);
+        static void send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet);
         void receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
 
 
@@ -244,9 +244,9 @@ class spi
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);
-        [[nodiscard]] uint32_t get_packets_requested_count() const;
-        [[nodiscard]] uint32_t get_packets_received_count() const;
-        void complete_transaction_tx_rx_success();
+        [[nodiscard]] static uint32_t get_packets_requested_count() ;
+        [[nodiscard]] static uint32_t get_packets_received_count() ;
+        void complete_transaction_tx_rx_success() const;
 
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);

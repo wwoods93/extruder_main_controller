@@ -35,33 +35,23 @@
 #include "../application/extruder.h"
 #include "sys_op_extrusion_process.h"
 
+
 #define EXTRUSION_PROCESS_STATE_INITIALIZE                          0
 #define EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION      1
 #define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
 #define EXTRUSION_PROCESS_STATE_RUN                                 3
-
-
-
 
 namespace sys_op::extrusion
 {
     rtosal::message_queue_handle_t to_comms_handler_queue_1_handle = nullptr;
     rtosal::message_queue_handle_t to_comms_handler_queue_2_handle = nullptr;
     rtosal::message_queue_handle_t to_comms_handler_queue_3_handle = nullptr;
-
     rtosal::message_queue_handle_t from_comms_handler_queue_1_handle = nullptr;
     rtosal::message_queue_handle_t from_comms_handler_queue_2_handle = nullptr;
     rtosal::message_queue_handle_t from_comms_handler_queue_3_handle = nullptr;
-
     rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
 
     rtosal::event_flag_handle_t initialization_event_flags_handle = nullptr;
-
-
-
-
-
-    uint8_t tx[8] = { 0x01, 0x03, 0x05, 0x07, 0x09, 0x0B, 0x0D, 0x0F };
 
     void task_intitialize()
     {
@@ -71,8 +61,7 @@ namespace sys_op::extrusion
     void task_state_machine()
     {
         static uint8_t extrusion_process_state = EXTRUSION_PROCESS_STATE_INITIALIZE;
-        static uint32_t counter = 0;
-        static uint8_t flag = 0;
+
         switch (extrusion_process_state)
         {
             case EXTRUSION_PROCESS_STATE_INITIALIZE:

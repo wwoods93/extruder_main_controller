@@ -1066,10 +1066,7 @@ uint8_t spi::process_return_buffers(packet_t& arg_packet, int16_t arg_channel_id
             {
                 ++packets_received_count;
                 get_channel_by_channel_id(channel, index);
-//                if (channel.rx_message_queue != nullptr)
-//                {
-                    send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
-//                }
+                send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
                 buffer_accessed = 0U;
             }
         }
@@ -1080,6 +1077,7 @@ uint8_t spi::process_return_buffers(packet_t& arg_packet, int16_t arg_channel_id
 
 void spi::process_send_buffer()
 {
+    // TODO wrap osKernelGetTickCount or switch to stm timer
     process_send_buffer_timeout_start = osKernelGetTickCount();
     while (!send_buffer.empty() && osKernelGetTickCount() - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
     {
@@ -1092,7 +1090,6 @@ void spi::process_send_buffer()
         uint8_t packet_index = 0U;
         uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
-
 
         for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {
@@ -1107,9 +1104,7 @@ void spi::process_send_buffer()
             }
         }
 
-
         send_buffer_pop();
-
         push_active_packet_to_return_buffer();
         reset_active_packet();
     }
@@ -1125,11 +1120,10 @@ void spi::transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t*
     for (uint8_t index = 0U; index < arg_current_transaction_size; ++index)
     {
         rx_result[index] = rx_pointer_tmp[index];
-//        rx_pointer_tmp[index] = 0;
     }
 }
 
-void spi::complete_transaction_tx_rx_success()
+void spi::complete_transaction_tx_rx_success() const
 {
     if (hal::gpio_read_pin(module->chip_select_port, module->chip_select_pin) == GPIO_PIN_RESET)
     {
@@ -1139,12 +1133,12 @@ void spi::complete_transaction_tx_rx_success()
     module->rx_data_ready_flag = 1U;
 }
 
-uint32_t spi::get_packets_requested_count() const
+uint32_t spi::get_packets_requested_count()
 {
     return packets_requested_count;
 }
 
-uint32_t spi::get_packets_received_count() const
+uint32_t spi::get_packets_received_count()
 {
     return packets_received_count;
 }

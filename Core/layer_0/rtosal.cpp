@@ -26,7 +26,6 @@
 /* sys op includes */
 
 /* meta structure includes */
-#include "../meta_structure/meta_structure_system_manager.h"
 /* layer_1_rtosal header */
 #include "rtosal.h"
 
@@ -45,7 +44,23 @@ osMessageQueueId_t spi_2_extrusion_task_rx_queue_handle;
 osMessageQueueId_t comms_handler_output_data_queue_handle;
 osMessageQueueId_t serial_monitor_usart_queue_handle;
 
+osMessageQueueId_t extrusion_task_to_comms_handler_queue_1_handle;
+osMessageQueueId_t extrusion_task_to_comms_handler_queue_2_handle;
+osMessageQueueId_t extrusion_task_to_comms_handler_queue_3_handle;
 
+osMessageQueueId_t comms_handler_to_extrusion_task_queue_1_handle;
+osMessageQueueId_t comms_handler_to_extrusion_task_queue_2_handle;
+osMessageQueueId_t comms_handler_to_extrusion_task_queue_3_handle;
+
+const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_1_attributes = { .name = "comms_handler_to_extrusion_task_queue_1" };
+const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_2_attributes = { .name = "comms_handler_to_extrusion_task_queue_2" };
+const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_3_attributes = { .name = "comms_handler_to_extrusion_task_queue_2" };
+
+
+
+const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_1_attributes = { .name = "extrusion_task_to_comms_handler_queue_1" };
+const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_2_attributes = { .name = "extrusion_task_to_comms_handler_queue_2" };
+const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_3_attributes = { .name = "extrusion_task_to_comms_handler_queue_3" };
 
 const osMessageQueueAttr_t spi_2_extrusion_task_tx_queue_attributes = { .name = "spi_2_extrusion_task_tx_queue" };
 const osMessageQueueAttr_t spi_2_extrusion_task_rx_queue_attributes = { .name = "spi_2_extrusion_task_rx_queue" };
@@ -56,6 +71,38 @@ const osMutexAttr_t zone_1_band_heater_mutex_attr = { .name = "zone_1_band_heate
 const osMutexAttr_t zone_2_band_heater_mutex_attr = { .name = "zone_2_band_heater_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
 const osMutexAttr_t zone_3_band_heater_mutex_attr = { .name = "zone_3_band_heater_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
 const osMutexAttr_t serial_monitor_usart_mutex_attr = { .name = "serial_monitor_usart_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
+
+
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_1_handle()
+{
+    return extrusion_task_to_comms_handler_queue_1_handle;
+}
+
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_2_handle()
+{
+    return extrusion_task_to_comms_handler_queue_2_handle;
+}
+
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_3_handle()
+{
+    return extrusion_task_to_comms_handler_queue_3_handle;
+}
+
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_1_handle()
+{
+    return comms_handler_to_extrusion_task_queue_1_handle;
+}
+
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_2_handle()
+{
+    return comms_handler_to_extrusion_task_queue_2_handle;
+}
+
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_3_handle()
+{
+    return comms_handler_to_extrusion_task_queue_3_handle;
+}
+
 
 
 osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
@@ -102,9 +149,21 @@ namespace rtosal
 {
     void rtosal_initialize()
     {
+
+        extrusion_task_to_comms_handler_queue_1_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_1_attributes);
+        extrusion_task_to_comms_handler_queue_2_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_2_attributes);
+        extrusion_task_to_comms_handler_queue_3_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_3_attributes);
+
+        comms_handler_to_extrusion_task_queue_1_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_1_attributes);
+        comms_handler_to_extrusion_task_queue_2_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_2_attributes);
+        comms_handler_to_extrusion_task_queue_3_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_3_attributes);
+
+        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
+        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
+
         spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
         spi_2_extrusion_task_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_rx_queue_attributes);
-        comms_handler_output_data_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &i2c_tx_queue_attributes);
+        comms_handler_output_data_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_float_data_t), &i2c_tx_queue_attributes);
 
         serial_monitor_usart_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(serial_monitor::packet_t), &serial_monitor_usart_queue_attr);
         zone_1_band_heater_mutex_handle = osMutexNew(&zone_1_band_heater_mutex_attr);

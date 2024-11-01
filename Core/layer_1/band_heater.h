@@ -20,7 +20,8 @@
 /* third-party includes */
 
 /* layer_0 includes */
-
+#include "../layer_0/hal.h"
+#include "../layer_0/hal_wrapper.h"
 /* layer_1_rtosal includes */
 #include "../layer_0/rtosal.h"
 #include "../layer_0/rtosal_wrapper.h"
@@ -45,8 +46,8 @@ class device::band_heater
 
         static constexpr uint16_t OUTPUT_PULSE_WIDTH = 250U;
 
-        static TIM_HandleTypeDef* zero_crossing_pulse_timer_module;
-        TIM_HandleTypeDef* output_pulse_timer_module;
+        static hal::timer_handle_t* zero_crossing_pulse_timer_module;
+        hal::timer_handle_t* output_pulse_timer_module;
         uint16_t new_period;
         uint16_t period = 8300U;
         osMutexId_t mutex_handle;
@@ -54,8 +55,7 @@ class device::band_heater
         uint32_t initialize(uint8_t arg_temperature_zone_id, uint8_t arg_output_pulse_timer_id, osMutexId_t arg_mutex_handle);
         uint32_t initialize_output_pulse_timer(uint8_t arg_output_pulse_timer_id);
         uint32_t set_period(uint16_t arg_period);
-        uint32_t update_period();
-        TIM_HandleTypeDef* get_output_pulse_timer_module();
+        hal::timer_handle_t* get_output_pulse_timer_module();
         static void zero_crossing_pulse_restart();
         friend void output_pulse_restart(band_heater* arg_band_heater);
 

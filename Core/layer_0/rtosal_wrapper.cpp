@@ -44,7 +44,6 @@ namespace rtosal
 
     int32_t message_queue_receive(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout)
     {
-
         return (int32_t) osMessageQueueGet((osMessageQueueId_t) arg_message_queue_id, arg_message_ptr, nullptr, arg_timeout);
     }
 

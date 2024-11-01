@@ -1,43 +1,42 @@
 /***********************************************************************************************************************
  * Main_Controller
- * application.h
+ * device_callback.cpp
  *
  * wilson
- * 10/9/24
- * 6:59 PM
+ * 10/31/24
+ * 11:19 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_EXTRUDER_H
-#define MAIN_CONTROLLER_EXTRUDER_H
-
 /* c/c++ includes */
-#include <cstdint>
+
 /* stm32 includes */
 
 /* third-party includes */
 
-/* layer_0 includes */
+/* layer_0_hal includes */
 
 /* layer_1_rtosal includes */
 
-/* layer_1 includes */
-
+/* layer_2_device includes */
+#include "device.h"
 /* layer_3_control includes */
 
 /* layer_4_sys_op includes */
 
 /* layer_n_meta_structure includes */
 
-
-static constexpr uint8_t TEMPERATURE_ZONE_1 = 0U;
-static constexpr uint8_t TEMPERATURE_ZONE_2 = 1U;
-static constexpr uint8_t TEMPERATURE_ZONE_3 = 2U;
+/* device_callback header */
+#include "device_callback.h"
 
 
 
-
-
-#endif //MAIN_CONTROLLER_EXTRUDER_H
+void device_callback_tim_1_input_capture_pulse_detected_callback(TIM_HandleTypeDef *htim)
+{
+    device::band_heater::zero_crossing_pulse_restart();
+    output_pulse_restart(&device::zone_1_band_heater);
+    output_pulse_restart(&device::zone_2_band_heater);
+    output_pulse_restart(&device::zone_3_band_heater);
+}

@@ -14,7 +14,6 @@
 #define MAIN_CONTROLLER_RTOSAL_H
 
 #include <cstdint>
-#include "../meta_structure/meta_structure_system_manager.h"
 
 #include "rtosal_wrapper.h"
 
@@ -25,6 +24,16 @@
 #define BINARY_SEMAPHORE_INITIAL_COUNT      0U
 #define TRANSACTION_BYTE_COUNT_MAX          8U
 #define COMMON_PACKET_ARRAY_LENGTH_MAX      32U
+
+
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_1_handle();
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_2_handle();
+osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_3_handle();
+
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_1_handle();
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_2_handle();
+osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_3_handle();
+
 
 osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle();
 osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle();

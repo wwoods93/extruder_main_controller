@@ -178,8 +178,7 @@ class spi
         module_t*                   module;
         packet_t                    active_packet;
         packet_t                    pending_packet;
-        TIM_HandleTypeDef*          timeout_time_base;
-        uint32_t                    timeout_time_base_frequency = 0U;
+        hal::timer_handle_t*          timeout_timer_handle;
         uint8_t                     rx_result[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
         int16_t                     next_available_channel_id = 0U;
         int16_t                     next_available_packet_id = 0U;
@@ -214,12 +213,10 @@ class spi
             channel_t channel_7;
         } channel_list;
 
-        void send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet);
-        void receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet);
+        static void send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet);
+        void receive_inter_task_transaction_requests();
 
-
-
-        procedure_status_t initialize(module_t* arg_module, uint8_t arg_instance_t, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency);
+        procedure_status_t initialize(module_t* arg_module, uint8_t arg_instance_t, TIM_HandleTypeDef* arg_timeout_timer_handle);
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
 
@@ -244,9 +241,9 @@ class spi
         procedure_status_t reset_active_packet();
         void chip_select_set_active(uint8_t arg_channel_id);
         void chip_select_set_inactive(uint8_t arg_channel_id);
-        [[nodiscard]] uint32_t get_packets_requested_count() const;
-        [[nodiscard]] uint32_t get_packets_received_count() const;
-        void complete_transaction_tx_rx_success();
+        [[nodiscard]] static uint32_t get_packets_requested_count() ;
+        [[nodiscard]] static uint32_t get_packets_received_count() ;
+        void complete_transaction_tx_rx_success() const;
 
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);

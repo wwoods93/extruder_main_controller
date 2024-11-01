@@ -18,6 +18,7 @@
 /* third-party includes */
 
 /* layer_0 includes */
+#include "hal.h"
 #include "hal_wrapper.h"
 #include "hal_spi_definitions.h"
 /* layer_1_rtosal includes */
@@ -39,7 +40,7 @@ uint32_t spi::packets_requested_count = 0U;
 uint32_t spi::packets_received_count = 0U;
 
 
-spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, TIM_HandleTypeDef* arg_timeout_time_base, uint32_t arg_timeout_time_base_frequency)
+spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, hal::timer_handle_t* arg_timeout_timer_handle)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
 
@@ -75,12 +76,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
         }
     }
 
-
-    timeout_time_base = arg_timeout_time_base;
-    timeout_time_base_frequency = arg_timeout_time_base_frequency;
-
-
-
+    timeout_timer_handle = arg_timeout_timer_handle;
     module->rx_data_ready_flag = 0U;
     module->settings.mode = SPI_CONFIG_MODE_CONTROLLER;
     module->settings.direction = SPI_CONFIG_DIRECTION_2_LINE;
@@ -471,12 +467,12 @@ void spi::set_transaction_parameters(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_d
 
 spi::procedure_status_t spi::flag_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status) const
 {
-    uint32_t start_time = timeout_time_base->Instance->CNT;
+    uint32_t start_time = get_timer_count(timeout_timer_handle);
     uint16_t fallback_countdown = FALLBACK_COUNTDOWN;
 
     while (get_status_register_bit(arg_status_reg_bit) != arg_bit_status)
     {
-        if (timeout_time_base->Instance->CNT - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
+        if (get_timer_count(timeout_timer_handle) - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
         {
             disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
 
@@ -1066,10 +1062,7 @@ uint8_t spi::process_return_buffers(packet_t& arg_packet, int16_t arg_channel_id
             {
                 ++packets_received_count;
                 get_channel_by_channel_id(channel, index);
-//                if (channel.rx_message_queue != nullptr)
-//                {
-                    send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
-//                }
+                send_inter_task_transaction_result(channel.rx_message_queue, arg_packet);
                 buffer_accessed = 0U;
             }
         }
@@ -1080,6 +1073,7 @@ uint8_t spi::process_return_buffers(packet_t& arg_packet, int16_t arg_channel_id
 
 void spi::process_send_buffer()
 {
+    // TODO wrap osKernelGetTickCount or switch to stm timer
     process_send_buffer_timeout_start = osKernelGetTickCount();
     while (!send_buffer.empty() && osKernelGetTickCount() - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
     {
@@ -1092,7 +1086,6 @@ void spi::process_send_buffer()
         uint8_t packet_index = 0U;
         uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
-
 
         for (uint8_t current_transaction = 0U; current_transaction < 8U; ++current_transaction)
         {
@@ -1107,9 +1100,7 @@ void spi::process_send_buffer()
             }
         }
 
-
         send_buffer_pop();
-
         push_active_packet_to_return_buffer();
         reset_active_packet();
     }
@@ -1125,11 +1116,10 @@ void spi::transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t*
     for (uint8_t index = 0U; index < arg_current_transaction_size; ++index)
     {
         rx_result[index] = rx_pointer_tmp[index];
-//        rx_pointer_tmp[index] = 0;
     }
 }
 
-void spi::complete_transaction_tx_rx_success()
+void spi::complete_transaction_tx_rx_success() const
 {
     if (hal::gpio_read_pin(module->chip_select_port, module->chip_select_pin) == GPIO_PIN_RESET)
     {
@@ -1139,12 +1129,12 @@ void spi::complete_transaction_tx_rx_success()
     module->rx_data_ready_flag = 1U;
 }
 
-uint32_t spi::get_packets_requested_count() const
+uint32_t spi::get_packets_requested_count()
 {
     return packets_requested_count;
 }
 
-uint32_t spi::get_packets_received_count() const
+uint32_t spi::get_packets_received_count()
 {
     return packets_received_count;
 }
@@ -1163,7 +1153,7 @@ void spi::send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_
     }
 }
 
-void spi::receive_inter_task_transaction_requests(rtosal::message_queue_handle_t arg_message_queue_id, common_packet_t& arg_tx_common_packet)
+void spi::receive_inter_task_transaction_requests()
 {
     channel_t channel;
     common_packet_t common_packet;

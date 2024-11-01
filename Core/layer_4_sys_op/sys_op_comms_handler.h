@@ -19,20 +19,6 @@
 #include "../layer_1/band_heater.h"
 
 
-//namespace hal
-//{
-//    spi* get_spi_1_object();
-//    spi* get_spi_2_object();
-//}
-
-namespace device
-{
-//    band_heater* get_heating_element_object();
-}
-
-spi::module_t* get_spi_handle();
-//rtd* get_rtd_object();
-
 namespace sys_op::comms_handler
 {
     void task_intitialize();

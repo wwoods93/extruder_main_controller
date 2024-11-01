@@ -36,6 +36,39 @@
 
 namespace hal
 {
+
+
+    status_t timer_register_callback(timer_handle_t* arg_timer_handle, timer_callback_id_t arg_callback_id_t, timer_callback_t arg_callback)
+    {
+        return (status_t) HAL_TIM_RegisterCallback((TIM_HandleTypeDef*)arg_timer_handle, (HAL_TIM_CallbackIDTypeDef)arg_callback_id_t, (pTIM_CallbackTypeDef) arg_callback);
+    }
+
+    status_t timer_input_capture_start_interrupt(timer_handle_t* arg_timer_handle, uint32_t arg_channel)
+    {
+        return (status_t)HAL_TIM_IC_Start_IT((TIM_HandleTypeDef*) arg_timer_handle, arg_channel);
+    }
+
+    status_t timer_time_base_start(timer_handle_t* arg_timer_handle)
+    {
+        return (status_t) HAL_TIM_Base_Start((TIM_HandleTypeDef*) arg_timer_handle);
+    }
+
+
+
+
+
+    status_t i2c_register_callback(i2c_handle_t* arg_i2c_handle, i2c_callback_id_t arg_callback_id, i2c_callback_t arg_callback)
+    {
+        return (status_t)HAL_I2C_RegisterCallback((I2C_HandleTypeDef*)arg_i2c_handle, (HAL_I2C_CallbackIDTypeDef)arg_callback_id, (pI2C_CallbackTypeDef)arg_callback);
+    }
+
+    status_t i2c_controller_transmit_interrupt(i2c_handle_t* arg_i2c_handle, uint16_t arg_address, uint8_t* arg_data, uint16_t arg_size)
+    {
+        return (status_t)HAL_I2C_Master_Transmit_IT((I2C_HandleTypeDef*)arg_i2c_handle, arg_address, arg_data, arg_size);
+    }
+
+
+
     void gpio_write_pin(gpio_t* arg_port_name, uint16_t arg_gpio_pin, uint8_t arg_pin_state)
     {
         HAL_GPIO_WritePin((GPIO_TypeDef *)arg_port_name, arg_gpio_pin, (GPIO_PinState)arg_pin_state);

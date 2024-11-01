@@ -18,7 +18,6 @@
 
 /* layer_0 includes */
 #include "hal.h"
-#include "hal_timer.h"
 #include "hal_spi.h"
 /* layer_1_rtosal includes */
 
@@ -37,6 +36,7 @@
 
 CAN_HandleTypeDef hcan1;
 WWDG_HandleTypeDef hwwdg;
+IWDG_HandleTypeDef hiwdg;
 UART_HandleTypeDef huart2;
 I2C_HandleTypeDef hi2c1;
 I2C_HandleTypeDef hi2c2;
@@ -49,6 +49,12 @@ TIM_HandleTypeDef htim10;
 TIM_HandleTypeDef htim13;
 TIM_HandleTypeDef htim14;
 
+TIM_HandleTypeDef htim7;
+TIM_HandleTypeDef htim11;
+
+static TIM_HandleTypeDef ms_timer_base_timer_handle;
+static TIM_HandleTypeDef us_base_timer_handle;
+
 namespace hal
 {
 
@@ -59,6 +65,44 @@ namespace hal
     {
         return &spi_2;
     }
+
+    void i2c_build_packet_array_from_converted_bytes(uint8_t* arg_i2c_packet_array, uint8_t arg_global_id, const uint8_t* arg_converted_bytes)
+    {
+        arg_i2c_packet_array[0] = arg_global_id;
+        arg_i2c_packet_array[1] = arg_converted_bytes[0];
+        arg_i2c_packet_array[2] = arg_converted_bytes[1];
+        arg_i2c_packet_array[3] = arg_converted_bytes[2];
+        arg_i2c_packet_array[4] = arg_converted_bytes[3];
+    }
+
+    void timer_2_initialize()
+    {
+        TIM_ClockConfigTypeDef sClockSourceConfig = {0};
+        TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+        htim2.Instance = TIM2;
+        htim2.Init.Prescaler = 31U;
+        htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+        htim2.Init.Period = 4294967295U;
+        htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+        htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+        if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+        {
+            Error_Handler();
+        }
+        sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
+        if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
+        {
+            Error_Handler();
+        }
+        sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+        sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+        if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+        {
+            Error_Handler();
+        }
+    }
+
 }
 
 SPI_HandleTypeDef* get_spi_1_handle()
@@ -81,9 +125,9 @@ TIM_HandleTypeDef* get_timer_2_handle()
     return &htim2;
 }
 
-TIM_HandleTypeDef* get_timer_6_handle()
+hal::timer_handle_t* get_timer_6_handle()
 {
-    return &htim6;
+    return static_cast<hal::timer_handle_t*>(&htim6);
 }
 
 TIM_HandleTypeDef* get_timer_10_handle()
@@ -126,6 +170,16 @@ uint32_t get_timer_2_count()
     return htim2.Instance->CNT;
 }
 
+uint32_t get_timer_6_count()
+{
+    return htim6.Instance->CNT;
+}
+
+uint32_t get_timer_count(hal::timer_handle_t* arg_timer_handle)
+{
+    return arg_timer_handle->Instance->CNT;
+}
+
 void error_handler()
 {
     __disable_irq();
@@ -151,21 +205,15 @@ void initialize_peripherals()
     MX_GPIO_Init();
     MX_RTC_Init();
     MX_TIM1_Init();
-//    MX_TIM2_Init();
-    MX_TIM6_Init();
+    timer_6_initialize();
     MX_TIM7_Init();
     MX_TIM10_Init();
     MX_TIM11_Init();
     MX_TIM13_Init();
     MX_TIM14_Init();
-//    MX_ADC1_Init();
-//    MX_UART4_Init();
-    MX_CAN1_Init();
-//    MX_SPI3_Init();
-//    MX_QUADSPI_Init();
-//    MX_WWDG_Init();
+    can_1_initialize();
     MX_USART2_UART_Init();
-    MX_I2C2_Init();
+    i2c_2_initialize();
 }
 
 //void MX_WWDG_Init(void)
@@ -194,16 +242,8 @@ void initialize_peripherals()
 //}
 
 
-void MX_CAN1_Init()
+void can_1_initialize()
 {
-
-    /* USER CODE BEGIN CAN1_Init 0 */
-
-    /* USER CODE END CAN1_Init 0 */
-
-    /* USER CODE BEGIN CAN1_Init 1 */
-
-    /* USER CODE END CAN1_Init 1 */
     hcan1.Instance = CAN1;
     hcan1.Init.Prescaler = 16;
     hcan1.Init.Mode = CAN_MODE_NORMAL;
@@ -216,26 +256,26 @@ void MX_CAN1_Init()
     hcan1.Init.AutoRetransmission = DISABLE;
     hcan1.Init.ReceiveFifoLocked = DISABLE;
     hcan1.Init.TransmitFifoPriority = DISABLE;
+
     if (HAL_CAN_Init(&hcan1) != HAL_OK)
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN CAN1_Init 2 */
+}
 
-    /* USER CODE END CAN1_Init 2 */
-
+void MX_IWDG_Init()
+{
+    hiwdg.Instance = IWDG;
+    hiwdg.Init.Prescaler = IWDG_PRESCALER_4;
+    hiwdg.Init.Reload = 4095;
+    if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
+    {
+        Error_Handler();
+    }
 }
 
 void MX_WWDG_Init()
 {
-
-    /* USER CODE BEGIN WWDG_Init 0 */
-////////////////
-    /* USER CODE END WWDG_Init 0 */
-
-    /* USER CODE BEGIN WWDG_Init 1 */
-////////////////
-    /* USER CODE END WWDG_Init 1 */
     hwwdg.Instance = WWDG;
     hwwdg.Init.Prescaler = WWDG_PRESCALER_1;
     hwwdg.Init.Window = 64;
@@ -245,22 +285,10 @@ void MX_WWDG_Init()
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN WWDG_Init 2 */
-////////////////
-    /* USER CODE END WWDG_Init 2 */
-
 }
 
 void MX_USART2_UART_Init()
 {
-
-    /* USER CODE BEGIN USART2_Init 0 */
-//
-    /* USER CODE END USART2_Init 0 */
-
-    /* USER CODE BEGIN USART2_Init 1 */
-//
-    /* USER CODE END USART2_Init 1 */
     huart2.Instance = USART2;
     huart2.Init.BaudRate = 115200;
     huart2.Init.WordLength = UART_WORDLENGTH_8B;
@@ -273,10 +301,6 @@ void MX_USART2_UART_Init()
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN USART2_Init 2 */
-//
-    /* USER CODE END USART2_Init 2 */
-
 }
 
 void MX_I2C1_Init()
@@ -296,8 +320,7 @@ void MX_I2C1_Init()
     }
 }
 
-
-void MX_I2C2_Init()
+void i2c_2_initialize()
 {
     hi2c2.Instance = I2C2;
     hi2c2.Init.ClockSpeed = 100000;
@@ -314,20 +337,9 @@ void MX_I2C2_Init()
 
 void MX_RTC_Init()
 {
-
-    /* USER CODE BEGIN RTC_Init 0 */
-
-    /* USER CODE END RTC_Init 0 */
-
     RTC_TimeTypeDef sTime = {0};
     RTC_DateTypeDef sDate = {0};
 
-    /* USER CODE BEGIN RTC_Init 1 */
-
-    /* USER CODE END RTC_Init 1 */
-
-    /** Initialize RTC Only
-    */
     hrtc.Instance = RTC;
     hrtc.Init.HourFormat = RTC_HOURFORMAT_24;
     hrtc.Init.AsynchPrediv = 127;
@@ -335,26 +347,23 @@ void MX_RTC_Init()
     hrtc.Init.OutPut = RTC_OUTPUT_DISABLE;
     hrtc.Init.OutPutPolarity = RTC_OUTPUT_POLARITY_HIGH;
     hrtc.Init.OutPutType = RTC_OUTPUT_TYPE_OPENDRAIN;
+
     if (HAL_RTC_Init(&hrtc) != HAL_OK)
     {
         Error_Handler();
     }
 
-    /* USER CODE BEGIN Check_RTC_BKUP */
-
-    /* USER CODE END Check_RTC_BKUP */
-
-    /** Initialize RTC and set the Time and Date
-    */
     sTime.Hours = 0x10;
     sTime.Minutes = 0x0;
     sTime.Seconds = 0x0;
     sTime.DayLightSaving = RTC_DAYLIGHTSAVING_NONE;
     sTime.StoreOperation = RTC_STOREOPERATION_RESET;
+
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
     {
         Error_Handler();
     }
+
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
     sDate.Month = RTC_MONTH_JANUARY;
     sDate.Date = 0x1;
@@ -364,25 +373,13 @@ void MX_RTC_Init()
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN RTC_Init 2 */
-
-    /* USER CODE END RTC_Init 2 */
-
 }
 
 void MX_TIM1_Init()
 {
-
-    /* USER CODE BEGIN TIM1_Init 0 */
-
-    /* USER CODE END TIM1_Init 0 */
-
     TIM_MasterConfigTypeDef sMasterConfig = {0};
     TIM_IC_InitTypeDef sConfigIC = {0};
 
-    /* USER CODE BEGIN TIM1_Init 1 */
-
-    /* USER CODE END TIM1_Init 1 */
     htim1.Instance = TIM1;
     htim1.Init.Prescaler = 64-1;
     htim1.Init.CounterMode = TIM_COUNTERMODE_UP;
@@ -408,53 +405,9 @@ void MX_TIM1_Init()
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN TIM1_Init 2 */
-
-    /* USER CODE END TIM1_Init 2 */
-
 }
 
-void MX_TIM2_Init()
-{
-
-    /* USER CODE BEGIN TIM2_Init 0 */
-
-    /* USER CODE END TIM2_Init 0 */
-
-    TIM_ClockConfigTypeDef sClockSourceConfig = {0};
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
-
-    /* USER CODE BEGIN TIM2_Init 1 */
-
-    /* USER CODE END TIM2_Init 1 */
-    htim2.Instance = TIM2;
-    htim2.Init.Prescaler = 32 - 1;
-    htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim2.Init.Period = 4294967295;
-    htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
-    htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sClockSourceConfig.ClockSource = TIM_CLOCKSOURCE_INTERNAL;
-    if (HAL_TIM_ConfigClockSource(&htim2, &sClockSourceConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    /* USER CODE BEGIN TIM2_Init 2 */
-
-    /* USER CODE END TIM2_Init 2 */
-
-}
-
-void MX_TIM6_Init()
+void timer_6_initialize()
 {
     TIM_MasterConfigTypeDef sMasterConfig = {0};
 
@@ -477,22 +430,15 @@ void MX_TIM6_Init()
 
 void MX_TIM10_Init()
 {
-
-    /* USER CODE BEGIN TIM10_Init 0 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM10_Init 0 */
-
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    /* USER CODE BEGIN TIM10_Init 1 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM10_Init 1 */
     htim10.Instance = TIM10;
     htim10.Init.Prescaler = 64-1;
     htim10.Init.CounterMode = TIM_COUNTERMODE_DOWN;
     htim10.Init.Period = 1000;
     htim10.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim10.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
     if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
     {
         Error_Handler();
@@ -501,49 +447,72 @@ void MX_TIM10_Init()
     {
         Error_Handler();
     }
+
     if (HAL_TIM_OnePulse_Init(&htim10, TIM_OPMODE_SINGLE) != HAL_OK)
     {
         Error_Handler();
     }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
     if (HAL_TIM_OC_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN TIM10_Init 2 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM10_Init 2 */
-    HAL_TIM_MspPostInit(&htim10);
 
+    HAL_TIM_MspPostInit(&htim10);
 }
 
-/**
-  * @brief TIM13 Initialization Function
-  * @param None
-  * @retval None
-  */
+void MX_TIM7_Init()
+{
+    TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+    us_base_timer_handle.Instance = TIM7;
+    us_base_timer_handle.Init.Prescaler = 32;
+    us_base_timer_handle.Init.CounterMode = TIM_COUNTERMODE_UP;
+    us_base_timer_handle.Init.Period = 65535;
+    us_base_timer_handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
+    {
+        Error_Handler();
+    }
+    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+    if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
+void MX_TIM11_Init()
+{
+    htim11.Instance = TIM11;
+    htim11.Init.Prescaler = 64;
+    htim11.Init.CounterMode = TIM_COUNTERMODE_UP;
+    htim11.Init.Period = 65535;
+    htim11.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+    htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+    if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
+    {
+        Error_Handler();
+    }
+}
+
 void MX_TIM13_Init()
 {
-
-    /* USER CODE BEGIN TIM13_Init 0 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM13_Init 0 */
-
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    /* USER CODE BEGIN TIM13_Init 1 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM13_Init 1 */
     htim13.Instance = TIM13;
     htim13.Init.Prescaler = 32-1;
     htim13.Init.CounterMode = TIM_COUNTERMODE_DOWN;
     htim13.Init.Period = 1000;
     htim13.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim13.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
     if (HAL_TIM_Base_Init(&htim13) != HAL_OK)
     {
         Error_Handler();
@@ -556,45 +525,33 @@ void MX_TIM13_Init()
     {
         Error_Handler();
     }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
     if (HAL_TIM_OC_ConfigChannel(&htim13, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN TIM13_Init 2 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM13_Init 2 */
+
     HAL_TIM_MspPostInit(&htim13);
 
 }
 
-/**
-  * @brief TIM14 Initialization Function
-  * @param None
-  * @retval None
-  */
 void MX_TIM14_Init()
 {
-
-    /* USER CODE BEGIN TIM14_Init 0 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM14_Init 0 */
-
     TIM_OC_InitTypeDef sConfigOC = {0};
 
-    /* USER CODE BEGIN TIM14_Init 1 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM14_Init 1 */
     htim14.Instance = TIM14;
     htim14.Init.Prescaler = 32-1;
     htim14.Init.CounterMode = TIM_COUNTERMODE_DOWN;
     htim14.Init.Period = 1000;
     htim14.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
     htim14.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+
     if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
     {
         Error_Handler();
@@ -607,18 +564,17 @@ void MX_TIM14_Init()
     {
         Error_Handler();
     }
+
     sConfigOC.OCMode = TIM_OCMODE_PWM2;
     sConfigOC.Pulse = 750;
     sConfigOC.OCPolarity = TIM_OCPOLARITY_HIGH;
     sConfigOC.OCIdleState = TIM_OCIDLESTATE_RESET;
     sConfigOC.OCFastMode = TIM_OCFAST_DISABLE;
+
     if (HAL_TIM_OC_ConfigChannel(&htim14, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
     {
         Error_Handler();
     }
-    /* USER CODE BEGIN TIM14_Init 2 */
-//////////////////////////////////////////////////////////
-    /* USER CODE END TIM14_Init 2 */
-    HAL_TIM_MspPostInit(&htim14);
 
+    HAL_TIM_MspPostInit(&htim14);
 }

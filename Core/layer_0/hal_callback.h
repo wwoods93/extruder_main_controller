@@ -39,6 +39,9 @@ void hal_callback_spi_2_error(spi *arg_object);
 void hal_callback_i2c_controller_tx_complete(I2C_HandleTypeDef *hi2c);
 void hal_callback_i2c_controller_error(I2C_HandleTypeDef *hi2c);
 
+void hal_callback_uart_tx_complete(UART_HandleTypeDef *huart);
+void hal_callback_uart_rx_complete_callback(UART_HandleTypeDef *huart);
+
 void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim);
 
 

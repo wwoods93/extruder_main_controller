@@ -169,26 +169,8 @@ namespace device
 
     uint32_t band_heater::set_period(uint16_t arg_period)
     {
-        if (osMutexAcquire(mutex_handle, 100) == osOK)
-        {
-            new_period = arg_period;
-            osMutexRelease(mutex_handle);
-        }
-        else
-        {
-            // handle error
-        }
+        period = arg_period;
 
-        return 0;
-    }
-
-    uint32_t band_heater::update_period()
-    {
-        if (osMutexAcquire(mutex_handle, 100) == osOK)
-        {
-            period = new_period;
-            osMutexRelease(mutex_handle);
-        }
         return 0;
     }
 
@@ -222,8 +204,7 @@ namespace device
         output_compare_init.OCIdleState = TIM_OCIDLESTATE_RESET;
         output_compare_init.OCFastMode = TIM_OCFAST_DISABLE;
 
-        if (HAL_TIM_OC_ConfigChannel(arg_band_heater->output_pulse_timer_module, &output_compare_init, TIM_CHANNEL_1) !=
-            HAL_OK)
+        if (HAL_TIM_OC_ConfigChannel(arg_band_heater->output_pulse_timer_module, &output_compare_init, TIM_CHANNEL_1) != HAL_OK)
         {
             Error_Handler();
         }

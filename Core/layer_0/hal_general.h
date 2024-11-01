@@ -64,13 +64,7 @@ typedef enum
 } flag_status_t;
 
 
-typedef enum
-{
-    HAL_STATUS_OK       = 0x00U,
-    HAL_STATUS_ERROR    = 0x01U,
-    HAL_STATUS_BUSY     = 0x02U,
-    HAL_STATUS_TIMEOUT  = 0x03U
-} hal_status_t;
+
 
 #ifndef PERIPHERAL_BASE_ADDRESS
 #define PERIPHERAL_BASE_ADDRESS             0x40000000UL

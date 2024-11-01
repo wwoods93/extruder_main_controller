@@ -59,15 +59,6 @@
 spi::module_t spi_2_handle;
 
 
-// TODO: move to hal_callback
-void hal_callback_tim_1_input_capture_pulse_detected_callback(TIM_HandleTypeDef *htim)
-{
-    device::band_heater::zero_crossing_pulse_restart();
-    output_pulse_restart(&device::zone_1_band_heater);
-    output_pulse_restart(&device::zone_2_band_heater);
-    output_pulse_restart(&device::zone_3_band_heater);
-}
-
 hal::timer_handle_t* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
 
 namespace sys_op::comms_handler
@@ -127,12 +118,12 @@ namespace sys_op::comms_handler
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_CONTROLLER_TX_COMPLETE_CALLBACK_ID, hal_callback_i2c_controller_tx_complete);
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_ERROR_CALLBACK_ID, hal_callback_i2c_controller_error);
 
-                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
-                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());
-                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID, get_zone_3_band_heater_mutex_handle());
-
-                hal::timer_register_callback(get_timer_1_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, hal_callback_tim_1_input_capture_pulse_detected_callback);
-                hal::timer_input_capture_start_interrupt(get_timer_1_handle(), hal::TIMER_CHANNEL_2);
+//                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
+//                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());
+//                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID, get_zone_3_band_heater_mutex_handle());
+//
+//                hal::timer_register_callback(get_timer_1_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, hal_callback_tim_1_input_capture_pulse_detected_callback);
+//                hal::timer_input_capture_start_interrupt(get_timer_1_handle(), hal::TIMER_CHANNEL_2);
                 hal::timer_2_initialize();
                 hal::timer_time_base_start(get_timer_2_handle());
 
@@ -148,9 +139,9 @@ namespace sys_op::comms_handler
                 device::built_in_display.get_intertask_output_data();
                 device::built_in_display.update_output();
 
-                device::zone_1_band_heater.update_period();
-                device::zone_2_band_heater.update_period();
-                device::zone_3_band_heater.update_period();
+//                device::zone_1_band_heater.update_period();
+//                device::zone_2_band_heater.update_period();
+//                device::zone_3_band_heater.update_period();
 
                 hal::spi_2.receive_inter_task_transaction_requests(spi_tx_queue_handle, tx_common_packet);
                 hal::spi_2.process_send_buffer();
@@ -170,82 +161,4 @@ namespace sys_op::comms_handler
         }
 
     }
-}
-
-
-void TIM1_CC_IRQHandler()
-{
-    HAL_TIM_IRQHandler(get_timer_1_handle());
-
-}
-
-void TIM1_UP_TIM10_IRQHandler()
-{
-    HAL_TIM_IRQHandler(get_timer_1_handle());
-    HAL_TIM_IRQHandler(get_timer_10_handle());
-}
-
-void TIM8_UP_TIM13_IRQHandler()
-{
-    HAL_TIM_IRQHandler(get_timer_13_handle());
-}
-
-void TIM8_TRG_COM_TIM14_IRQHandler()
-{
-    HAL_TIM_IRQHandler(get_timer_14_handle());
-}
-
-void SPI1_IRQHandler()
-{
-//    spi_irq_handler(hal::get_spi_1_object());
-}
-
-void SPI2_IRQHandler()
-{
-    spi_irq_handler(hal::get_spi_2_object());
-}
-
-void USART2_IRQHandler()
-{
-    HAL_UART_IRQHandler(get_usart_2_handle());
-}
-
-void CAN1_TX_IRQHandler()
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_RX0_IRQHandler()
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_RX1_IRQHandler()
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void CAN1_SCE_IRQHandler()
-{
-    HAL_CAN_IRQHandler(get_can_1_handle());
-}
-
-void I2C1_EV_IRQHandler()
-{
-    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
-}
-
-void I2C1_ER_IRQHandler()
-{
-    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
-}
-
-void I2C2_EV_IRQHandler()
-{
-    HAL_I2C_EV_IRQHandler(get_i2c_2_handle());
-}
-
-void I2C2_ER_IRQHandler()
-{
-    HAL_I2C_ER_IRQHandler(get_i2c_2_handle());
 }

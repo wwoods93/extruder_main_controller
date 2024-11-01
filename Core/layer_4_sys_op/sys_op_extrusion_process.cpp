@@ -28,6 +28,7 @@
 #include "../layer_0/rtosal_globals.h"
 #include "../layer_0/rtosal.h"
 #include "../layer_1/device.h"
+#include "../layer_1/device_callback.h"
 #include "../layer_1/rtd.h"
 #include "../layer_1/band_heater.h"
 
@@ -38,6 +39,8 @@
 #define EXTRUSION_PROCESS_STATE_WAIT_FOR_SYSTEM_INITIALIZATION      1
 #define EXTRUSION_PROCESS_STATE_CONFIGURE_USERS                     2
 #define EXTRUSION_PROCESS_STATE_RUN                                 3
+
+
 
 
 namespace sys_op::extrusion
@@ -107,6 +110,14 @@ namespace sys_op::extrusion
                 device::rtd_zone_0.start_read_requests();
                 device::rtd_zone_1.start_read_requests();
                 device::rtd_zone_2.start_read_requests();
+
+                device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID, get_zone_1_band_heater_mutex_handle());
+                device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID, get_zone_2_band_heater_mutex_handle());
+                device::zone_3_band_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID, get_zone_3_band_heater_mutex_handle());
+
+                hal::timer_register_callback(get_timer_1_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, device_callback_tim_1_input_capture_pulse_detected_callback);
+                hal::timer_input_capture_start_interrupt(get_timer_1_handle(), hal::TIMER_CHANNEL_2);
+
 
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
                 break;

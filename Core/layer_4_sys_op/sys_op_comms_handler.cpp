@@ -93,8 +93,8 @@ namespace sys_op::comms_handler
 
                 rtosal::event_flag_wait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-                device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
                 device::built_in_display.initialize(get_i2c_2_handle(), comms_handler_output_data_queue_handle);
+                device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle());
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);

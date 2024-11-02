@@ -37,7 +37,7 @@ namespace sys_op::initialization
             }
             case INITIALIZATION_TASK_STATE_RUN:
             {
-
+                osThreadYield();
                 break;
             }
             default:

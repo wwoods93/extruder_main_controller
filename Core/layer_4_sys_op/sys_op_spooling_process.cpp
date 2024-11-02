@@ -10,6 +10,7 @@
  *
  **********************************************************************************************************************/
 
+#include "cmsis_os2.h"
 #include "sys_op_spooling_process.h"
 
 namespace sys_op::spooling
@@ -21,7 +22,6 @@ namespace sys_op::spooling
 
     void task_state_machine()
     {
-
-
+        osThreadYield();
     }
 }

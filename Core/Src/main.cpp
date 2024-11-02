@@ -28,6 +28,7 @@
 
 /* layer_4_sys_op includes */
 #include "../layer_4_sys_op/sys_op_initialization.h"
+#include "../layer_4_sys_op/sys_op_heartbeat_task.h"
 #include "../layer_4_sys_op/sys_op_comms_handler.h"
 #include "../layer_4_sys_op/sys_op_preparation_process.h"
 #include "../layer_4_sys_op/sys_op_extrusion_process.h"
@@ -61,9 +62,9 @@ osThreadId_t spooling_process_taskHandle;
 osThreadId_t heartbeat_taskHandle;
 
 const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityAboveNormal2, };
+const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityAboveNormal1, };
+const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 const osThreadAttr_t heartbeat_task_attributes      = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 
@@ -105,7 +106,7 @@ void start_heartbeat_task(void *argument)
 {
     while (true)
     {
-        osDelay(1);
+        sys_op::heartbeat::task_state_machine();
     }
 }
 

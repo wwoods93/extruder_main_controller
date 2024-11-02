@@ -11,7 +11,7 @@
  **********************************************************************************************************************/
 
 #include <cstdint>
-
+#include "cmsis_os2.h"
 #include "stm32f4xx_it.h"
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_general.h"
@@ -91,6 +91,7 @@ namespace sys_op::extrusion
                 device::rtd_zone_1.read();
                 device::rtd_zone_2.read();
                 device::rtd_zone_3.read();
+                osThreadYield();
 
                 break;
             }

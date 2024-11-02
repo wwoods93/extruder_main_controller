@@ -42,8 +42,6 @@
 #include "task.h"
 
 
-
-
 const osEventFlagsAttr_t initialization_event_flags_attributes = { .name = "initialization_event_flags" };
 
 osEventFlagsId_t initialization_event_flags_handle;
@@ -51,11 +49,8 @@ osMessageQueueId_t initialization_task_queue_handle;
 const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "initialization_task_queue" };
 
 
-
-
-
-osThreadId_t initialization_taskHandle;
-osThreadId_t comms_handler_taskHandle;
+osThreadId_t initialization_task_handle;
+osThreadId_t comms_handler_task_handle;
 osThreadId_t preparation_process_taskHandle;
 osThreadId_t extrusion_process_taskHandle;
 osThreadId_t spooling_process_taskHandle;
@@ -80,7 +75,6 @@ void start_heartbeat_task(void *argument);
 int main()
 {
     initialize_peripherals();
-//    timers_initialize();
     osKernelInitialize();
 
     initialization_event_flags_handle = osEventFlagsNew(&initialization_event_flags_attributes);
@@ -90,8 +84,8 @@ int main()
 
 
 
-    initialization_taskHandle       = osThreadNew(start_initialization_task,        nullptr, &initialization_task_attributes);
-    comms_handler_taskHandle        = osThreadNew(start_comms_handler_task,         nullptr, &comms_handler_task_attributes);
+    initialization_task_handle       = osThreadNew(start_initialization_task, nullptr, &initialization_task_attributes);
+    comms_handler_task_handle        = osThreadNew(start_comms_handler_task, nullptr, &comms_handler_task_attributes);
     preparation_process_taskHandle  = osThreadNew(start_preparation_process_task,   nullptr, &preparation_task_attributes);
     extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_task_attributes);
     spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);

@@ -11,7 +11,7 @@
  **********************************************************************************************************************/
 
 #include <cstdint>
-
+#include "cmsis_os2.h"
 #include "stm32f4xx_it.h"
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_general.h"
@@ -38,6 +38,8 @@ namespace sys_op::extrusion
     rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
 
     rtosal::event_flag_handle_t initialization_event_flags_handle = nullptr;
+
+    char debug_msg[] = "period is 8000";
 
     void task_intitialize()
     {
@@ -91,6 +93,7 @@ namespace sys_op::extrusion
                 device::rtd_zone_1.read();
                 device::rtd_zone_2.read();
                 device::rtd_zone_3.read();
+                osThreadYield();
 
                 break;
             }

@@ -58,7 +58,10 @@ namespace sys_op::comms_handler
     int16_t rtd_1_channel_id = ID_INVALID;
     int16_t rtd_2_channel_id = ID_INVALID;
 
-    uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
+    uint32_t tick;
+    uint32_t tick_diff;
+    volatile uint32_t comms_handler_timer_tick;
+    volatile uint32_t comms_handler_execution_time_us;
 
     void task_intitialize()
     {
@@ -70,7 +73,6 @@ namespace sys_op::comms_handler
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
         char time_stamp[9];
-        spi::packet_t spi_rx_packet;
 
         switch (comms_handler_state)
         {
@@ -114,19 +116,20 @@ namespace sys_op::comms_handler
             }
             case COMMS_HANDLER_STATE_RUN:
             {
+                comms_handler_timer_tick = get_timer_2_count();
+                tick = osKernelGetTickCount();
                 device::debug_serial_monitor.process_send_buffer();
                 device::built_in_display.get_intertask_output_data();
                 device::built_in_display.update_output();
 
                 hal::spi_2.receive_inter_task_transaction_requests();
                 hal::spi_2.process_send_buffer();
-                hal::spi_2.process_return_buffers(spi_rx_packet, 0, rx_d);
-
-                // TODO: move heartbeat led
-                hal::gpio_toggle_pin(PORT_A, PIN_5);
+                hal::spi_2.process_return_buffers();
 
                 hal::rtc_get_time_stamp(time_stamp);
-
+                tick_diff = osKernelGetTickCount() - tick;
+                comms_handler_execution_time_us = get_timer_2_count() - comms_handler_timer_tick;
+                osThreadYield();
                 break;
             }
             default:

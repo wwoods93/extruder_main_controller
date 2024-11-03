@@ -53,7 +53,7 @@ uint32_t serial_monitor::print(const char* arg_output_string)
     memset(&packet, '\0', sizeof(packet_t));
     sprintf(packet.message, "%s->%s:: %s", time_stamp, name, arg_output_string);
 
-    if (rtosal::message_queue_send(usart_message_queue_send_handle, &packet, 100) == rtosal::OS_OK)
+    if (rtosal::message_queue_send(usart_message_queue_send_handle, &packet, 0U) == rtosal::OS_OK)
     {
         // success
     }
@@ -69,7 +69,7 @@ uint32_t serial_monitor::process_send_buffer()
 {
     packet_t packet;
     memset(&packet, '\0', sizeof(packet_t));
-    if (rtosal::message_queue_receive(usart_message_queue_receive_handle, &packet, 100) == rtosal::OS_OK)
+    if (rtosal::message_queue_receive(usart_message_queue_receive_handle, &packet, 0U) == rtosal::OS_OK)
     {
         memset(&message, '\0', sizeof(message));
         memcpy(&message, &packet.message, sizeof(packet.message));

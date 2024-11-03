@@ -65,7 +65,7 @@
 //WWDG_HandleTypeDef hwwdg;
 //
 ///* Definitions for initialization_task */
-//osThreadId_t initialization_taskHandle;
+//osThreadId_t initialization_task_handle;
 //const osThreadAttr_t initialization_task_attributes = {
 //  .name = "initialization_task",
 //  .stack_size = 128 * 4,
@@ -93,7 +93,7 @@
 //  .priority = (osPriority_t) osPriorityNormal,
 //};
 ///* Definitions for comms_handler_task */
-//osThreadId_t comms_handler_taskHandle;
+//osThreadId_t comms_handler_task_handle;
 //const osThreadAttr_t comms_handler_task_attributes = {
 //  .name = "comms_handler_task",
 //  .stack_size = 512 * 4,
@@ -254,7 +254,7 @@
 //
 //  /* Create the thread(s) */
 //  /* creation of initialization_task */
-//  initialization_taskHandle = osThreadNew(start_initialization_task, NULL, &initialization_task_attributes);
+//  initialization_task_handle = osThreadNew(start_initialization_task, NULL, &initialization_task_attributes);
 //
 //  /* creation of preparation_process_task */
 //  preparation_process_taskHandle = osThreadNew(start_preparation_process_task, NULL, &preparation_process_task_attributes);
@@ -266,7 +266,7 @@
 //  spooling_process_taskHandle = osThreadNew(start_spooling_process_task, NULL, &spooling_process_task_attributes);
 //
 //  /* creation of comms_handler_task */
-//  comms_handler_taskHandle = osThreadNew(start_comms_updater_task, NULL, &comms_handler_task_attributes);
+//  comms_handler_task_handle = osThreadNew(start_comms_updater_task, NULL, &comms_handler_task_attributes);
 //
 //  /* creation of heartbeat_task */
 //  heartbeat_taskHandle = osThreadNew(start_heartbeat_task, NULL, &heartbeat_task_attributes);

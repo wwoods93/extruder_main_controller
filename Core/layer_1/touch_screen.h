@@ -42,9 +42,14 @@ class touch_screen
         static constexpr uint8_t STATE_SEND_SPI_REQUEST_COUNT = 1U;
         static constexpr uint8_t STATE_SEND_SPI_RECEIVE_COUNT = 2U;
 
-        float zone_1_rtd_reading = 0;
-        float zone_2_rtd_reading = 0;
-        float zone_3_rtd_reading = 0;
+        float zone_1_rtd_reading = 0.0;
+        float zone_2_rtd_reading = 0.0;
+        float zone_3_rtd_reading = 0.0;
+
+        uint8_t zone_1_rtd_reading_is_fresh = 0U;
+        uint8_t zone_2_rtd_reading_is_fresh = 0U;
+        uint8_t zone_3_rtd_reading_is_fresh = 0U;
+
 
         uint32_t touch_screen_iteration_tick = 0U;
         uint8_t converter_result[4] = { 0, 0, 0, 0 };

@@ -61,8 +61,6 @@ namespace sys_op::comms_handler
     volatile uint32_t comms_handler_timer_tick;
     volatile uint32_t comms_handler_execution_time_us;
 
-    uint8_t rx_d[TX_SIZE_MAX] = {0, 0, 0, 0, 0, 0, 0, 0 };
-
     void task_intitialize()
     {
 
@@ -73,7 +71,6 @@ namespace sys_op::comms_handler
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
         char time_stamp[9];
-        spi::packet_t spi_rx_packet;
 
         switch (comms_handler_state)
         {
@@ -95,9 +92,6 @@ namespace sys_op::comms_handler
 
                 device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
                 device::built_in_display.initialize(get_i2c_2_handle(), comms_handler_output_data_queue_handle);
-
-
-
 
                 hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle());
                 hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
@@ -127,7 +121,7 @@ namespace sys_op::comms_handler
 
                 hal::spi_2.receive_inter_task_transaction_requests();
                 hal::spi_2.process_send_buffer();
-                hal::spi_2.process_return_buffers(spi_rx_packet, 0, rx_d);
+                hal::spi_2.process_return_buffers();
 
                 hal::rtc_get_time_stamp(time_stamp);
                 comms_handler_execution_time_us = get_timer_2_count() - comms_handler_timer_tick;

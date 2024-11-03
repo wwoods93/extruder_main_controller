@@ -39,6 +39,8 @@ namespace sys_op::extrusion
 
     rtosal::event_flag_handle_t initialization_event_flags_handle = nullptr;
 
+    char debug_msg[] = "period is 8000";
+
     void task_intitialize()
     {
 

@@ -48,7 +48,7 @@ void touch_screen::initialize(I2C_HandleTypeDef *arg_i2c_module, rtosal::message
 
 void touch_screen::get_intertask_output_data()
 {
-    if (rtosal::message_queue_receive(message_queue_handle, &received_data, 50U) == 0U)
+    if (rtosal::message_queue_receive(message_queue_handle, &received_data, 0U) == 0U)
     {
         switch (received_data.id)
         {
@@ -136,7 +136,7 @@ void touch_screen::update_output()
                     }
                 }
 
-                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5);
+                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
 
                 break;
             }
@@ -144,7 +144,7 @@ void touch_screen::update_output()
             {
                 utility::convert_uint32_to_uint8_array(spi::get_packets_requested_count(), converter_result);
                 hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x07, converter_result);
-                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5);
+                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_SPI_RECEIVE_COUNT;
                 break;
             }
@@ -152,7 +152,7 @@ void touch_screen::update_output()
             {
                 utility::convert_uint32_to_uint8_array(spi::get_packets_received_count(), converter_result);
                 hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x06, converter_result);
-                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5);
+                hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_RTD_READINGS;
                 break;
             }

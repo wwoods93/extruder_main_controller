@@ -58,6 +58,8 @@ namespace sys_op::comms_handler
     int16_t rtd_1_channel_id = ID_INVALID;
     int16_t rtd_2_channel_id = ID_INVALID;
 
+    uint32_t tick;
+    uint32_t tick_diff;
     volatile uint32_t comms_handler_timer_tick;
     volatile uint32_t comms_handler_execution_time_us;
 
@@ -115,6 +117,7 @@ namespace sys_op::comms_handler
             case COMMS_HANDLER_STATE_RUN:
             {
                 comms_handler_timer_tick = get_timer_2_count();
+                tick = osKernelGetTickCount();
                 device::debug_serial_monitor.process_send_buffer();
                 device::built_in_display.get_intertask_output_data();
                 device::built_in_display.update_output();
@@ -124,6 +127,7 @@ namespace sys_op::comms_handler
                 hal::spi_2.process_return_buffers();
 
                 hal::rtc_get_time_stamp(time_stamp);
+                tick_diff = osKernelGetTickCount() - tick;
                 comms_handler_execution_time_us = get_timer_2_count() - comms_handler_timer_tick;
                 osThreadYield();
                 break;

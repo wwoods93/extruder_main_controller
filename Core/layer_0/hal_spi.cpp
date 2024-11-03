@@ -1170,7 +1170,7 @@ void spi::receive_inter_task_transaction_requests()
         if (channel_array[index] == 1U)
         {
             get_channel_by_channel_id(channel, index);
-            if (rtosal::message_queue_receive(channel.tx_message_queue, &common_packet, 5U) == rtosal::OS_OK)
+            if (rtosal::message_queue_receive(channel.tx_message_queue, &common_packet, 0U) == rtosal::OS_OK)
             {
                 memset(&packet, '\0', sizeof(packet_t));
                 memcpy(&packet.tx_bytes, common_packet.bytes, sizeof(packet.tx_bytes));

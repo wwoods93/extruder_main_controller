@@ -63,6 +63,7 @@ namespace rtosal
     int32_t message_queue_receive(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
     uint32_t event_flag_set(message_queue_handle_t arg_event_flag_id, uint32_t arg_flags);
     uint32_t event_flag_wait(message_queue_handle_t arg_event_flag_id, uint32_t arg_flags, uint32_t arg_options, uint32_t arg_timeout);
+    int32_t thread_yield();
 }
 
 #endif //MAIN_CONTROLLER_RTOSAL_WRAPPER_H

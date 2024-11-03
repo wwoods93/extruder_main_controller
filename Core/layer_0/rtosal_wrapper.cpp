@@ -56,5 +56,11 @@ namespace rtosal
     {
         return osEventFlagsWait(arg_event_flag_id, arg_flags, arg_options, arg_timeout);
     }
+
+    int32_t thread_yield()
+    {
+        return osThreadYield();
+    }
+
 #endif
 }

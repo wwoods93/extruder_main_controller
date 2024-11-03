@@ -11,7 +11,6 @@
  **********************************************************************************************************************/
 
 #include <cstdint>
-#include "cmsis_os2.h"
 #include "stm32f4xx_it.h"
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_general.h"
@@ -82,6 +81,7 @@ namespace sys_op::extrusion
                 hal::timer_input_capture_start_interrupt(get_timer_1_handle(), hal::TIMER_CHANNEL_2);
 
                 extrusion_process_state = EXTRUSION_PROCESS_STATE_RUN;
+
                 break;
             }
             case EXTRUSION_PROCESS_STATE_RUN:
@@ -89,11 +89,10 @@ namespace sys_op::extrusion
                 device::zone_1_band_heater.set_period(8000);
                 device::zone_2_band_heater.set_period(8000);
                 device::zone_3_band_heater.set_period(8000);
-
                 device::rtd_zone_1.read();
                 device::rtd_zone_2.read();
                 device::rtd_zone_3.read();
-                osThreadYield();
+                rtosal::thread_yield();
 
                 break;
             }

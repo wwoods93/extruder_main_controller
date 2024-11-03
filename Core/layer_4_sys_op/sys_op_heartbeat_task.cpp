@@ -59,7 +59,7 @@ namespace sys_op::heartbeat
             case TASK_STATE_RUN:
             {
                 hal::gpio_toggle_pin(PORT_A, PIN_5);
-                osThreadYield();
+                rtosal::thread_yield();
                 break;
             }
             default:

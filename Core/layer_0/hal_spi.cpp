@@ -36,7 +36,6 @@
 #include "hal_spi.h"
 
 
-
 spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, hal::timer_handle_t* arg_timeout_timer_handle)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;

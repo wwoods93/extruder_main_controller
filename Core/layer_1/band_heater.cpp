@@ -195,7 +195,7 @@ namespace device
 
         if (HAL_TIM_Base_Init(arg_band_heater->output_pulse_timer_module) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         output_compare_init.OCMode = TIM_OCMODE_PWM2;
@@ -206,7 +206,7 @@ namespace device
 
         if (HAL_TIM_OC_ConfigChannel(arg_band_heater->output_pulse_timer_module, &output_compare_init, TIM_CHANNEL_1) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         HAL_TIM_OC_Start_IT(arg_band_heater->output_pulse_timer_module, TIM_CHANNEL_1);

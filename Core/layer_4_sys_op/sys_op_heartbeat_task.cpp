@@ -15,7 +15,7 @@
 /* stm32 includes */
 
 /* third-party includes */
-#include "cmsis_os2.h"
+
 /* layer_0_hal includes */
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_wrapper.h"

@@ -18,7 +18,7 @@
 /* stm32 includes */
 #include "stm32f4xx_it.h"
 /* 3rd-party includes */
-#include "cmsis_os2.h"
+
 /* hal includes */
 #include "../layer_0/hal_callback.h"
 #include "../layer_0/hal.h"
@@ -114,6 +114,7 @@ namespace sys_op::comms_handler
                 device::debug_serial_monitor.process_send_buffer();
                 device::built_in_display.get_intertask_output_data();
                 device::built_in_display.update_output();
+
                 hal::spi_2.receive_inter_task_transaction_requests();
                 hal::spi_2.process_send_buffer();
                 hal::spi_2.process_return_buffers();

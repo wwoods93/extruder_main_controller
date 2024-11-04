@@ -43,7 +43,7 @@ class spi
 
         static constexpr uint32_t   FLAG_TIMEOUT                    = 50U;
         static constexpr uint32_t   TRANSACTION_TIMEOUT             = 100U;
-        static constexpr uint32_t   PROCESS_SEND_BUFFER_TIMEOUT     = 25U;
+        static constexpr uint32_t   PROCESS_SEND_BUFFER_TIMEOUT     = 50U;
         static constexpr uint16_t   FALLBACK_COUNTDOWN              = 1000U;
         static constexpr uint8_t    SPI_PROCEDURE_ERROR_NONE        = 0U;
         static constexpr uint8_t    SPI_PROCEDURE_STATE_BUS_ERROR   = 1U;
@@ -181,8 +181,8 @@ class spi
         int16_t                     next_available_channel_id = 0U;
         int16_t                     next_available_packet_id = 0U;
         int16_t                     message_queue_count = 0U;
-        static uint32_t             packets_requested_count;
-        static uint32_t             packets_received_count;
+        uint32_t                    packets_requested_count;
+        uint32_t                    packets_received_count;
         uint32_t                    process_send_buffer_timeout_start;
         uint8_t                     channel_array[8] = { 0, 0, 0, 0, 0, 0, 0, 0 };
 
@@ -209,6 +209,10 @@ class spi
             channel_t channel_7;
         } channel_list;
 
+        std::shared_ptr<uint8_t[]> shared_rx_ptr;
+        uint8_t packet_index = 0U;
+        uint8_t transaction_byte_count = 0U;
+
         procedure_status_t initialize(module_t* arg_module, uint8_t arg_instance_t, TIM_HandleTypeDef* arg_timeout_timer_handle);
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
@@ -216,8 +220,8 @@ class spi
         void receive_inter_task_transaction_requests();
         void process_send_buffer();
         uint8_t process_return_buffers();
-        [[nodiscard]] static uint32_t get_packets_requested_count();
-        [[nodiscard]] static uint32_t get_packets_received_count();
+        [[nodiscard]] uint32_t get_packets_requested_count() const;
+        [[nodiscard]] uint32_t get_packets_received_count() const;
         friend void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void rx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
         friend void tx_2_line_16_bit_isr(spi arg_object, struct spi::_handle_t *arg_module);
@@ -226,7 +230,6 @@ class spi
 
     private:
 
-        void transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data);
         procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size);
         int16_t assign_next_available_channel_id();
         void get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id);

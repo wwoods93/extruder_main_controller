@@ -32,13 +32,6 @@
 
 #define USE_CMSIS_OS2       1U
 
-//typedef osMessageQueueId_t cmsis_message_queue_id_t;
-//typedef osEventFlagsId_t cmsis_os2_event_flag_id;
-
-
-
-
-
 
 namespace rtosal
 {

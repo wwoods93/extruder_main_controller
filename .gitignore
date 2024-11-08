@@ -63,6 +63,7 @@ dkms.conf
 *.png
 
 out/
+cmake-build-release/
 cmake-build-debug/
 community.*
 cubemx-clion.jar

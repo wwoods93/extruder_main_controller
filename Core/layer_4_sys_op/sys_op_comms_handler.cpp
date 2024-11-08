@@ -67,8 +67,6 @@ namespace sys_op::comms_handler
     {
         static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
 
-        char time_stamp[9];
-
         switch (comms_handler_state)
         {
             case COMMS_HANDLER_STATE_INITIALIZE:

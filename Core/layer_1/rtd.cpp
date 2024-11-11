@@ -26,13 +26,16 @@ rtd::rtd()
 
 }
 
-void rtd::initialize(int16_t arg_channel_id, rtosal::message_queue_handle_t arg_request_queue_handle, rtosal::message_queue_handle_t arg_result_queue_handle, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle)
+void rtd::initialize(int16_t arg_channel_id, rtosal::message_queue_handle_t arg_request_queue_handle, rtosal::message_queue_handle_t arg_result_queue_handle, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle, float arg_cal_measured, float arg_cal_expected)
 {
     request_queue_handle = arg_request_queue_handle;
     result_queue_handle = arg_result_queue_handle;
     output_queue_handle = arg_output_queue_handle;
     reading_timer_handle = arg_reading_timer_handle;
     channel_id = arg_channel_id;
+
+    cal_resistance_constant_offset = arg_cal_expected - arg_cal_measured;
+    cal_resistance_linear_scale_factor = 1 + (cal_resistance_constant_offset / arg_cal_expected);
 }
 
 float rtd::read()
@@ -61,23 +64,51 @@ float rtd::receive_reading_and_output_moving_average()
 
     if (rtosal::message_queue_receive( result_queue_handle, &result_packet, 50U) == rtosal::OS_OK)
     {
-        temperature_celsius_current_reading = 0;
-
-        rtd_resistance_scaled_and_rounded = (double)get_msb_and_lsb_register_bytes_and_concatenate(result_packet);
-        rtd_resistance_scaled_and_rounded = ceil((double)(rtd_resistance_scaled_and_rounded * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0)) / 1000.0;
-        rtd_resistance_scaled_and_rounded = ceil(rtd_resistance_scaled_and_rounded * 100);
-        temperature_celsius_current_reading = convert_rtd_resistance_to_temperature_celsius((uint32_t) rtd_resistance_scaled_and_rounded);
-
-        if (temperature_celsius_current_reading > 0.0 && temperature_celsius_current_reading < 60000.0)
+        if (result_packet.channel_id == channel_id)
         {
-            temperature_celsius_moving_average -= (temperature_celsius_moving_average / (float) moving_average_sample_count);
-            temperature_celsius_moving_average += (temperature_celsius_current_reading / (float) moving_average_sample_count);
-            output_data.id = channel_id;
-            output_data.value = temperature_celsius_moving_average;
+            temperature_celsius_current_reading = 0;
 
-            if (rtosal::message_queue_send(output_queue_handle, &output_data, 50U) == rtosal::OS_OK)
+            rtd_resistance_scaled_and_rounded = (double) get_msb_and_lsb_register_bytes_and_concatenate(result_packet);
+
+            rtd_resistance_scaled_and_rounded =
+                ceil((double) (rtd_resistance_scaled_and_rounded * RTD_RESISTANCE_RATIO_SCALE_FACTOR * 1000.0)) /
+                1000.0;
+            rtd_resistance_scaled_and_rounded = ceil(rtd_resistance_scaled_and_rounded * 100);
+            temperature_celsius_current_reading = convert_rtd_resistance_to_temperature_celsius(
+                (uint32_t) rtd_resistance_scaled_and_rounded);
+            switch (calibration_method)
             {
+                case CAL_METHOD_CONSTANT:
+                {
+                    temperature_celsius_current_reading += cal_resistance_constant_offset;
+                    break;
+                }
+                case CAL_METHOD_LINEAR:
+                {
+                    temperature_celsius_current_reading =
+                        temperature_celsius_current_reading * cal_resistance_linear_scale_factor;
+                    break;
+                }
+                default:
+                {
+                    break;
+                }
+            }
 
+            if (temperature_celsius_current_reading > 0.0 && temperature_celsius_current_reading < 60000.0 &&
+                (temperature_celsius_current_reading - temperature_celsius_moving_average) < 100)
+            {
+                temperature_celsius_moving_average -= (temperature_celsius_moving_average /
+                                                       (float) moving_average_sample_count);
+                temperature_celsius_moving_average += (temperature_celsius_current_reading /
+                                                       (float) moving_average_sample_count);
+                output_data.id = channel_id;
+                output_data.value = temperature_celsius_moving_average;
+
+                if (rtosal::message_queue_send(output_queue_handle, &output_data, 50U) == rtosal::OS_OK)
+                {
+
+                }
             }
         }
     }

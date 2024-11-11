@@ -26,6 +26,10 @@
 static constexpr uint8_t EXTRUSION_PROCESS_STATE_INITIALIZE     = 0U;
 static constexpr uint8_t EXTRUSION_PROCESS_STATE_RUN            = 1U;
 
+uint8_t zone_1_demand = 35U;
+uint8_t zone_2_demand = 10U;
+uint8_t zone_3_demand = 35U;
+
 namespace sys_op::extrusion
 {
     rtosal::message_queue_handle_t to_comms_handler_queue_1_handle = nullptr;
@@ -69,9 +73,9 @@ namespace sys_op::extrusion
                 timer_6_initialize();
                 hal::timer_time_base_start(get_timer_6_handle());
 
-                device::rtd_zone_1.initialize(0U, to_comms_handler_queue_1_handle, from_comms_handler_queue_1_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
-                device::rtd_zone_2.initialize(1U, to_comms_handler_queue_2_handle, from_comms_handler_queue_2_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
-                device::rtd_zone_3.initialize(2U, to_comms_handler_queue_3_handle, from_comms_handler_queue_3_handle, comms_handler_output_data_queue_handle, get_timer_6_handle());
+                device::rtd_zone_1.initialize(0U, to_comms_handler_queue_1_handle, from_comms_handler_queue_1_handle, comms_handler_output_data_queue_handle, get_timer_6_handle(), 21.34, 20.45);
+                device::rtd_zone_2.initialize(1U, to_comms_handler_queue_2_handle, from_comms_handler_queue_2_handle, comms_handler_output_data_queue_handle, get_timer_6_handle(), 23.15, 20.45);
+                device::rtd_zone_3.initialize(2U, to_comms_handler_queue_3_handle, from_comms_handler_queue_3_handle, comms_handler_output_data_queue_handle, get_timer_6_handle(), 22.67, 20.45);
 
                 device::zone_1_band_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID);
                 device::zone_2_band_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID);
@@ -86,9 +90,9 @@ namespace sys_op::extrusion
             }
             case EXTRUSION_PROCESS_STATE_RUN:
             {
-                device::zone_1_band_heater.set_demand(0U);
-                device::zone_2_band_heater.set_demand(0U);
-                device::zone_3_band_heater.set_demand(0U);
+                device::zone_1_band_heater.set_demand(zone_1_demand);
+                device::zone_2_band_heater.set_demand(zone_2_demand);
+                device::zone_3_band_heater.set_demand(zone_3_demand);
                 device::rtd_zone_1.read();
                 device::rtd_zone_2.read();
                 device::rtd_zone_3.read();

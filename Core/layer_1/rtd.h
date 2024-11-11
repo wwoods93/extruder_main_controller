@@ -43,10 +43,11 @@ class rtd
         static constexpr uint8_t CONFIG_REGISTER_SET_NOTCH_FILTER_60_HZ         = 0x00;
 
         static constexpr uint8_t RTD_CONFIG_REG_BYTE = CONFIG_REGISTER_SET_BIAS
-                                                     | CONFIG_REGISTER_SET_CONVERSION_MODE_AUTO
+                                                     /*| CONFIG_REGISTER_SET_CONVERSION_MODE_AUTO*/
+                                                     | CONFIG_REGISTER_SET_CONVERSION_MODE_1_SHOT
                                                      | CONFIG_REGISTER_SET_RTD_TYPE_3_WIRE
-                                                     | CONFIG_REGISTER_FAULT_STATUS_CLEAR
-                                                     | CONFIG_REGISTER_SET_NOTCH_FILTER_50_HZ;
+                                                     /*| CONFIG_REGISTER_FAULT_STATUS_CLEAR
+                                                     | CONFIG_REGISTER_SET_NOTCH_FILTER_50_HZ*/;
 
         static constexpr uint8_t MSB_REGISTER_ADDRESS                           = 0x01;
         static constexpr uint8_t LSB_REGISTER_ADDRESS                           = 0x02;
@@ -70,14 +71,21 @@ class rtd
         static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         rtd();
-        void initialize(int16_t arg_channel_id, rtosal::message_queue_handle_t arg_request_queue_handle, rtosal::message_queue_handle_t arg_result_queue_handle, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle);
+        void initialize(int16_t arg_channel_id, rtosal::message_queue_handle_t arg_request_queue_handle, rtosal::message_queue_handle_t arg_result_queue_handle, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle, float arg_cal_measured, float arg_cal_expected);
         float read();
 
     private:
 
+        static constexpr uint8_t CAL_METHOD_NONE = 0U;
+        static constexpr uint8_t CAL_METHOD_CONSTANT = 1U;
+        static constexpr uint8_t CAL_METHOD_LINEAR = 2U;
+
+        uint8_t calibration_method = CAL_METHOD_NONE;
+        float cal_resistance_constant_offset = 0.0;
+        float cal_resistance_linear_scale_factor = 0.0;
         float temperature_celsius_current_reading = 0.0;
         float temperature_celsius_moving_average = 1.0;
-        uint8_t moving_average_sample_count = 50U;
+        uint8_t moving_average_sample_count = 8U;
 
         rtosal::message_queue_handle_t request_queue_handle;
         rtosal::message_queue_handle_t result_queue_handle;
@@ -166,7 +174,5 @@ class rtd
             280980, 281310, 281640, 281980, 282310, 282640, 282970, 283310, 283640, 283970
         };
 };
-
-
 
 #endif //MAIN_CONTROLLER_RTD_H

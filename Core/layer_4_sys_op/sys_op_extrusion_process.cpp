@@ -26,9 +26,9 @@
 static constexpr uint8_t EXTRUSION_PROCESS_STATE_INITIALIZE     = 0U;
 static constexpr uint8_t EXTRUSION_PROCESS_STATE_RUN            = 1U;
 
-uint8_t zone_1_demand = 35U;
+uint8_t zone_1_demand = 50U;
 uint8_t zone_2_demand = 10U;
-uint8_t zone_3_demand = 35U;
+uint8_t zone_3_demand = 10U;
 
 namespace sys_op::extrusion
 {

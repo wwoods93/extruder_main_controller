@@ -26,7 +26,7 @@
 
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 
@@ -142,7 +142,7 @@ void touch_screen::update_output()
             }
             case STATE_SEND_SPI_REQUEST_COUNT:
             {
-                utility::convert_uint32_to_uint8_array(spi::get_packets_requested_count(), converter_result);
+                utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_requested_count(), converter_result);
                 hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x07, converter_result);
                 hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_SPI_RECEIVE_COUNT;
@@ -150,7 +150,7 @@ void touch_screen::update_output()
             }
             case STATE_SEND_SPI_RECEIVE_COUNT:
             {
-                utility::convert_uint32_to_uint8_array(spi::get_packets_received_count(), converter_result);
+                utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_received_count(), converter_result);
                 hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x06, converter_result);
                 hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_RTD_READINGS;

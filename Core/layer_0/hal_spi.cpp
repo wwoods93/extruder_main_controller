@@ -36,10 +36,6 @@
 #include "hal_spi.h"
 
 
-uint32_t spi::packets_requested_count = 0U;
-uint32_t spi::packets_received_count = 0U;
-
-
 spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instance_id, hal::timer_handle_t* arg_timeout_timer_handle)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
@@ -505,7 +501,7 @@ spi::procedure_status_t spi::flag_timeout(uint32_t arg_status_reg_bit, bit_statu
 spi::procedure_status_t spi::wait_for_pending_flags_and_end_transaction(transaction_t arg_transaction_type)
 {
     procedure_status_t status = PROCEDURE_STATUS_OK;
-    uint32_t pending_flag = 0;
+    uint32_t pending_flag = 0U;
 
     if ((module->settings.mode == SPI_CONFIG_MODE_CONTROLLER)
         && ((module->settings.direction == SPI_CONFIG_DIRECTION_1_LINE)
@@ -617,12 +613,11 @@ void spi::close_isr(transaction_t arg_transaction_type)
     }
 }
 
-spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_handle_t arg_tx_message_queue, rtosal::message_queue_handle_t arg_rx_message_queue)
+spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin)
 {
     arg_channel_id = ID_INVALID;
 
     int16_t new_channel_id = assign_next_available_channel_id();
-
 
     if (new_channel_id != ID_INVALID)
     {
@@ -632,8 +627,6 @@ spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t
         new_channel.channel_id = new_channel_id;
         new_channel.chip_select.port = arg_chip_select_port;
         new_channel.chip_select.pin = arg_chip_select_pin;
-        new_channel.tx_message_queue = arg_tx_message_queue;
-        new_channel.rx_message_queue = arg_rx_message_queue;
 
         switch (new_channel_id)
         {
@@ -702,7 +695,6 @@ spi::procedure_status_t spi::create_channel(int16_t& arg_channel_id, hal::gpio_t
     return PROCEDURE_STATUS_OK;
 }
 
-
 int16_t spi::assign_next_available_channel_id()
 {
     int16_t channel_id = ID_INVALID;
@@ -715,26 +707,6 @@ int16_t spi::assign_next_available_channel_id()
 
     return channel_id;
 }
-
-
-//spi::procedure_status_t spi::create_packet_and_add_to_send_buffer(int16_t arg_channel_id, uint8_t arg_tx_byte_count, uint8_t (&arg_tx_bytes)[8], uint8_t (&arg_bytes_per_transaction)[8])
-//{
-//    packet_t packet;
-//    channel_t channel;
-//    get_channel_by_channel_id(channel, arg_channel_id);
-//
-//    memset(&packet, '\0', sizeof(packet_t));
-//    memcpy(&packet.tx_bytes, arg_tx_bytes, sizeof(packet.tx_bytes));
-//    memcpy(&packet.bytes_per_transaction, arg_bytes_per_transaction, sizeof(packet.bytes_per_transaction));
-//    packet.channel_id = arg_channel_id;
-//    packet.packet_id = ++next_available_packet_id;
-//    packet.chip_select.port = channel.chip_select.port;
-//    packet.chip_select.pin = channel.chip_select.pin;
-//    send_buffer_push(packet);
-//
-//    return PROCEDURE_STATUS_OK;
-//}
-
 
 void spi::get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id)
 {
@@ -789,113 +761,6 @@ void spi::get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_
     }
 }
 
-//void spi::send_buffer_push(packet_t& arg_packet)
-//{
-//    send_buffer.push(arg_packet);
-//}
-
-//void spi::send_buffer_pop()
-//{
-//    if (!send_buffer.empty())
-//    {
-//        send_buffer.pop();
-//    }
-//}
-
-//void spi::send_buffer_get_front(spi::packet_t& arg_packet)
-//{
-//    if (!send_buffer.empty())
-//    {
-//        memset(&arg_packet, '\0', sizeof(packet_t));
-//        memcpy(&arg_packet, &send_buffer.front(), sizeof(packet_t));
-//    }
-//}
-
-//void spi::push_active_packet_to_pending_buffer()
-//{
-//    pending_buffer.push(active_packet);
-//}
-
-//void spi::pending_buffer_push(packet_t& arg_packet)
-//{
-//    pending_buffer.push(arg_packet);
-//}
-
-//void spi::pending_buffer_pop()
-//{
-//    if (!pending_buffer.empty())
-//    {
-//        pending_buffer.pop();
-//    }
-//}
-
-//void spi::pending_buffer_get_front(spi::packet_t& arg_packet)
-//{
-//    if (!pending_buffer.empty())
-//    {
-//        memset(&arg_packet, '\0', sizeof(packet_t));
-//        memcpy(&arg_packet, &pending_buffer.front(), sizeof(packet_t));
-//    }
-//}
-//
-//void spi::push_pending_packet_to_return_buffer()
-//{
-//    pending_buffer_get_front(pending_packet);
-//
-//    switch(pending_packet.channel_id)
-//    {
-//        case CHANNEL_0:
-//        {
-//            return_buffer_0.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_1:
-//        {
-//            return_buffer_1.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_2:
-//        {
-//            return_buffer_2.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_3:
-//        {
-//            return_buffer_3.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_4:
-//        {
-//            return_buffer_4.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_5:
-//        {
-//            return_buffer_5.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_6:
-//        {
-//            return_buffer_6.push(pending_packet);
-//            break;
-//        }
-//        case CHANNEL_7:
-//        {
-//            return_buffer_7.push(pending_packet);
-//            break;
-//        }
-//        default:
-//        {
-//            break;
-//        }
-//    }
-//}
-
-//void spi::set_active_packet_from_send_buffer()
-//{
-//    send_buffer_get_front(active_packet);
-//}
-
 void spi::push_active_packet_to_return_buffer()
 {
     switch(active_packet.channel_id)
@@ -946,15 +811,6 @@ void spi::push_active_packet_to_return_buffer()
         }
     }
 }
-
-//spi::procedure_status_t spi::reset_active_packet()
-//{
-//    memset(&active_packet, '\0', sizeof(packet_t));
-//    active_packet.channel_id = ID_INVALID;
-//
-//    return PROCEDURE_STATUS_OK;
-//}
-
 
 uint8_t spi::process_return_buffers()
 {
@@ -1066,9 +922,8 @@ uint8_t spi::process_return_buffers()
 
             if (buffer_accessed)
             {
-                ++packets_received_count;
-                get_channel_by_channel_id(channel, index);
-                send_inter_task_transaction_result(channel.rx_message_queue, packet);
+//                get_channel_by_channel_id(channel, index);
+//                send_inter_task_transaction_result(channel.rx_message_queue, packet);
             }
         }
     }
@@ -1076,53 +931,85 @@ uint8_t spi::process_return_buffers()
     return buffer_accessed;
 }
 
+void spi::transmit_receive(spi::packet_t& arg_packet)
+{
+
+    memset(&active_packet, '\0', sizeof(packet_t));
+    memcpy(&active_packet, &arg_packet, sizeof(packet_t));
+
+    module->chip_select.port = active_packet.chip_select.port;
+    module->chip_select.pin = active_packet.chip_select.pin;
+    memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
+
+    packet_index = 0U;
+    transaction_byte_count = 0U;
+
+    ++packets_requested_count;
+    std::shared_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
+
+    for (uint8_t current_transaction : active_packet.bytes_per_transaction)
+    {
+        transaction_byte_count = current_transaction;
+        if (transaction_byte_count != 0U)
+        {
+            spi_transmit_receive_interrupt(&active_packet.tx_bytes[packet_index], rx_pointer_tmp.get(), transaction_byte_count);
+            while (!module->rx_data_ready_flag);
+            module->rx_data_ready_flag = 0U;
+
+            for (uint8_t index = 0U; index <  transaction_byte_count; ++index)
+            {
+                active_packet.rx_bytes[packet_index++] = rx_pointer_tmp[index];
+            }
+        }
+    }
+    ++packets_received_count;
+//    send_buffer.pop();
+    memset(&arg_packet, '\0', sizeof(packet_t));
+    memcpy(&arg_packet, &active_packet, sizeof(packet_t));
+    memset(&active_packet, '\0', sizeof(packet_t));
+    active_packet.channel_id = ID_INVALID;
+
+}
+
+
 void spi::process_send_buffer()
 {
-    // TODO wrap osKernelGetTickCount or switch to stm timer
-    process_send_buffer_timeout_start = osKernelGetTickCount();
-    while (!send_buffer.empty() && osKernelGetTickCount() - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
+    process_send_buffer_timeout_start = get_timer_count(timeout_timer_handle);
+    while (!send_buffer.empty() && get_timer_count(timeout_timer_handle) - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
     {
-        ++packets_requested_count;
         memset(&active_packet, '\0', sizeof(packet_t));
         memcpy(&active_packet, &send_buffer.front(), sizeof(packet_t));
 
         module->chip_select.port = active_packet.chip_select.port;
         module->chip_select.pin = active_packet.chip_select.pin;
-
-        uint8_t packet_index = 0U;
-        uint8_t transaction_byte_count = 0U;
         memset(&active_packet.rx_bytes, '\0', sizeof(active_packet.rx_bytes));
+
+        packet_index = 0U;
+        transaction_byte_count = 0U;
+
+        ++packets_requested_count;
+        std::shared_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
 
         for (uint8_t current_transaction : active_packet.bytes_per_transaction)
         {
             transaction_byte_count = current_transaction;
             if (transaction_byte_count != 0U)
             {
-                transmit_and_get_result(transaction_byte_count, &active_packet.tx_bytes[packet_index]);
-                for (uint8_t transaction_index = 0U; transaction_index < transaction_byte_count; ++transaction_index)
+                spi_transmit_receive_interrupt(&active_packet.tx_bytes[packet_index], rx_pointer_tmp.get(), transaction_byte_count);
+                while (!module->rx_data_ready_flag);
+                module->rx_data_ready_flag = 0U;
+
+                for (uint8_t index = 0U; index <  transaction_byte_count; ++index)
                 {
-                    active_packet.rx_bytes[packet_index++] = rx_result[transaction_index];
+                    active_packet.rx_bytes[packet_index++] = rx_pointer_tmp[index];
                 }
             }
         }
-
+        ++packets_received_count;
         send_buffer.pop();
         push_active_packet_to_return_buffer();
         memset(&active_packet, '\0', sizeof(packet_t));
         active_packet.channel_id = ID_INVALID;
-    }
-}
-
-void spi::transmit_and_get_result(uint8_t arg_current_transaction_size, uint8_t* arg_tx_data)
-{
-    std::unique_ptr<uint8_t[]> rx_pointer_tmp(new uint8_t[TX_SIZE_MAX]);
-    spi_transmit_receive_interrupt(arg_tx_data, rx_pointer_tmp.get(), arg_current_transaction_size);
-    while (!module->rx_data_ready_flag);
-    module->rx_data_ready_flag = 0U;
-
-    for (uint8_t index = 0U; index < arg_current_transaction_size; ++index)
-    {
-        rx_result[index] = rx_pointer_tmp[index];
     }
 }
 
@@ -1136,12 +1023,12 @@ void spi::complete_transaction_tx_rx_success() const
     module->rx_data_ready_flag = 1U;
 }
 
-uint32_t spi::get_packets_requested_count()
+uint32_t spi::get_packets_requested_count() const
 {
     return packets_requested_count;
 }
 
-uint32_t spi::get_packets_received_count()
+uint32_t spi::get_packets_received_count() const
 {
     return packets_received_count;
 }
@@ -1152,7 +1039,7 @@ void spi::send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_
     rtosal::build_common_packet(rx_common_packet, arg_packet.channel_id, arg_packet.rx_bytes, arg_packet.bytes_per_transaction);
     if (rtosal::message_queue_send(arg_message_queue_id, &rx_common_packet, 0U) == rtosal::OS_OK)
     {
-        // success
+
     }
     else
     {
@@ -1184,3 +1071,7 @@ void spi::receive_inter_task_transaction_requests()
         }
     }
 }
+
+
+
+

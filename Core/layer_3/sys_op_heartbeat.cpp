@@ -15,7 +15,7 @@
 /* stm32 includes */
 
 /* third-party includes */
-#include "cmsis_os2.h"
+
 /* layer_0_hal includes */
 #include "../layer_0/hal.h"
 #include "../layer_0/hal_wrapper.h"
@@ -25,12 +25,12 @@
 
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 
 /* sys_op_heartbeat_task header */
-#include "sys_op_heartbeat_task.h"
+#include "sys_op_heartbeat.h"
 
 
 namespace sys_op::heartbeat
@@ -59,7 +59,7 @@ namespace sys_op::heartbeat
             case TASK_STATE_RUN:
             {
                 hal::gpio_toggle_pin(PORT_A, PIN_5);
-                osThreadYield();
+                rtosal::thread_yield();
                 break;
             }
             default:

@@ -1,28 +1,22 @@
 /***********************************************************************************************************************
  * Main_Controller
- * system_operation_preparation_process.cpp
+ * system_operation_extrusion_process.h
  *
  * wilson
  * 11/6/22
- * 3:50 PM
+ * 3:51 PM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#include "cmsis_os2.h"
-#include "sys_op_preparation_process.h"
+#ifndef MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H
+#define MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H
 
-namespace sys_op::preparation
+namespace sys_op::temp_control
 {
-    void task_intitialize()
-    {
-
-    }
-
-    void task_state_machine()
-    {
-        osThreadYield();
-
-    }
+    void task_intitialize();
+    void task_state_machine();
 }
+
+#endif //MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H

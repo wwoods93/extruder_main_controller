@@ -1,17 +1,17 @@
 /***********************************************************************************************************************
  * Main_Controller
- * sys_op_heartbeat_task.h
+ * sys_op_power_management.h
  *
  * wilson
- * 11/1/24
- * 2:35 PM
+ * 2/8/25
+ * 1:35 AM
  *
  * Description:
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_SYS_OP_HEARTBEAT_TASK_H
-#define MAIN_CONTROLLER_SYS_OP_HEARTBEAT_TASK_H
+#ifndef MAIN_CONTROLLER_SYS_OP_POWER_MANAGEMENT_H
+#define MAIN_CONTROLLER_SYS_OP_POWER_MANAGEMENT_H
 
 /* c/c++ includes */
 
@@ -32,10 +32,4 @@
 /* layer_n_meta_structure includes */
 
 
-namespace sys_op::heartbeat
-{
-    void task_intitialize();
-    void task_state_machine();
-}
-
-#endif //MAIN_CONTROLLER_SYS_OP_HEARTBEAT_TASK_H
+#endif //MAIN_CONTROLLER_SYS_OP_POWER_MANAGEMENT_H

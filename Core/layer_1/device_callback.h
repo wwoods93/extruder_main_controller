@@ -27,7 +27,7 @@
 #include "device.h"
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 

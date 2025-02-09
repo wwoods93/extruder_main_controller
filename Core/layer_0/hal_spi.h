@@ -216,9 +216,11 @@ class spi
         procedure_status_t initialize(module_t* arg_module, uint8_t arg_instance_t, TIM_HandleTypeDef* arg_timeout_timer_handle);
         procedure_status_t register_callback(callback_id_t arg_callback_id, spi_callback_ptr_t arg_callback_ptr) const;
         [[nodiscard]] procedure_status_t unregister_callback(callback_id_t arg_callback_id) const;
-        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, rtosal::message_queue_handle_t arg_tx_message_queue, rtosal::message_queue_handle_t arg_rx_message_queue);
+        procedure_status_t create_channel(int16_t& arg_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin);
         void receive_inter_task_transaction_requests();
+        void transmit_receive(spi::packet_t& arg_packet);
         void process_send_buffer();
+        procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size);
         uint8_t process_return_buffers();
         [[nodiscard]] uint32_t get_packets_requested_count() const;
         [[nodiscard]] uint32_t get_packets_received_count() const;
@@ -230,7 +232,7 @@ class spi
 
     private:
 
-        procedure_status_t spi_transmit_receive_interrupt(uint8_t *arg_tx_data_ptr, uint8_t *arg_rx_data_ptr, uint16_t arg_packet_size);
+
         int16_t assign_next_available_channel_id();
         void get_channel_by_channel_id(channel_t& arg_channel, int16_t arg_channel_id);
         void push_active_packet_to_return_buffer();

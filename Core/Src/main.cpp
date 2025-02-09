@@ -26,13 +26,13 @@
 
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
-#include "../layer_4_sys_op/sys_op_initialization.h"
-#include "../layer_4_sys_op/sys_op_heartbeat_task.h"
-#include "../layer_4_sys_op/sys_op_comms_handler.h"
-#include "../layer_4_sys_op/sys_op_preparation_process.h"
-#include "../layer_4_sys_op/sys_op_extrusion_process.h"
-#include "../layer_4_sys_op/sys_op_spooling_process.h"
+/* layer_3 includes */
+#include "../layer_3/sys_op_heartbeat.h"
+#include "../layer_3/sys_op_initialization.h"
+#include "../layer_3/sys_op_user_comms.h"
+#include "../layer_3/sys_op_power_management.h"
+#include "../layer_3/sys_op_speed_control.h"
+#include "../layer_3/sys_op_temp_control.h"
 /* layer_n_meta_structure includes */
 
 /* main header */
@@ -50,24 +50,21 @@ const osMessageQueueAttr_t initialization_task_queue_attributes = { .name = "ini
 
 
 osThreadId_t initialization_task_handle;
-osThreadId_t comms_handler_task_handle;
-osThreadId_t preparation_process_taskHandle;
-osThreadId_t extrusion_process_taskHandle;
-osThreadId_t spooling_process_taskHandle;
-osThreadId_t heartbeat_taskHandle;
+osThreadId_t user_comms_task_handle;
+osThreadId_t speed_control_task_handle;
+osThreadId_t temp_control_task_handle;
+osThreadId_t heartbeat_task_handle;
 
-const osThreadAttr_t initialization_task_attributes = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t comms_handler_task_attributes  = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t preparation_task_attributes    = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t extrusion_task_attributes      = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t spooling_task_attributes       = { .name = "spooling_process_task",    .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
-const osThreadAttr_t heartbeat_task_attributes      = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t initialization_task_attributes     = { .name = "initialization_task",      .stack_size = 200 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t user_comms_task_attributes         = { .name = "comms_handler_task",       .stack_size = 320 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t speed_control_task_attributes      = { .name = "preparation_process_task", .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t temp_control_task_attributes       = { .name = "extrusion_process_task",   .stack_size = 256 * 4, .priority = (osPriority_t) osPriorityNormal, };
+const osThreadAttr_t heartbeat_task_attributes          = { .name = "heartbeat_task",           .stack_size = 96  * 4, .priority = (osPriority_t) osPriorityNormal, };
 
 void start_initialization_task(void *argument);
-void start_comms_handler_task(void *argument);
-void start_preparation_process_task(void *argument);
-void start_extrusion_process_task(void *argument);
-void start_spooling_process_task(void *argument);
+void start_user_comms_task(void *argument);
+void start_speed_control_task(void *argument);
+void start_temp_control_task(void *argument);
 void start_heartbeat_task(void *argument);
 
 
@@ -82,14 +79,11 @@ int main()
     rtosal::rtosal_initialize();
     initialization_task_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &initialization_task_queue_attributes);
 
-
-
-    initialization_task_handle       = osThreadNew(start_initialization_task, nullptr, &initialization_task_attributes);
-    comms_handler_task_handle        = osThreadNew(start_comms_handler_task, nullptr, &comms_handler_task_attributes);
-    preparation_process_taskHandle  = osThreadNew(start_preparation_process_task,   nullptr, &preparation_task_attributes);
-    extrusion_process_taskHandle    = osThreadNew(start_extrusion_process_task,     nullptr, &extrusion_task_attributes);
-    spooling_process_taskHandle     = osThreadNew(start_spooling_process_task,      nullptr, &spooling_task_attributes);
-    heartbeat_taskHandle            = osThreadNew(start_heartbeat_task,             nullptr, &heartbeat_task_attributes);
+    initialization_task_handle  = osThreadNew(start_initialization_task, nullptr, &initialization_task_attributes);
+    user_comms_task_handle      = osThreadNew(start_user_comms_task, nullptr, &user_comms_task_attributes);
+    speed_control_task_handle   = osThreadNew(start_speed_control_task, nullptr, &speed_control_task_attributes);
+    temp_control_task_handle    = osThreadNew(start_temp_control_task, nullptr, &temp_control_task_attributes);
+    heartbeat_task_handle       = osThreadNew(start_heartbeat_task, nullptr, &heartbeat_task_attributes);
 
     osEventFlagsClear(initialization_event_flags_handle, 0xFFFFFFFF);
     osKernelStart();
@@ -113,7 +107,7 @@ void start_initialization_task(void *argument)
     }
 }
 
-void start_comms_handler_task(void *argument)
+void start_user_comms_task(void *argument)
 {
 
 //    static unsigned long last_ten_high_water_marks[10];
@@ -122,7 +116,7 @@ void start_comms_handler_task(void *argument)
 
     while (true)
     {
-        sys_op::comms_handler::task_state_machine();
+        sys_op::user_comms::task_state_machine();
 //        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
 //        last_ten_high_water_marks[count] = high_water_mark;
 //        count++;
@@ -139,15 +133,15 @@ void start_comms_handler_task(void *argument)
     }
 }
 
-void start_preparation_process_task(void *argument)
+void start_speed_control_task(void *argument)
 {
     while (true)
     {
-        sys_op::preparation::task_state_machine();
+        sys_op::speed_control::task_state_machine();
     }
 }
 
-void start_extrusion_process_task(void *argument)
+void start_temp_control_task(void *argument)
 {
 //    static unsigned long last_ten_high_water_marks[10];
 //    static unsigned long highest = 0;
@@ -155,7 +149,7 @@ void start_extrusion_process_task(void *argument)
 
     while (true)
     {
-        sys_op::extrusion::task_state_machine();
+        sys_op::temp_control::task_state_machine();
 //        unsigned long high_water_mark =  uxTaskGetStackHighWaterMark(nullptr);
 //        last_ten_high_water_marks[count] = high_water_mark;
 //        count++;
@@ -172,30 +166,10 @@ void start_extrusion_process_task(void *argument)
     }
 }
 
-void start_spooling_process_task(void *argument)
-{
-    while (true)
-    {
-        sys_op::spooling::task_state_machine();
-    }
-}
-
 osMessageQueueId_t get_initialization_task_queue_handle()
 {
     return initialization_task_queue_handle;
 }
-
-//osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
-//{
-//    return spi_tx_queue_handle;
-//}
-
-//osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle()
-//{
-//    return spi_rx_queue_handle;
-//}
-
-
 
 osEventFlagsId_t get_initialization_event_flags_handle()
 {

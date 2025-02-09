@@ -72,14 +72,14 @@
 //  .priority = (osPriority_t) osPriorityNormal,
 //};
 ///* Definitions for preparation_process_task */
-//osThreadId_t preparation_process_taskHandle;
+//osThreadId_t speed_control_task_handle;
 //const osThreadAttr_t preparation_process_task_attributes = {
 //  .name = "preparation_process_task",
 //  .stack_size = 320 * 4,
 //  .priority = (osPriority_t) osPriorityNormal,
 //};
 ///* Definitions for extrusion_process_task */
-//osThreadId_t extrusion_process_taskHandle;
+//osThreadId_t temp_control_task_handle;
 //const osThreadAttr_t extrusion_process_task_attributes = {
 //  .name = "extrusion_process_task",
 //  .stack_size = 320 * 4,
@@ -93,14 +93,14 @@
 //  .priority = (osPriority_t) osPriorityNormal,
 //};
 ///* Definitions for comms_handler_task */
-//osThreadId_t comms_handler_task_handle;
-//const osThreadAttr_t comms_handler_task_attributes = {
+//osThreadId_t user_comms_task_handle;
+//const osThreadAttr_t user_comms_task_attributes = {
 //  .name = "comms_handler_task",
 //  .stack_size = 512 * 4,
 //  .priority = (osPriority_t) osPriorityNormal,
 //};
 ///* Definitions for heartbeat_task */
-//osThreadId_t heartbeat_taskHandle;
+//osThreadId_t heartbeat_task_handle;
 //const osThreadAttr_t heartbeat_task_attributes = {
 //  .name = "heartbeat_task",
 //  .stack_size = 128 * 4,
@@ -155,8 +155,8 @@
 //static void MX_SPI1_Init(void);
 //static void MX_IWDG_Init(void);
 //void start_initialization_task(void *argument);
-//void start_preparation_process_task(void *argument);
-//void start_extrusion_process_task(void *argument);
+//void start_speed_control_task(void *argument);
+//void start_temp_control_task(void *argument);
 //void start_spooling_process_task(void *argument);
 //void start_comms_updater_task(void *argument);
 //void start_heartbeat_task(void *argument);
@@ -257,19 +257,19 @@
 //  initialization_task_handle = osThreadNew(start_initialization_task, NULL, &initialization_task_attributes);
 //
 //  /* creation of preparation_process_task */
-//  preparation_process_taskHandle = osThreadNew(start_preparation_process_task, NULL, &preparation_process_task_attributes);
+//  speed_control_task_handle = osThreadNew(start_speed_control_task, NULL, &preparation_process_task_attributes);
 //
 //  /* creation of extrusion_process_task */
-//  extrusion_process_taskHandle = osThreadNew(start_extrusion_process_task, NULL, &extrusion_process_task_attributes);
+//  temp_control_task_handle = osThreadNew(start_temp_control_task, NULL, &extrusion_process_task_attributes);
 //
 //  /* creation of spooling_process_task */
 //  spooling_process_taskHandle = osThreadNew(start_spooling_process_task, NULL, &spooling_process_task_attributes);
 //
 //  /* creation of comms_handler_task */
-//  comms_handler_task_handle = osThreadNew(start_comms_updater_task, NULL, &comms_handler_task_attributes);
+//  user_comms_task_handle = osThreadNew(start_comms_updater_task, NULL, &user_comms_task_attributes);
 //
 //  /* creation of heartbeat_task */
-//  heartbeat_taskHandle = osThreadNew(start_heartbeat_task, NULL, &heartbeat_task_attributes);
+//  heartbeat_task_handle = osThreadNew(start_heartbeat_task, NULL, &heartbeat_task_attributes);
 //
 //  /* USER CODE BEGIN RTOS_THREADS */
 ////////////////////////////////////////////////////////////////////  /* add threads, ... */
@@ -1133,15 +1133,15 @@
 ////////////////////////////////////////////////////////////////////* @retval None
 ////////////////////////////////////////////////////////////////////*/
 ///* USER CODE END Header_start_preparation_process_task */
-//void start_preparation_process_task(void *argument)
+//void start_speed_control_task(void *argument)
 //{
-//  /* USER CODE BEGIN start_preparation_process_task */
+//  /* USER CODE BEGIN start_speed_control_task */
 ////////////////////////////////////////////////////////////////////  /* Infinite loop */
 ////////////////////////////////////////////////////////////////////  for(;;)
 ////////////////////////////////////////////////////////////////////  {
 ////////////////////////////////////////////////////////////////////    osDelay(1);
 ////////////////////////////////////////////////////////////////////  }
-//  /* USER CODE END start_preparation_process_task */
+//  /* USER CODE END start_speed_control_task */
 //}
 //
 ///* USER CODE BEGIN Header_start_extrusion_process_task */
@@ -1151,15 +1151,15 @@
 ////////////////////////////////////////////////////////////////////* @retval None
 ////////////////////////////////////////////////////////////////////*/
 ///* USER CODE END Header_start_extrusion_process_task */
-//void start_extrusion_process_task(void *argument)
+//void start_temp_control_task(void *argument)
 //{
-//  /* USER CODE BEGIN start_extrusion_process_task */
+//  /* USER CODE BEGIN start_temp_control_task */
 ////////////////////////////////////////////////////////////////////  /* Infinite loop */
 ////////////////////////////////////////////////////////////////////  for(;;)
 ////////////////////////////////////////////////////////////////////  {
 ////////////////////////////////////////////////////////////////////    osDelay(1);
 ////////////////////////////////////////////////////////////////////  }
-//  /* USER CODE END start_extrusion_process_task */
+//  /* USER CODE END start_temp_control_task */
 //}
 //
 ///* USER CODE BEGIN Header_start_spooling_process_task */

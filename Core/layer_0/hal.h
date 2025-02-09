@@ -28,7 +28,7 @@
 
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 
@@ -41,6 +41,7 @@ namespace hal
     void i2c_build_packet_array_from_converted_bytes(uint8_t* arg_i2c_packet_array, uint8_t arg_global_id, const uint8_t* arg_converted_bytes);
 
     void timer_2_initialize();
+    void timer_6_initialize();
 }
 
 
@@ -75,7 +76,7 @@ void MX_USART2_UART_Init();
 
 void MX_RTC_Init();
 void MX_TIM1_Init();
-void timer_6_initialize();
+
 void MX_TIM7_Init();
 void MX_TIM10_Init();
 void MX_TIM11_Init();

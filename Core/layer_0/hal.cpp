@@ -23,9 +23,7 @@
 
 /* layer_1 includes */
 
-/* layer_3_control includes */
-
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 
@@ -98,6 +96,27 @@ namespace hal
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
         if (HAL_TIMEx_MasterConfigSynchronization(&htim2, &sMasterConfig) != HAL_OK)
+        {
+            Error_Handler();
+        }
+    }
+
+    void timer_6_initialize()
+    {
+        TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+        htim6.Instance = TIM6;
+        htim6.Init.Prescaler = 32000 - 1;
+        htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+        htim6.Init.Period = 65535;
+        htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
+        if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+        {
+            Error_Handler();
+        }
+        sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+        sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+        if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
         {
             Error_Handler();
         }
@@ -205,7 +224,6 @@ void initialize_peripherals()
     MX_GPIO_Init();
     MX_RTC_Init();
     MX_TIM1_Init();
-    timer_6_initialize();
     MX_TIM7_Init();
     MX_TIM10_Init();
     MX_TIM11_Init();
@@ -407,26 +425,7 @@ void MX_TIM1_Init()
     }
 }
 
-void timer_6_initialize()
-{
-    TIM_MasterConfigTypeDef sMasterConfig = {0};
 
-    htim6.Instance = TIM6;
-    htim6.Init.Prescaler = 32000 - 1;
-    htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
-    htim6.Init.Period = 65535;
-    htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
-    if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
-    {
-        Error_Handler();
-    }
-    sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
-    sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
-    if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
-    {
-        Error_Handler();
-    }
-}
 
 void MX_TIM10_Init()
 {

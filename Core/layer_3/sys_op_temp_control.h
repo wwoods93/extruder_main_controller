@@ -10,13 +10,13 @@
  *
  **********************************************************************************************************************/
 
-#ifndef MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H
-#define MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H
+#ifndef MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H
+#define MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H
 
-namespace sys_op::extrusion
+namespace sys_op::temp_control
 {
     void task_intitialize();
     void task_state_machine();
 }
 
-#endif //MAIN_CONTROLLER_SYS_OP_EXTRUSION_PROCESS_H
+#endif //MAIN_CONTROLLER_SYS_OP_TEMP_CONTROL_H

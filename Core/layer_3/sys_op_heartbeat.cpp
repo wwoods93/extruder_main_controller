@@ -25,12 +25,12 @@
 
 /* layer_3_control includes */
 
-/* layer_4_sys_op includes */
+/* layer_3 includes */
 
 /* layer_n_meta_structure includes */
 
 /* sys_op_heartbeat_task header */
-#include "sys_op_heartbeat_task.h"
+#include "sys_op_heartbeat.h"
 
 
 namespace sys_op::heartbeat

@@ -29,17 +29,15 @@
 #include "../layer_0/rtosal_globals.h"
 #include "../layer_0/rtosal.h"
 /* system_operation_comms_handler header */
-#include "sys_op_comms_handler.h"
+#include "sys_op_user_comms.h"
 
 
-#define COMMS_HANDLER_STATE_INITIALIZE      0
-#define COMMS_HANDLER_STATE_RUN             1
-
-spi::module_t spi_2_handle;
+#define USER_COMMS_INITIALIZE      0
+#define USER_COMMS_RUN             1
 
 hal::timer_handle_t* device::band_heater::zero_crossing_pulse_timer_module = get_timer_1_handle();
 
-namespace sys_op::comms_handler
+namespace sys_op::user_comms
 {
     rtosal::event_flag_handle_t  initialization_event_flags_handle = nullptr;
 
@@ -54,9 +52,7 @@ namespace sys_op::comms_handler
     rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
     rtosal::message_queue_handle_t serial_monitor_usart_queue_handle = nullptr;
 
-    int16_t rtd_0_channel_id = ID_INVALID;
-    int16_t rtd_1_channel_id = ID_INVALID;
-    int16_t rtd_2_channel_id = ID_INVALID;
+
 
     void task_intitialize()
     {
@@ -65,11 +61,11 @@ namespace sys_op::comms_handler
 
     void task_state_machine()
     {
-        static uint8_t comms_handler_state = COMMS_HANDLER_STATE_INITIALIZE;
+        static uint8_t comms_handler_state = USER_COMMS_INITIALIZE;
 
         switch (comms_handler_state)
         {
-            case COMMS_HANDLER_STATE_INITIALIZE:
+            case USER_COMMS_INITIALIZE:
             {
                 // TODO: fix initialization procedure
                 initialization_event_flags_handle       = get_initialization_event_flags_handle();
@@ -85,37 +81,23 @@ namespace sys_op::comms_handler
 
                 rtosal::event_flag_wait(initialization_event_flags_handle, READY_FOR_RESOURCE_INIT_FLAG, osFlagsWaitAny, osWaitForever);
 
-                device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
-                device::built_in_display.initialize(get_i2c_2_handle(), comms_handler_output_data_queue_handle);
-
-                hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle());
-                hal::spi_2.register_callback(spi::TX_RX_COMPLETE_CALLBACK_ID, hal_callback_spi_2_tx_rx_complete);
-                hal::spi_2.register_callback(spi::ERROR_CALLBACK_ID, hal_callback_spi_2_error);
-                hal::spi_2.create_channel(rtd_0_channel_id, PORT_B, GPIO_PIN_14, from_extrusion_task_queue_1_handle, to_extrusion_task_queue_1_handle);
-                hal::spi_2.create_channel(rtd_1_channel_id, PORT_B, GPIO_PIN_15, from_extrusion_task_queue_2_handle, to_extrusion_task_queue_2_handle);
-                hal::spi_2.create_channel(rtd_2_channel_id, PORT_B, GPIO_PIN_1, from_extrusion_task_queue_3_handle, to_extrusion_task_queue_3_handle);
-
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_CONTROLLER_TX_COMPLETE_CALLBACK_ID, hal_callback_i2c_controller_tx_complete);
                 hal::i2c_register_callback(get_i2c_2_handle(), hal::I2C_ERROR_CALLBACK_ID, hal_callback_i2c_controller_error);
 
-                hal::timer_2_initialize();
-                hal::timer_time_base_start(get_timer_2_handle());
+                device::debug_serial_monitor.initialize(get_usart_2_handle(), serial_monitor_usart_queue_handle);
+                device::built_in_display.initialize(get_i2c_2_handle(), comms_handler_output_data_queue_handle);
 
                 rtosal::event_flag_set(initialization_event_flags_handle, READY_FOR_USER_INIT_FLAG);
 
-                comms_handler_state = COMMS_HANDLER_STATE_RUN;
+                comms_handler_state = USER_COMMS_RUN;
 
                 break;
             }
-            case COMMS_HANDLER_STATE_RUN:
+            case USER_COMMS_RUN:
             {
                 device::debug_serial_monitor.process_send_buffer();
                 device::built_in_display.get_intertask_output_data();
                 device::built_in_display.update_output();
-
-                hal::spi_2.receive_inter_task_transaction_requests();
-                hal::spi_2.process_send_buffer();
-                hal::spi_2.process_return_buffers();
                 rtosal::thread_yield();
 
                 break;

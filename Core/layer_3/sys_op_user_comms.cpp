@@ -40,19 +40,8 @@ hal::timer_handle_t* device::band_heater::zero_crossing_pulse_timer_module = get
 namespace sys_op::user_comms
 {
     rtosal::event_flag_handle_t  initialization_event_flags_handle = nullptr;
-
-    rtosal::message_queue_handle_t to_extrusion_task_queue_1_handle = nullptr;
-    rtosal::message_queue_handle_t to_extrusion_task_queue_2_handle = nullptr;
-    rtosal::message_queue_handle_t to_extrusion_task_queue_3_handle = nullptr;
-
-    rtosal::message_queue_handle_t from_extrusion_task_queue_1_handle = nullptr;
-    rtosal::message_queue_handle_t from_extrusion_task_queue_2_handle = nullptr;
-    rtosal::message_queue_handle_t from_extrusion_task_queue_3_handle = nullptr;
-
     rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
     rtosal::message_queue_handle_t serial_monitor_usart_queue_handle = nullptr;
-
-
 
     void task_intitialize()
     {
@@ -67,15 +56,7 @@ namespace sys_op::user_comms
         {
             case USER_COMMS_INITIALIZE:
             {
-                // TODO: fix initialization procedure
                 initialization_event_flags_handle       = get_initialization_event_flags_handle();
-
-                to_extrusion_task_queue_1_handle = get_comms_handler_to_extrusion_task_queue_1_handle();
-                to_extrusion_task_queue_2_handle = get_comms_handler_to_extrusion_task_queue_2_handle();
-                to_extrusion_task_queue_3_handle = get_comms_handler_to_extrusion_task_queue_3_handle();
-                from_extrusion_task_queue_1_handle = get_extrusion_task_to_comms_handler_queue_1_handle();
-                from_extrusion_task_queue_2_handle = get_extrusion_task_to_comms_handler_queue_2_handle();
-                from_extrusion_task_queue_3_handle = get_extrusion_task_to_comms_handler_queue_3_handle();
                 comms_handler_output_data_queue_handle  = get_comms_handler_output_data_queue_handle();
                 serial_monitor_usart_queue_handle       = get_serial_monitor_usart_queue_handle();
 

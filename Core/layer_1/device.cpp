@@ -36,13 +36,13 @@
 
 namespace device
 {
-    rtd rtd_zone_1;
-    rtd rtd_zone_2;
-    rtd rtd_zone_3;
+    rtd z0_rtd;
+    rtd z1_rtd;
+    rtd z2_rtd;
 
-    band_heater zone_1_band_heater;
-    band_heater zone_2_band_heater;
-    band_heater zone_3_band_heater;
+    band_heater z0_heater;
+    band_heater z1_heater;
+    band_heater z2_heater;
 
     serial_monitor debug_serial_monitor;
 

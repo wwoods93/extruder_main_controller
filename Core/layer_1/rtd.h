@@ -21,13 +21,13 @@ class rtd
 {
     public:
 
-        #define CELSIUS_MIN                     0
-        #define CELSIUS_MAX                     509
-        #define RESISTANCE_RATIO_DIVISOR        32768
+        #define CELSIUS_MIN                     0U
+        #define CELSIUS_MAX                     509U
+        #define RESISTANCE_RATIO_DIVISOR        32768U
 
-        #define READ_REGISTER_ADDRESS_MASK      0x7F
-        #define WRITE_REGISTER_ADDRESS_MASK     0x80
-        #define DUMMY_BYTE                      0xFF
+        static constexpr uint8_t READ_REGISTER_ADDRESS_MASK = 0x7F;
+        static constexpr uint8_t WRITE_REGISTER_ADDRESS_MASK = 0x80;
+        static constexpr uint8_t DUMMY_BYTE = 0xFF;
 
         static constexpr uint32_t READING_PERIOD_MS = 500U;
 
@@ -43,11 +43,8 @@ class rtd
         static constexpr uint8_t CONFIG_REGISTER_SET_NOTCH_FILTER_60_HZ         = 0x00;
 
         static constexpr uint8_t RTD_CONFIG_REG_BYTE = CONFIG_REGISTER_SET_BIAS
-                                                     /*| CONFIG_REGISTER_SET_CONVERSION_MODE_AUTO*/
-                                                     | CONFIG_REGISTER_SET_CONVERSION_MODE_1_SHOT
-                                                     | CONFIG_REGISTER_SET_RTD_TYPE_3_WIRE
-                                                     /*| CONFIG_REGISTER_FAULT_STATUS_CLEAR
-                                                     | CONFIG_REGISTER_SET_NOTCH_FILTER_50_HZ*/;
+                                                        | CONFIG_REGISTER_SET_CONVERSION_MODE_1_SHOT
+                                                        | CONFIG_REGISTER_SET_RTD_TYPE_3_WIRE;
 
         static constexpr uint8_t MSB_REGISTER_ADDRESS                           = 0x01;
         static constexpr uint8_t LSB_REGISTER_ADDRESS                           = 0x02;
@@ -66,8 +63,8 @@ class rtd
         static constexpr uint8_t FAULT_RTDIN_LOW                                = 0x08;
         static constexpr uint8_t FAULT_OVER_UNDER_VOLTAGE                       = 0x04;
 
-        static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0;
-        static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0;
+        static constexpr float  RTD_RESISTANCE_NOMINAL = 1000.0F;
+        static constexpr float  RTD_RESISTANCE_REFERENCE = 4300.0F;
         static constexpr double RTD_RESISTANCE_RATIO_SCALE_FACTOR = RTD_RESISTANCE_REFERENCE / RESISTANCE_RATIO_DIVISOR;
 
         rtd();
@@ -76,7 +73,7 @@ class rtd
 
     private:
 
-        spi spi_instance;
+        spi* spi_instance;
         spi::packet_t spi_packet;
         spi::chip_select_t chip_select;
         int16_t channel_id = ID_INVALID;
@@ -86,22 +83,22 @@ class rtd
         static constexpr uint8_t CAL_METHOD_CONSTANT = 1U;
         static constexpr uint8_t CAL_METHOD_LINEAR = 2U;
         uint8_t calibration_method = CAL_METHOD_NONE;
-        float cal_resistance_constant_offset = 0.0;
-        float cal_resistance_linear_scale_factor = 0.0;
-        float temperature_celsius_current_reading = 0.0;
-        float temperature_celsius_moving_average = 1.0;
+        float cal_resistance_constant_offset = 0.0F;
+        float cal_resistance_linear_scale_factor = 0.0F;
+        float temperature_celsius_current_reading = 0.0F;
+        float temperature_celsius_moving_average = 1.0F;
         uint8_t moving_average_sample_count = 8U;
 
         hal::timer_handle_t* reading_timer_handle;
         uint32_t reading_request_tick = 0U;
 
-        common_packet_t request_packet;
-        common_packet_t result_packet;
-        common_float_data_t output_data;
-        uint8_t complete_tx[8] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, 0, 0 };
+        rtosal::common_packet_t request_packet;
+        rtosal::common_packet_t result_packet;
+        rtosal::common_float_data_t output_data;
+        uint8_t complete_tx[8] = { CONFIG_REGISTER_ADDRESS | WRITE_REGISTER_ADDRESS_MASK, RTD_CONFIG_REG_BYTE, MSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, LSB_REGISTER_ADDRESS_FOR_READ & 0x7F, DUMMY_BYTE, 0U, 0U };
         uint8_t bytes_per_tx[8] = {2, 4, 0, 0, 0, 0, 0, 0 };
         uint16_t rtd_register_contents = 0U;
-        double rtd_resistance_scaled_and_rounded = 0.0;
+        double rtd_resistance_scaled_and_rounded = 0.0F;
         uint32_t lookup_table_index = 0U;
         uint32_t resistance_upper_bound = 0U;
         uint32_t resistance_lower_bound = 0U;
@@ -112,7 +109,7 @@ class rtd
         uint16_t temperature_range_max = CELSIUS_MAX;
         uint16_t temperature_range_midpoint = 0U;
 
-        uint16_t get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet);
+        uint16_t get_msb_and_lsb_register_bytes_and_concatenate(rtosal::common_packet_t& arg_common_packet);
         uint32_t search_lookup_table(uint32_t rtd_resistance);
         float convert_rtd_resistance_to_temperature_celsius(uint32_t rtd_resistance);
 

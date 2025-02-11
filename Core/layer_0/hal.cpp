@@ -577,3 +577,8 @@ void MX_TIM14_Init()
 
     HAL_TIM_MspPostInit(&htim14);
 }
+
+void assert_failed(uint8_t *file, uint32_t line)
+{
+
+}

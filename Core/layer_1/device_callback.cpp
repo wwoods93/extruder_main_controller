@@ -36,7 +36,7 @@
 void device_callback_tim_1_input_capture_pulse_detected_callback(TIM_HandleTypeDef *htim)
 {
     device::band_heater::zero_crossing_pulse_restart();
-    output_pulse_restart(&device::zone_1_band_heater);
-    output_pulse_restart(&device::zone_2_band_heater);
-    output_pulse_restart(&device::zone_3_band_heater);
+    output_pulse_restart(&device::z0_heater);
+    output_pulse_restart(&device::z1_heater);
+    output_pulse_restart(&device::z2_heater);
 }

@@ -53,7 +53,7 @@ class touch_screen
 
         uint32_t touch_screen_iteration_tick = 0U;
         uint8_t converter_result[4] = { 0, 0, 0, 0 };
-        common_float_data_t received_data;
+        rtosal::common_float_data_t received_data;
 
         uint8_t current_zone_rtd;
         uint8_t touch_screen_state;

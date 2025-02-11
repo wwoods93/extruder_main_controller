@@ -17,167 +17,57 @@
 
 /* third-party includes */
 #include "cmsis_os2.h"
-/* hal includes */
+/* layer_0 includes */
 
-/* driver includes */
-#include "../layer_1/serial_monitor.h"
-/* rtos abstraction includes */
-#include "rtosal_globals.h"
-/* sys op includes */
+/* layer_1 includes */
+#include "../layer_1/device.h"
+/* layer_2 includes */
 
-/* meta structure includes */
-/* layer_1_rtosal header */
+/* layer_3 includes */
+
+/* application includes */
+
+/* rtosal header */
 #include "rtosal.h"
 
 
-static uint8_t spi_tx_buffer_mutex_initialized_flag = false;
-
-
-osMutexId_t zone_1_band_heater_mutex_handle;
-osMutexId_t zone_2_band_heater_mutex_handle;
-osMutexId_t zone_3_band_heater_mutex_handle;
-osMutexId_t serial_monitor_usart_mutex_handle;
-
-
-osMessageQueueId_t spi_2_extrusion_task_tx_queue_handle;
-osMessageQueueId_t spi_2_extrusion_task_rx_queue_handle;
-osMessageQueueId_t comms_handler_output_data_queue_handle;
-osMessageQueueId_t serial_monitor_usart_queue_handle;
-
-osMessageQueueId_t extrusion_task_to_comms_handler_queue_1_handle;
-osMessageQueueId_t extrusion_task_to_comms_handler_queue_2_handle;
-osMessageQueueId_t extrusion_task_to_comms_handler_queue_3_handle;
-
-osMessageQueueId_t comms_handler_to_extrusion_task_queue_1_handle;
-osMessageQueueId_t comms_handler_to_extrusion_task_queue_2_handle;
-osMessageQueueId_t comms_handler_to_extrusion_task_queue_3_handle;
-
-const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_1_attributes = { .name = "comms_handler_to_extrusion_task_queue_1" };
-const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_2_attributes = { .name = "comms_handler_to_extrusion_task_queue_2" };
-const osMessageQueueAttr_t comms_handler_to_extrusion_task_queue_3_attributes = { .name = "comms_handler_to_extrusion_task_queue_2" };
-
-
-
-const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_1_attributes = { .name = "extrusion_task_to_comms_handler_queue_1" };
-const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_2_attributes = { .name = "extrusion_task_to_comms_handler_queue_2" };
-const osMessageQueueAttr_t extrusion_task_to_comms_handler_queue_3_attributes = { .name = "extrusion_task_to_comms_handler_queue_3" };
-
-const osMessageQueueAttr_t spi_2_extrusion_task_tx_queue_attributes = { .name = "spi_2_extrusion_task_tx_queue" };
-const osMessageQueueAttr_t spi_2_extrusion_task_rx_queue_attributes = { .name = "spi_2_extrusion_task_rx_queue" };
-const osMessageQueueAttr_t i2c_tx_queue_attributes = { .name = "touchscreen_i2c_tx_queue" };
-const osMessageQueueAttr_t serial_monitor_usart_queue_attr = { .name = "serial_monitor_usart_queue" };
-
-const osMutexAttr_t zone_1_band_heater_mutex_attr = { .name = "zone_1_band_heater_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
-const osMutexAttr_t zone_2_band_heater_mutex_attr = { .name = "zone_2_band_heater_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
-const osMutexAttr_t zone_3_band_heater_mutex_attr = { .name = "zone_3_band_heater_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
-const osMutexAttr_t serial_monitor_usart_mutex_attr = { .name = "serial_monitor_usart_mutex", .attr_bits = osMutexPrioInherit, .cb_mem = nullptr, .cb_size = 0U };
-
-
-osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_1_handle()
-{
-    return extrusion_task_to_comms_handler_queue_1_handle;
-}
-
-osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_2_handle()
-{
-    return extrusion_task_to_comms_handler_queue_2_handle;
-}
-
-osMessageQueueId_t get_extrusion_task_to_comms_handler_queue_3_handle()
-{
-    return extrusion_task_to_comms_handler_queue_3_handle;
-}
-
-osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_1_handle()
-{
-    return comms_handler_to_extrusion_task_queue_1_handle;
-}
-
-osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_2_handle()
-{
-    return comms_handler_to_extrusion_task_queue_2_handle;
-}
-
-osMessageQueueId_t get_comms_handler_to_extrusion_task_queue_3_handle()
-{
-    return comms_handler_to_extrusion_task_queue_3_handle;
-}
-
-
-
-osMessageQueueId_t get_spi_2_extrusion_task_tx_queue_handle()
-{
-    return spi_2_extrusion_task_tx_queue_handle;
-}
-
-osMessageQueueId_t get_spi_2_extrusion_task_rx_queue_handle()
-{
-    return spi_2_extrusion_task_rx_queue_handle;
-}
-
-osMessageQueueId_t get_comms_handler_output_data_queue_handle()
-{
-    return comms_handler_output_data_queue_handle;
-}
-
-osMessageQueueId_t get_serial_monitor_usart_queue_handle()
-{
-    return serial_monitor_usart_queue_handle;
-}
-
-osMutexId_t get_zone_1_band_heater_mutex_handle()
-{
-    return zone_1_band_heater_mutex_handle;
-}
-
-osMutexId_t get_zone_2_band_heater_mutex_handle()
-{
-    return zone_2_band_heater_mutex_handle;
-}
-
-osMutexId_t get_zone_3_band_heater_mutex_handle()
-{
-    return zone_3_band_heater_mutex_handle;
-}
-
-osMutexId_t get_serial_monitor_usart_mutex_handle()
-{
-    return zone_3_band_heater_mutex_handle;
-}
-
 namespace rtosal
 {
-    void rtosal_initialize()
+    event_flag_handle_t initialization_event_flags_handle;
+    message_queue_handle_t user_comms_output_queue_handle;
+    message_queue_handle_t serial_monitor_usart_queue_handle;
+
+    const event_flag_attr_t     initialization_event_flags_attributes   = { .name = "initialization_event_flags" };
+    const message_queue_attr_t  user_comms_output_queue_attributes      = { .name = "touchscreen_i2c_tx_queue" };
+    const message_queue_attr_t  serial_monitor_usart_queue_attr         = { .name = "serial_monitor_usart_queue" };
+
+    void rtosal_resource_init()
     {
+        user_comms_output_queue_handle      = message_queue_create((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_float_data_t),       &user_comms_output_queue_attributes);
+        serial_monitor_usart_queue_handle   = message_queue_create((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(serial_monitor::packet_t),  &serial_monitor_usart_queue_attr);
 
-        extrusion_task_to_comms_handler_queue_1_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_1_attributes);
-        extrusion_task_to_comms_handler_queue_2_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_2_attributes);
-        extrusion_task_to_comms_handler_queue_3_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &extrusion_task_to_comms_handler_queue_3_attributes);
+        initialization_event_flags_handle   = event_flag_create(&initialization_event_flags_attributes);
 
-        comms_handler_to_extrusion_task_queue_1_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_1_attributes);
-        comms_handler_to_extrusion_task_queue_2_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_2_attributes);
-        comms_handler_to_extrusion_task_queue_3_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &comms_handler_to_extrusion_task_queue_3_attributes);
-
-        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
-        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
-
-        spi_2_extrusion_task_tx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_tx_queue_attributes);
-        spi_2_extrusion_task_rx_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_packet_t), &spi_2_extrusion_task_rx_queue_attributes);
-        comms_handler_output_data_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(common_float_data_t), &i2c_tx_queue_attributes);
-
-        serial_monitor_usart_queue_handle = osMessageQueueNew((uint32_t)QUEUE_LENGTH_MAX, (uint32_t)sizeof(serial_monitor::packet_t), &serial_monitor_usart_queue_attr);
-        zone_1_band_heater_mutex_handle = osMutexNew(&zone_1_band_heater_mutex_attr);
-        zone_2_band_heater_mutex_handle = osMutexNew(&zone_2_band_heater_mutex_attr);
-        zone_3_band_heater_mutex_handle = osMutexNew(&zone_3_band_heater_mutex_attr);
-        serial_monitor_usart_mutex_handle = osMutexNew(&serial_monitor_usart_mutex_attr);
-        osMutexRelease(zone_1_band_heater_mutex_handle);
-        osMutexRelease(zone_2_band_heater_mutex_handle);
-        osMutexRelease(zone_3_band_heater_mutex_handle);
-        osMutexRelease(serial_monitor_usart_mutex_handle);
-
+        event_flag_clear(initialization_event_flags_handle, 0xFFFFFFFF);
     }
 
     #if (USE_CMSIS_OS2 == 1U)
+
+        event_flag_handle_t get_initialization_event_flags_handle()
+        {
+            return initialization_event_flags_handle;
+        }
+
+        message_queue_handle_t get_comms_handler_output_data_queue_handle()
+        {
+            return user_comms_output_queue_handle;
+        }
+
+        message_queue_handle_t get_serial_monitor_usart_queue_handle()
+        {
+            return serial_monitor_usart_queue_handle;
+        }
+
         uint32_t get_rtos_kernel_tick_frequency()
         {
             return osKernelGetTickFreq();
@@ -187,12 +77,8 @@ namespace rtosal
         {
             return osKernelGetTickCount();
         }
+
     #endif
-
-
-
-
-
 
     void build_common_packet(common_packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_bytes)[8], uint8_t (&arg_bytes_per_tx)[8])
     {
@@ -202,12 +88,4 @@ namespace rtosal
         memcpy(&arg_packet.bytes_per_transaction, arg_bytes_per_tx, sizeof(arg_packet.bytes_per_transaction));
         memcpy(&arg_packet.bytes, arg_bytes, sizeof(arg_packet.bytes));
     }
-
-
-
-
-
-
-
-
 }

@@ -36,13 +36,13 @@
 
 namespace device
 {
-    extern rtd rtd_zone_1;
-    extern rtd rtd_zone_2;
-    extern rtd rtd_zone_3;
+    extern rtd z0_rtd;
+    extern rtd z1_rtd;
+    extern rtd z2_rtd;
+    extern band_heater z0_heater;
+    extern band_heater z1_heater;
+    extern band_heater z2_heater;
 
-    extern band_heater zone_1_band_heater;
-    extern band_heater zone_2_band_heater;
-    extern band_heater zone_3_band_heater;
     extern serial_monitor debug_serial_monitor;
     extern touch_screen built_in_display;
 }

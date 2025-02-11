@@ -28,7 +28,7 @@ rtd::rtd()
 
 void rtd::initialize(spi& arg_spi_instance, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, int16_t arg_channel_id, rtosal::message_queue_handle_t arg_output_queue_handle, hal::timer_handle_t* arg_reading_timer_handle, float arg_cal_measured, float arg_cal_expected)
 {
-    spi_instance = arg_spi_instance;
+    spi_instance = &arg_spi_instance;
     chip_select.port = arg_chip_select_port;
     chip_select.pin = arg_chip_select_pin;
     output_queue_handle = arg_output_queue_handle;
@@ -51,7 +51,7 @@ float rtd::read()
         spi_packet.bytes_per_transaction[i] = bytes_per_tx[i];
     }
 
-    spi_instance.transmit_receive(spi_packet);
+    spi_instance->transmit_receive(spi_packet);
 
     for (uint8_t i = 0U; i < 8U; ++i)
     {
@@ -101,7 +101,7 @@ float rtd::read()
     return temperature_celsius_moving_average;
 }
 
-uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(common_packet_t& arg_common_packet)
+uint16_t rtd::get_msb_and_lsb_register_bytes_and_concatenate(rtosal::common_packet_t& arg_common_packet)
 {
     rtd_register_contents = arg_common_packet.bytes[3];
     rtd_register_contents <<= 8U;

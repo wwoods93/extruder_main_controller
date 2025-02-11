@@ -17,7 +17,7 @@
 /* third-party includes */
 
 /* layer_0 includes */
-#include "hal_general.h"
+#include "hal.h"
 /* layer_1_rtosal includes */
 
 /* layer_1 includes */

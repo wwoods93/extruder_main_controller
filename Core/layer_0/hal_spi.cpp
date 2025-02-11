@@ -1035,7 +1035,7 @@ uint32_t spi::get_packets_received_count() const
 
 void spi::send_inter_task_transaction_result(rtosal::message_queue_handle_t arg_message_queue_id, packet_t& arg_packet)
 {
-    common_packet_t rx_common_packet;
+    rtosal::common_packet_t rx_common_packet;
     rtosal::build_common_packet(rx_common_packet, arg_packet.channel_id, arg_packet.rx_bytes, arg_packet.bytes_per_transaction);
     if (rtosal::message_queue_send(arg_message_queue_id, &rx_common_packet, 0U) == rtosal::OS_OK)
     {
@@ -1051,7 +1051,7 @@ void spi::receive_inter_task_transaction_requests()
 {
     channel_t channel;
     packet_t packet;
-    common_packet_t common_packet;
+    rtosal::common_packet_t common_packet;
     for (uint8_t index = 0U; index < SPI_CHANNELS_MAX; ++index)
     {
         if (channel_array[index] == 1U)

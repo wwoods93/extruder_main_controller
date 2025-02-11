@@ -20,7 +20,6 @@
 /* third-party includes */
 
 /* layer_0 includes */
-#include "hal_general.h"
 #include "hal_wrapper.h"
 /* layer_1_rtosal includes */
 

@@ -17,7 +17,6 @@
 /* third-party includes */
 #include "../../Middlewares/Third_Party/FreeRTOS/Source/CMSIS_RTOS_V2/cmsis_os2.h"
 /* layer_0 includes */
-#include "../layer_0/hal_general.h"
 #include "../layer_0/hal.h"
 /* layer_1_rtosal includes */
 

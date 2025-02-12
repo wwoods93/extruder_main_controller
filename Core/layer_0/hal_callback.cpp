@@ -117,7 +117,7 @@ void hal_callback_uart_rx_complete_callback(UART_HandleTypeDef *huart)
 //    {
 //        data_buffer[cnt++] = recvd_data;
 //    }
-//    HAL_UART_Receive_IT(get_usart_2_handle(), &recvd_data,1);
+//    HAL_UART_Receive_IT(usart_2_get_handle(), &recvd_data,1);
 
 }
 

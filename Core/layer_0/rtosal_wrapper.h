@@ -61,6 +61,8 @@ namespace rtosal
 
     int32_t kernel_init();
     int32_t kernel_start();
+    uint32_t kernel_get_tick_frequency();
+    uint32_t kernel_get_tick_count();
     message_queue_handle_t message_queue_create(uint32_t arg_message_count, uint32_t arg_message_size, const message_queue_attr_t* arg_message_queue_attr);
     int32_t message_queue_send(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);
     int32_t message_queue_receive(message_queue_handle_t arg_message_queue_id, void* arg_message_ptr, uint32_t arg_timeout);

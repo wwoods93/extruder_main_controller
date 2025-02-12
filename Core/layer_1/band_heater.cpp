@@ -50,20 +50,20 @@ namespace device
         {
             case TIMER_10_ID:
             {
-                MX_TIM10_Init();
-                output_pulse_timer_module = get_timer_10_handle();
+                hal::tim_10_initialize();
+                output_pulse_timer_module = hal::tim_10_get_handle();
                 break;
             }
             case TIMER_13_ID:
             {
-                MX_TIM13_Init();
-                output_pulse_timer_module = get_timer_13_handle();
+                hal::tim_13_initialize();
+                output_pulse_timer_module = hal::tim_13_get_handle();
                 break;
             }
             case TIMER_14_ID:
             {
-                MX_TIM14_Init();
-                output_pulse_timer_module = get_timer_14_handle();
+                hal::tim_14_initialize();
+                output_pulse_timer_module = hal::tim_14_get_handle();
                 break;
             }
             default:

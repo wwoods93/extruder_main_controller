@@ -48,7 +48,7 @@ uint8_t z2_heater_demand = 10U;
 
 namespace sys_op::temp_control
 {
-    rtosal::message_queue_handle_t comms_handler_output_data_queue_handle = nullptr;
+    rtosal::message_queue_handle_t user_comms_queue_handle = nullptr;
     rtosal::event_flag_handle_t initialization_event_flags_handle = nullptr;
 
     char debug_msg[] = "period is 8000";
@@ -70,26 +70,26 @@ namespace sys_op::temp_control
 
                 rtosal::event_flag_wait(initialization_event_flags_handle, rtosal::READY_FOR_TEMP_CONTROL_INIT_FLAG, rtosal::OS_FLAGS_ANY, rtosal::OS_WAIT_FOREVER);
 
-                comms_handler_output_data_queue_handle = rtosal::get_comms_handler_output_data_queue_handle();
+                user_comms_queue_handle = rtosal::user_comms_queue_get_handle();
 
-                hal::timer_register_callback(get_timer_1_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, device_callback_tim_1_input_capture_pulse_detected_callback);
-                hal::timer_2_initialize();
-                hal::timer_6_initialize();
-                hal::timer_time_base_start(get_timer_2_handle());
-                hal::timer_time_base_start(get_timer_6_handle());
-                hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, get_timer_2_handle());
+                hal::timer_register_callback(hal::tim_1_get_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, device_callback_tim_1_input_capture_pulse_detected_callback);
+                hal::tim_2_initialize();
+                hal::tim_6_initialize();
+                hal::timer_time_base_start(hal::tim_2_get_handle());
+                hal::timer_time_base_start(hal::tim_6_get_handle());
+                hal::spi_2.initialize(&spi_2_handle, SPI_2_ID, hal::tim_2_get_handle());
                 hal::spi_2.create_channel(z0_channel_id, PORT_B, GPIO_PIN_14);
                 hal::spi_2.create_channel(z1_channel_id, PORT_B, GPIO_PIN_15);
                 hal::spi_2.create_channel(z2_channel_id, PORT_B, GPIO_PIN_1);
 
-                device::z0_rtd.initialize(hal::spi_2, PORT_B, PIN_14, 0U, comms_handler_output_data_queue_handle, get_timer_6_handle(), 21.34F, 20.45F);
-                device::z1_rtd.initialize(hal::spi_2, PORT_B, PIN_15, 1U, comms_handler_output_data_queue_handle, get_timer_6_handle(), 23.15F, 20.45F);
-                device::z2_rtd.initialize(hal::spi_2, PORT_B, PIN_1,  2U, comms_handler_output_data_queue_handle, get_timer_6_handle(), 22.67F, 20.45F);
+                device::z0_rtd.initialize(hal::spi_2, PORT_B, PIN_14, 0U, user_comms_queue_handle,hal::tim_6_get_handle(), 21.34F, 20.45F);
+                device::z1_rtd.initialize(hal::spi_2, PORT_B, PIN_15, 1U, user_comms_queue_handle,hal::tim_6_get_handle(), 23.15F, 20.45F);
+                device::z2_rtd.initialize(hal::spi_2, PORT_B, PIN_1,  2U, user_comms_queue_handle,hal::tim_6_get_handle(), 22.67F, 20.45F);
                 device::z0_heater.initialize(TEMPERATURE_ZONE_1, TIMER_10_ID);
                 device::z1_heater.initialize(TEMPERATURE_ZONE_2, TIMER_13_ID);
                 device::z2_heater.initialize(TEMPERATURE_ZONE_3, TIMER_14_ID);
 
-                hal::timer_input_capture_start_interrupt(get_timer_1_handle(), hal::TIMER_CHANNEL_2);
+                hal::timer_input_capture_start_interrupt(hal::tim_1_get_handle(), hal::TIMER_CHANNEL_2);
 
                 state = TEMP_CONTROL_RUN;
 

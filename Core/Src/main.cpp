@@ -51,7 +51,7 @@ uint8_t system_run = 1U;
 
 int main()
 {
-    initialize_peripherals();
+    hal::initialize_peripherals();
     rtosal::kernel_init();
     rtosal::rtosal_resource_init();
 

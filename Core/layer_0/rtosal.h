@@ -58,10 +58,9 @@ namespace rtosal
 
     void rtosal_resource_init();
     event_flag_handle_t get_initialization_event_flags_handle();
-    message_queue_handle_t get_comms_handler_output_data_queue_handle();
+    message_queue_handle_t user_comms_queue_get_handle();
     message_queue_handle_t get_serial_monitor_usart_queue_handle();
-    uint32_t get_rtos_kernel_tick_frequency();
-    uint32_t get_rtos_kernel_tick_count();
+
     void build_common_packet(common_packet_t& arg_packet, int16_t arg_channel_id, uint8_t (&arg_bytes)[8], uint8_t (&arg_bytes_per_tx)[8]);
 }
 

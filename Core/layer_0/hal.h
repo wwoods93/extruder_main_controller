@@ -186,53 +186,59 @@ typedef struct _dma_handle_t
 
 namespace hal
 {
+    void initialize_peripherals();
+
     extern spi spi_2;
 
     spi* get_spi_2_object();
-    void i2c_build_packet_array_from_converted_bytes(uint8_t* arg_i2c_packet_array, uint8_t arg_global_id, const uint8_t* arg_converted_bytes);
+    void i2c_build_packet_array_from_uint8_array(uint8_t* arg_i2c_packet_array, uint8_t arg_global_id, const uint8_t* arg_converted_bytes);
 
-    void timer_2_initialize();
-    void timer_6_initialize();
+    void tim_1_initialize();
+    void tim_2_initialize();
+    void tim_6_initialize();
+    void tim_7_initialize();
+    void tim_10_initialize();
+    void tim_11_initialize();
+    void tim_13_initialize();
+    void tim_14_initialize();
+
+    timer_handle_t* tim_1_get_handle();
+    timer_handle_t* tim_2_get_handle();
+    timer_handle_t* tim_6_get_handle();
+    timer_handle_t* tim_10_get_handle();
+    timer_handle_t* tim_13_get_handle();
+    timer_handle_t* tim_14_get_handle();
+
+    uint32_t timer_2_get_count();
+    uint32_t timer_6_get_count();
+    uint32_t timer_get_count(hal::timer_handle_t* arg_timer_handle);
 }
 
 
 void error_handler();
 void Error_Handler();
 
-SPI_HandleTypeDef* get_spi_1_handle();
+SPI_HandleTypeDef* spi_1_get_handle();
 
-RTC_HandleTypeDef* get_rtc_handle();
-TIM_HandleTypeDef* get_timer_1_handle();
-TIM_HandleTypeDef* get_timer_2_handle();
-hal::timer_handle_t* get_timer_6_handle();
-TIM_HandleTypeDef* get_timer_10_handle();
-TIM_HandleTypeDef* get_timer_13_handle();
-TIM_HandleTypeDef* get_timer_14_handle();
+RTC_HandleTypeDef* rtc_get_handle();
 
-uint32_t get_timer_2_count();
-uint32_t get_timer_6_count();
-uint32_t get_timer_count(hal::timer_handle_t* arg_timer_handle);
 
-CAN_HandleTypeDef* get_can_1_handle();
-I2C_HandleTypeDef* get_i2c_1_handle();
-I2C_HandleTypeDef* get_i2c_2_handle();
-UART_HandleTypeDef* get_usart_2_handle();
-void initialize_peripherals();
+
+
+CAN_HandleTypeDef* can_1_get_handle();
+I2C_HandleTypeDef* i2c_1_get_handle();
+I2C_HandleTypeDef* i2c_2_get_handle();
+UART_HandleTypeDef* usart_2_get_handle();
+
 void can_1_initialize();
-void MX_I2C1_Init();
+void i2c_1_initialize();
 void i2c_2_initialize();
 void MX_IWDG_Init();
 void MX_WWDG_Init();
-void MX_USART2_UART_Init();
+void usart_2_initialize();
 
-void MX_RTC_Init();
-void MX_TIM1_Init();
+void rtc_initialize();
 
-void MX_TIM7_Init();
-void MX_TIM10_Init();
-void MX_TIM11_Init();
-void MX_TIM13_Init();
-void MX_TIM14_Init();
 void assert_failed(uint8_t *file, uint32_t line);
 
 #endif //MAIN_CONTROLLER_HAL_H

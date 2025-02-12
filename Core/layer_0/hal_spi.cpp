@@ -469,12 +469,12 @@ spi::procedure_status_t spi::verify_communication_direction(uint32_t arg_intende
 
 spi::procedure_status_t spi::flag_timeout(uint32_t arg_status_reg_bit, bit_status_t arg_bit_status) const
 {
-    uint32_t start_time = get_timer_count(timeout_timer_handle);
+    uint32_t start_time = hal::timer_get_count(timeout_timer_handle);
     uint16_t fallback_countdown = FALLBACK_COUNTDOWN;
 
     while (get_status_register_bit(arg_status_reg_bit) != arg_bit_status)
     {
-        if (get_timer_count(timeout_timer_handle) - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
+        if (hal::timer_get_count(timeout_timer_handle) - start_time >= FLAG_TIMEOUT || fallback_countdown == 0)
         {
             disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
 
@@ -963,7 +963,6 @@ void spi::transmit_receive(spi::packet_t& arg_packet)
         }
     }
     ++packets_received_count;
-//    send_buffer.pop();
     memset(&arg_packet, '\0', sizeof(packet_t));
     memcpy(&arg_packet, &active_packet, sizeof(packet_t));
     memset(&active_packet, '\0', sizeof(packet_t));
@@ -974,8 +973,8 @@ void spi::transmit_receive(spi::packet_t& arg_packet)
 
 void spi::process_send_buffer()
 {
-    process_send_buffer_timeout_start = get_timer_count(timeout_timer_handle);
-    while (!send_buffer.empty() && get_timer_count(timeout_timer_handle) - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
+    process_send_buffer_timeout_start = hal::timer_get_count(timeout_timer_handle);
+    while (!send_buffer.empty() && hal::timer_get_count(timeout_timer_handle) - process_send_buffer_timeout_start < PROCESS_SEND_BUFFER_TIMEOUT)
     {
         memset(&active_packet, '\0', sizeof(packet_t));
         memcpy(&active_packet, &send_buffer.front(), sizeof(packet_t));

@@ -85,7 +85,7 @@ void touch_screen::get_intertask_output_data()
 
 void touch_screen::update_output()
 {
-    if (get_timer_2_handle()->Instance->CNT - touch_screen_iteration_tick > 100000U)
+    if (hal::tim_2_get_handle()->Instance->CNT - touch_screen_iteration_tick > 100000U)
     {
         switch (touch_screen_state)
         {
@@ -98,7 +98,7 @@ void touch_screen::update_output()
                         if (zone_1_rtd_reading_is_fresh)
                         {
                             utility::convert_float_to_uint8_array(zone_1_rtd_reading, converter_result);
-                            hal::i2c_build_packet_array_from_converted_bytes(i2c_data, current_zone_rtd, converter_result);
+                            hal::i2c_build_packet_array_from_uint8_array(i2c_data, current_zone_rtd, converter_result);
                             zone_1_rtd_reading_is_fresh = 0U;
                         }
 
@@ -110,7 +110,7 @@ void touch_screen::update_output()
                         if (zone_2_rtd_reading_is_fresh)
                         {
                             utility::convert_float_to_uint8_array(zone_2_rtd_reading, converter_result);
-                            hal::i2c_build_packet_array_from_converted_bytes(i2c_data, current_zone_rtd, converter_result);
+                            hal::i2c_build_packet_array_from_uint8_array(i2c_data, current_zone_rtd, converter_result);
                             zone_2_rtd_reading_is_fresh = 0U;
                         }
 
@@ -122,7 +122,7 @@ void touch_screen::update_output()
                         if (zone_3_rtd_reading_is_fresh)
                         {
                             utility::convert_float_to_uint8_array(zone_3_rtd_reading, converter_result);
-                            hal::i2c_build_packet_array_from_converted_bytes(i2c_data, current_zone_rtd, converter_result);
+                            hal::i2c_build_packet_array_from_uint8_array(i2c_data, current_zone_rtd, converter_result);
                             zone_3_rtd_reading_is_fresh = 0U;
                         }
 
@@ -143,7 +143,7 @@ void touch_screen::update_output()
             case STATE_SEND_SPI_REQUEST_COUNT:
             {
                 utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_requested_count(), converter_result);
-                hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x07, converter_result);
+                hal::i2c_build_packet_array_from_uint8_array(i2c_data, 0x07, converter_result);
                 hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_SPI_RECEIVE_COUNT;
                 break;
@@ -151,7 +151,7 @@ void touch_screen::update_output()
             case STATE_SEND_SPI_RECEIVE_COUNT:
             {
                 utility::convert_uint32_to_uint8_array(hal::spi_2.get_packets_received_count(), converter_result);
-                hal::i2c_build_packet_array_from_converted_bytes(i2c_data, 0x06, converter_result);
+                hal::i2c_build_packet_array_from_uint8_array(i2c_data, 0x06, converter_result);
                 hal::i2c_controller_transmit_interrupt(i2c_module, (0x14 << 1), i2c_data, 5U);
                 touch_screen_state = STATE_SEND_RTD_READINGS;
                 break;
@@ -162,6 +162,6 @@ void touch_screen::update_output()
                 break;
             }
         }
-        touch_screen_iteration_tick = get_timer_2_handle()->Instance->CNT;
+        touch_screen_iteration_tick = hal::tim_2_get_handle()->Instance->CNT;
     }
 }

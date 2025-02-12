@@ -47,6 +47,16 @@ namespace rtosal
         return (int32_t)osKernelStart();
     }
 
+    uint32_t kernel_get_tick_frequency()
+    {
+        return osKernelGetTickFreq();
+    }
+
+    uint32_t kernel_get_tick_count()
+    {
+        return osKernelGetTickCount();
+    }
+
     message_queue_handle_t message_queue_create(uint32_t arg_message_count, uint32_t arg_message_size, const message_queue_attr_t* arg_message_queue_attr)
     {
         return (message_queue_handle_t)osMessageQueueNew(arg_message_count, arg_message_size, (const osMessageQueueAttr_t*)arg_message_queue_attr);

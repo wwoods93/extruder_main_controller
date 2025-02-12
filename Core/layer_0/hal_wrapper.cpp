@@ -98,8 +98,8 @@ namespace hal
         char colon[2] = ":";
 
         memset(&current_time, '\0', sizeof(RTC_TimeTypeDef));
-        HAL_RTC_GetTime(get_rtc_handle(), &current_time, RTC_FORMAT_BCD);
-        HAL_RTC_GetDate(get_rtc_handle(), &current_date, RTC_FORMAT_BCD);
+        HAL_RTC_GetTime(rtc_get_handle(), &current_time, RTC_FORMAT_BCD);
+        HAL_RTC_GetDate(rtc_get_handle(), &current_date, RTC_FORMAT_BCD);
 
         uint8_t hours = RTC_Bcd2ToByte(current_time.Hours);
         uint8_t minutes = RTC_Bcd2ToByte(current_time.Minutes);

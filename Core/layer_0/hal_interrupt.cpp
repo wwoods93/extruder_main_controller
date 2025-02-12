@@ -33,24 +33,24 @@
 
 void TIM1_CC_IRQHandler()
 {
-    HAL_TIM_IRQHandler(get_timer_1_handle());
+    HAL_TIM_IRQHandler(hal::tim_1_get_handle());
 
 }
 
 void TIM1_UP_TIM10_IRQHandler()
 {
-    HAL_TIM_IRQHandler(get_timer_1_handle());
-    HAL_TIM_IRQHandler(get_timer_10_handle());
+    HAL_TIM_IRQHandler(hal::tim_1_get_handle());
+    HAL_TIM_IRQHandler(hal::tim_10_get_handle());
 }
 
 void TIM8_UP_TIM13_IRQHandler()
 {
-    HAL_TIM_IRQHandler(get_timer_13_handle());
+    HAL_TIM_IRQHandler(hal::tim_13_get_handle());
 }
 
 void TIM8_TRG_COM_TIM14_IRQHandler()
 {
-    HAL_TIM_IRQHandler(get_timer_14_handle());
+    HAL_TIM_IRQHandler(hal::tim_14_get_handle());
 }
 
 void SPI1_IRQHandler()
@@ -65,45 +65,45 @@ void SPI2_IRQHandler()
 
 void USART2_IRQHandler()
 {
-    HAL_UART_IRQHandler(get_usart_2_handle());
+    HAL_UART_IRQHandler(usart_2_get_handle());
 }
 
 void CAN1_TX_IRQHandler()
 {
-    HAL_CAN_IRQHandler(get_can_1_handle());
+    HAL_CAN_IRQHandler(can_1_get_handle());
 }
 
 void CAN1_RX0_IRQHandler()
 {
-    HAL_CAN_IRQHandler(get_can_1_handle());
+    HAL_CAN_IRQHandler(can_1_get_handle());
 }
 
 void CAN1_RX1_IRQHandler()
 {
-    HAL_CAN_IRQHandler(get_can_1_handle());
+    HAL_CAN_IRQHandler(can_1_get_handle());
 }
 
 void CAN1_SCE_IRQHandler()
 {
-    HAL_CAN_IRQHandler(get_can_1_handle());
+    HAL_CAN_IRQHandler(can_1_get_handle());
 }
 
 void I2C1_EV_IRQHandler()
 {
-    HAL_I2C_EV_IRQHandler(get_i2c_1_handle());
+    HAL_I2C_EV_IRQHandler(i2c_1_get_handle());
 }
 
 void I2C1_ER_IRQHandler()
 {
-    HAL_I2C_ER_IRQHandler(get_i2c_1_handle());
+    HAL_I2C_ER_IRQHandler(i2c_1_get_handle());
 }
 
 void I2C2_EV_IRQHandler()
 {
-    HAL_I2C_EV_IRQHandler(get_i2c_2_handle());
+    HAL_I2C_EV_IRQHandler(i2c_2_get_handle());
 }
 
 void I2C2_ER_IRQHandler()
 {
-    HAL_I2C_ER_IRQHandler(get_i2c_2_handle());
+    HAL_I2C_ER_IRQHandler(i2c_2_get_handle());
 }

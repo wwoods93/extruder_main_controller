@@ -103,13 +103,13 @@ namespace hal
         htim1.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_ENABLE;
         if (HAL_TIM_IC_Init(&htim1) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
         if (HAL_TIMEx_MasterConfigSynchronization(&htim1, &sMasterConfig) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         sConfigIC.ICPolarity = TIM_INPUTCHANNELPOLARITY_RISING;
         sConfigIC.ICSelection = TIM_ICSELECTION_DIRECTTI;
@@ -117,7 +117,7 @@ namespace hal
         sConfigIC.ICFilter = 0;
         if (HAL_TIM_IC_ConfigChannel(&htim1, &sConfigIC, TIM_CHANNEL_2) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
     }
 
@@ -181,13 +181,13 @@ namespace hal
         us_base_timer_handle.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
         if (HAL_TIM_Base_Init(&htim7) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
         sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
         if (HAL_TIMEx_MasterConfigSynchronization(&htim7, &sMasterConfig) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
     }
 
@@ -204,16 +204,16 @@ namespace hal
 
         if (HAL_TIM_Base_Init(&htim10) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         if (HAL_TIM_OC_Init(&htim10) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         if (HAL_TIM_OnePulse_Init(&htim10, TIM_OPMODE_SINGLE) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         sConfigOC.OCMode = TIM_OCMODE_PWM2;
@@ -224,7 +224,7 @@ namespace hal
 
         if (HAL_TIM_OC_ConfigChannel(&htim10, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         HAL_TIM_MspPostInit(&htim10);
@@ -240,7 +240,7 @@ namespace hal
         htim11.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
         if (HAL_TIM_Base_Init(&htim11) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
     }
 
@@ -257,15 +257,15 @@ namespace hal
 
         if (HAL_TIM_Base_Init(&htim13) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         if (HAL_TIM_OC_Init(&htim13) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         if (HAL_TIM_OnePulse_Init(&htim13, TIM_OPMODE_SINGLE) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         sConfigOC.OCMode = TIM_OCMODE_PWM2;
@@ -276,7 +276,7 @@ namespace hal
 
         if (HAL_TIM_OC_ConfigChannel(&htim13, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         HAL_TIM_MspPostInit(&htim13);
@@ -296,15 +296,15 @@ namespace hal
 
         if (HAL_TIM_Base_Init(&htim14) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         if (HAL_TIM_OC_Init(&htim14) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
         if (HAL_TIM_OnePulse_Init(&htim14, TIM_OPMODE_SINGLE) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         sConfigOC.OCMode = TIM_OCMODE_PWM2;
@@ -315,7 +315,7 @@ namespace hal
 
         if (HAL_TIM_OC_ConfigChannel(&htim14, &sConfigOC, TIM_CHANNEL_1) != HAL_OK)
         {
-            Error_Handler();
+            error_handler();
         }
 
         HAL_TIM_MspPostInit(&htim14);
@@ -432,7 +432,7 @@ void Error_Handler()
 //    hwwdg.Init.EWIMode = WWDG_EWI_ENABLE;
 //    if (HAL_WWDG_Init(&hwwdg) != HAL_OK)
 //    {
-//        Error_Handler();
+//        error_handler();
 //    }
 //    /* USER CODE BEGIN WWDG_Init 2 */
 //
@@ -458,7 +458,7 @@ void can_1_initialize()
 
     if (HAL_CAN_Init(&hcan1) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -469,7 +469,7 @@ void MX_IWDG_Init()
     hiwdg.Init.Reload = 4095;
     if (HAL_IWDG_Init(&hiwdg) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -482,7 +482,7 @@ void MX_WWDG_Init()
     hwwdg.Init.EWIMode = WWDG_EWI_ENABLE;
     if (HAL_WWDG_Init(&hwwdg) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -498,7 +498,7 @@ void usart_2_initialize()
     huart2.Init.OverSampling = UART_OVERSAMPLING_16;
     if (HAL_UART_Init(&huart2) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -515,7 +515,7 @@ void i2c_1_initialize()
     hi2c1.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c1) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -532,7 +532,7 @@ void i2c_2_initialize()
     hi2c2.Init.NoStretchMode = I2C_NOSTRETCH_DISABLE;
     if (HAL_I2C_Init(&hi2c2) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 
@@ -551,7 +551,7 @@ void rtc_initialize()
 
     if (HAL_RTC_Init(&hrtc) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 
     sTime.Hours = 0x10;
@@ -562,7 +562,7 @@ void rtc_initialize()
 
     if (HAL_RTC_SetTime(&hrtc, &sTime, RTC_FORMAT_BCD) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 
     sDate.WeekDay = RTC_WEEKDAY_MONDAY;
@@ -572,7 +572,7 @@ void rtc_initialize()
 
     if (HAL_RTC_SetDate(&hrtc, &sDate, RTC_FORMAT_BCD) != HAL_OK)
     {
-        Error_Handler();
+        error_handler();
     }
 }
 

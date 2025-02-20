@@ -71,11 +71,18 @@ void MX_GPIO_Init()
     HAL_GPIO_Init(SPI1_CS2_GPIO_Port, &GPIO_InitStruct);
 
     /*Configure GPIO pins : RELAY_C5_Pin RELAY_C6_Pin RELAY_C8_Pin RELAY_C9_Pin */
-    GPIO_InitStruct.Pin = RELAY_C5_Pin|RELAY_C6_Pin|RELAY_C8_Pin|RELAY_C9_Pin;
+    GPIO_InitStruct.Pin = RELAY_C5_Pin|RELAY_C6_Pin|RELAY_C8_Pin;
     GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
     GPIO_InitStruct.Pull = GPIO_NOPULL;
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
     HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+    GPIO_InitStruct.Pin = RELAY_C9_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
 
     /*Configure GPIO pins : RELAY_B0_Pin RELAY_B2_Pin RELAY_B9_Pin */
     GPIO_InitStruct.Pin = RELAY_B0_Pin|RELAY_B2_Pin|RELAY_B9_Pin;

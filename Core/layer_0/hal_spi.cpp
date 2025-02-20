@@ -53,7 +53,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
         case SPI_2_ID:
         {
             module->instance = SPI_2;
-            module->settings.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_16;
+            module->settings.baud_rate_prescaler = SPI_CONFIG_BAUD_RATE_PRESCALER_32;
             break;
         }
         case SPI_3_ID:

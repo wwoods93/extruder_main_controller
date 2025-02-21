@@ -61,6 +61,8 @@
 //#define SPI2_CS2_GPIO_Port GPIOB
 //#define RELAY_C6_Pin GPIO_PIN_6
 //#define RELAY_C6_GPIO_Port GPIOC
+//#define LTC_2984_INTERRUPT_Pin GPIO_PIN_7
+//#define LTC_2984_INTERRUPT_GPIO_Port GPIOC
 //#define RELAY_C8_Pin GPIO_PIN_8
 //#define RELAY_C8_GPIO_Port GPIOC
 //#define RELAY_C9_Pin GPIO_PIN_9

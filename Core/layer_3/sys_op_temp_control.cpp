@@ -74,7 +74,6 @@ namespace sys_op::temp_control
                 rtosal::event_flag_wait(initialization_event_flags_handle, rtosal::READY_FOR_TEMP_CONTROL_INIT_FLAG, rtosal::OS_FLAGS_ANY, rtosal::OS_WAIT_FOREVER);
 
                 user_comms_queue_handle = rtosal::user_comms_queue_get_handle();
-                hal::gpio_write_pin(PORT_C, GPIO_PIN_9, 0U);
                 hal::timer_register_callback(hal::tim_1_get_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, device_callback_tim_1_input_capture_pulse_detected_callback);
                 hal::tim_2_initialize();
                 hal::tim_6_initialize();
@@ -102,7 +101,7 @@ namespace sys_op::temp_control
 
                 while (ltc_2984_awake == 0U)
                 {
-                    if (hal::gpio_read_pin(PORT_C, GPIO_PIN_9) == 1U)
+                    if (hal::gpio_read_pin(PORT_C, GPIO_PIN_7) == (GPIO_PinState)GPIO_PIN_SET)
                     {
                         ltc_2984_awake = 1U;
                     }
@@ -119,7 +118,6 @@ namespace sys_op::temp_control
 
 //                hal::timer_input_capture_start_interrupt(hal::tim_1_get_handle(), hal::TIMER_CHANNEL_2);
 
-                hal::gpio_write_pin(PORT_C, GPIO_PIN_9, 0U);
                 state = TEMP_CONTROL_RUN;
 
                 break;
@@ -133,12 +131,10 @@ namespace sys_op::temp_control
 //                device::z1_heater.set_demand(z1_heater_demand);
 //                device::z2_heater.set_demand(z2_heater_demand);
 
-                if (hal::gpio_read_pin(PORT_C, GPIO_PIN_9) == 1U)
+                if (hal::gpio_read_pin(PORT_C, GPIO_PIN_7) == (GPIO_PinState)GPIO_PIN_SET)
                 {
                     rtd_module.read_conversion_result(ltc_2984::CH20);
                 }
-
-                rtosal::thread_yield();
 
                 break;
             }

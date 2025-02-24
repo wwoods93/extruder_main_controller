@@ -47,6 +47,11 @@ uint8_t z0_heater_demand = 50U;
 uint8_t z1_heater_demand = 10U;
 uint8_t z2_heater_demand = 10U;
 uint8_t ltc_2984_awake = 0U;
+uint8_t ltc_2984_ready = 0U;
+uint8_t ltc_2984_status = 0U;
+uint32_t ltc_2984_delay_start = 0U;
+uint32_t ltc_2984_conversion_result = 0U;
+volatile float ltc_2984_temp = 0.0F;
 ltc_2984 rtd_module;
 
 namespace sys_op::temp_control
@@ -73,6 +78,7 @@ namespace sys_op::temp_control
 
                 rtosal::event_flag_wait(initialization_event_flags_handle, rtosal::READY_FOR_TEMP_CONTROL_INIT_FLAG, rtosal::OS_FLAGS_ANY, rtosal::OS_WAIT_FOREVER);
 
+                hal::gpio_write_pin(PORT_C, GPIO_PIN_9, 0U);
                 user_comms_queue_handle = rtosal::user_comms_queue_get_handle();
                 hal::timer_register_callback(hal::tim_1_get_handle(), hal::TIMER_INPUT_CAPTURE_CALLBACK_ID, device_callback_tim_1_input_capture_pulse_detected_callback);
                 hal::tim_2_initialize();
@@ -83,8 +89,21 @@ namespace sys_op::temp_control
                 hal::spi_2.create_channel(z0_channel_id, PORT_B, GPIO_PIN_14);
 //                hal::spi_2.create_channel(z1_channel_id, PORT_B, GPIO_PIN_15);
 //                hal::spi_2.create_channel(z2_channel_id, PORT_B, GPIO_PIN_1);
-                spi::packet_t packet;
+                hal::gpio_write_pin(PORT_C, GPIO_PIN_9, 1U);
 
+                ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 1000000U);
+
+                while (ltc_2984_awake == 0U)
+                {
+                    if (hal::gpio_read_pin(PORT_C, GPIO_PIN_7) == (GPIO_PinState)GPIO_PIN_SET)
+                    {
+                        ltc_2984_awake = 1U;
+
+                    }
+                }
+
+                spi::packet_t packet;
                 for (uint8_t i = 0; i < 8U; ++i)
                 {
                     packet.tx_bytes[i] = 0x00U;
@@ -96,19 +115,51 @@ namespace sys_op::temp_control
                 packet.channel_id = z0_channel_id;
                 packet.chip_select.port = PORT_B;
                 packet.chip_select.pin = GPIO_PIN_14;
-                packet.bytes_per_transaction[0] = 8U;
-                hal::spi_2.transmit_receive(packet);
+                packet.bytes_per_transaction[0] = 1U;
 
-                while (ltc_2984_awake == 0U)
-                {
-                    if (hal::gpio_read_pin(PORT_C, GPIO_PIN_7) == (GPIO_PinState)GPIO_PIN_SET)
-                    {
-                        ltc_2984_awake = 1U;
-                    }
-                }
+                hal::spi_2.transmit_receive(packet);
+                ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 1000000U);
+
+                // initialize
                 rtd_module.initialize(hal::spi_2, z0_channel_id, PORT_B, GPIO_PIN_14, hal::tim_6_get_handle());
-                rtd_module.rtd_channel_assign(ltc_2984::CH20, ltc_2984::RTD_TYPE_PT100, ltc_2984::SENSE_RESISTOR_PTR_CH18_CH17, ltc_2984::SENSE_CONFIG_3_WIRE, ltc_2984::SENSE_CONFIG_GND_INT, ltc_2984::EXCITATION_CURRENT_50_UA, ltc_2984::RTD_CURVE_AMERICAN, (uint32_t)0U, (uint32_t)0U);
-                rtd_module.sense_resistor_channel_assign(ltc_2984::CH17);
+
+                ltc_2984_status = 0U;
+                while(ltc_2984_status != 0x40)
+                {
+                    ltc_2984_status = rtd_module.read_status_reg();
+                    ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                    while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 10000U);
+                }
+                // end initialize
+
+                // rtd channel assign
+                rtd_module.rtd_channel_assign(ltc_2984::CH20, ltc_2984::RTD_TYPE_PT100, ltc_2984::SENSE_RESISTOR_PTR_CH18_CH17, ltc_2984::SENSE_CONFIG_3_WIRE, ltc_2984::SENSE_CONFIG_GND_EXT, ltc_2984::EXCITATION_CURRENT_50_UA, ltc_2984::RTD_CURVE_AMERICAN, (uint32_t)0U, (uint32_t)0U);
+
+                ltc_2984_status = 0U;
+                while(ltc_2984_status != 0x40)
+                {
+                    ltc_2984_status = rtd_module.read_status_reg();
+                    ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                    while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 10000U);
+                }
+                // end rtd channel assign
+
+                // sense resistor assign
+                rtd_module.sense_resistor_channel_assign(ltc_2984::CH18);
+
+                ltc_2984_status = 0U;
+                while(ltc_2984_status != 0x40)
+                {
+                    ltc_2984_status = rtd_module.read_status_reg();
+                    ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                    while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 10000U);
+                }
+                // end sense resistor assign
+
+
+                ltc_2984_ready = 1U;
+
 //                device::z0_rtd.initialize(hal::spi_2, PORT_B, PIN_14, 0U, user_comms_queue_handle,hal::tim_6_get_handle(), 21.34F, 20.45F);
 //                device::z1_rtd.initialize(hal::spi_2, PORT_B, PIN_15, 1U, user_comms_queue_handle,hal::tim_6_get_handle(), 23.15F, 20.45F);
 //                device::z2_rtd.initialize(hal::spi_2, PORT_B, PIN_1,  2U, user_comms_queue_handle,hal::tim_6_get_handle(), 22.67F, 20.45F);
@@ -131,10 +182,30 @@ namespace sys_op::temp_control
 //                device::z1_heater.set_demand(z1_heater_demand);
 //                device::z2_heater.set_demand(z2_heater_demand);
 
-                if (hal::gpio_read_pin(PORT_C, GPIO_PIN_7) == (GPIO_PinState)GPIO_PIN_SET)
+                // initiate conversion
+                rtd_module.initiate_conversion(ltc_2984::CH20);
+
+                ltc_2984_status = 0U;
+                while((ltc_2984_status & 0x40) == 0U || (ltc_2984_status & 0x80) == 1U)
                 {
-                    rtd_module.read_conversion_result(ltc_2984::CH20);
+                    ltc_2984_status = rtd_module.read_status_reg();
+                    ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                    while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 10000U);
                 }
+                // end initiate conversion
+
+                // read result
+                ltc_2984_conversion_result = rtd_module.read_conversion_result(ltc_2984::CH20);
+                ltc_2984_temp = ltc_2984::rtd_calculate_temp(ltc_2984_conversion_result);
+                while ((ltc_2984_status & 0x40) == 0U)
+                {
+                    ltc_2984_status = rtd_module.read_status_reg();
+                    ltc_2984_delay_start = hal::tim_2_get_handle()->Instance->CNT;
+                    while (hal::tim_2_get_handle()->Instance->CNT - ltc_2984_delay_start < 10000U);
+                }
+                // end read result
+
+                ltc_2984_ready = 1U;
 
                 break;
             }

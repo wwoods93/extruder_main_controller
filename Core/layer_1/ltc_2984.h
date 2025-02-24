@@ -111,6 +111,16 @@ class ltc_2984
         static constexpr uint32_t   RTD_FAULT_ADC_OUT_OF_RANGE_SOFT         = 0x02000000U;  // 0000 0010 0000 0000 0000 0000 0000 0000
         static constexpr uint32_t   RTD_FAULT_MASK_RESULT_VALID             = 0x01000000U;  // 0000 0001 0000 0000 0000 0000 0000 0000
 
+        typedef enum
+        {
+            SENSOR_HARD_FAULT = (uint32_t)RTD_FAULT_SENSOR_HARD_FAULT,
+            ADC_OUT_OF_RANGE_HARD = (uint32_t)RTD_FAULT_ADC_OUT_OF_RANGE_HARD,
+            TEMP_OVER_RANGE_SOFT = (uint32_t)RTD_FAULT_TEMP_OVER_RANGE_SOFT,
+            TEMP_UNDER_RANGE_SOFT = (uint32_t)RTD_FAULT_TEMP_UNDER_RANGE_SOFT,
+            ADC_OUT_OF_RANGE_SOFT = (uint32_t)RTD_FAULT_ADC_OUT_OF_RANGE_SOFT,
+            RESULT_VALID = (uint32_t)RTD_FAULT_MASK_RESULT_VALID,
+        } fault_t;
+
         // sense resistor assignment word [31:27] sensor type                               // #### #--- ---- ---- ---- ---- ---- ----
         static constexpr uint32_t   SENSE_RESISTOR_SENSOR_TYPE              = 0xE8000000U;  // 1111 1000 0000 0000 0000 0000 0000 0000
         // sense resistor assignment word resistor value mask [26:0]                        // ---- -### #### #### #### #### #### ####
@@ -263,11 +273,18 @@ class ltc_2984
             CH20        = (uint8_t)0x14U,
         } channel_id_e;
 
+        typedef union
+        {
+            uint32_t num_unsigned;
+            int32_t num_signed;
+        } int_converter_32_bit;
+
         spi* spi_instance;
         int16_t spi_channel;
         spi::chip_select_t chip_select {};
         hal::timer_handle_t* timer_handle;
         uint32_t channel_assignment_words[CHANNEL_COUNT] {};
+        uint16_t status_reg;
 
 
 
@@ -275,10 +292,11 @@ class ltc_2984
     void initialize(spi& arg_spi_instance, int16_t arg_spi_channel_id, hal::gpio_t* arg_chip_select_port, uint16_t arg_chip_select_pin, hal::timer_handle_t* arg_timer_handle);
     void rtd_channel_assign(channel_id_e arg_ch_id, uint32_t arg_rtd_type, uint32_t arg_resistor_ptr, uint32_t arg_num_wires, uint32_t arg_exc_mode, uint32_t arg_exc_current, uint32_t arg_rtd_curve, uint32_t arg_custom_rtd, uint32_t arg_custom_rtd_len);
     void sense_resistor_channel_assign(channel_id_e arg_ch_id) const;
+    uint8_t read_status_reg();
     void initiate_conversion(channel_id_e arg_ch_id) const;
-    void read_conversion_result(channel_id_e arg_ch_id);
+    uint32_t read_conversion_result(channel_id_e arg_ch_id);
     static uint32_t get_channel_config_data_address(channel_id_e arg_ch_id);
-
+    static float rtd_calculate_temp(uint32_t arg_raw_conversion);
 
 
 

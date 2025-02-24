@@ -178,9 +178,8 @@ static constexpr uint32_t SPI_MAX_TIMEOUT                                       
 static constexpr uint8_t  ACTIVE_LOW                                                    = 0U;
 static constexpr uint8_t  ACTIVE_HIGH                                                   = 1U;
 
-static constexpr uint8_t  CHIP_SELECT_LOGIC_LEVEL                                       = ACTIVE_LOW;
-static constexpr uint8_t  CHIP_SELECT_SET                                               = CHIP_SELECT_LOGIC_LEVEL;
-static constexpr uint8_t  CHIP_SELECT_RESET                                             = !CHIP_SELECT_SET;
+static constexpr uint8_t  CHIP_SELECT_LOW                                               = 0U;
+static constexpr uint8_t  CHIP_SELECT_HIGH                                             = !CHIP_SELECT_LOW;
 
 static constexpr uint8_t  SPI_TRANSACTION_NOT_IN_PROGRESS                               = 0U;
 static constexpr uint8_t  SPI_TRANSACTION_IN_PROGRESS                                   = 1U;

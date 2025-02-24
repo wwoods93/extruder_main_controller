@@ -134,13 +134,13 @@ void ltc_2984::rtd_channel_assign(channel_id_e arg_ch_id, uint32_t arg_rtd_type,
     packet.chip_select.pin = chip_select.pin;
     packet.bytes_per_transaction[0] = SPI_PACKET_NUM_BYTES;
 
-    packet.tx_bytes[6] = SPI_INSTRUCTION_WRITE_RAM;
-    packet.tx_bytes[5] = (uint8_t)((channel_config_data_addr >> 8U) & 0xFFU);
-    packet.tx_bytes[4] = (uint8_t)(channel_config_data_addr & 0xFFU);
+    packet.tx_bytes[0] = SPI_INSTRUCTION_WRITE_RAM;
+    packet.tx_bytes[1] = (uint8_t)((channel_config_data_addr >> 8U) & 0xFFU);
+    packet.tx_bytes[2] = (uint8_t)(channel_config_data_addr & 0xFFU);
     packet.tx_bytes[3] = (uint8_t)((channel_assignment_word >> 24U) & 0xFFU);
-    packet.tx_bytes[2] = (uint8_t)((channel_assignment_word >> 16U) & 0xFFU);
-    packet.tx_bytes[1] = (uint8_t)((channel_assignment_word >> 8U) & 0xFFU);
-    packet.tx_bytes[0] = (uint8_t)(channel_assignment_word & 0xFFU);
+    packet.tx_bytes[4] = (uint8_t)((channel_assignment_word >> 16U) & 0xFFU);
+    packet.tx_bytes[5] = (uint8_t)((channel_assignment_word >> 8U) & 0xFFU);
+    packet.tx_bytes[6] = (uint8_t)(channel_assignment_word & 0xFFU);
     spi_instance->transmit_receive(packet);
 }
 
@@ -164,19 +164,46 @@ void ltc_2984::sense_resistor_channel_assign(channel_id_e arg_ch_id) const
     packet.chip_select.pin = chip_select.pin;
     packet.bytes_per_transaction[0] = SPI_PACKET_NUM_BYTES;
 
-    packet.tx_bytes[6] = SPI_INSTRUCTION_WRITE_RAM;
-    packet.tx_bytes[5] = (uint8_t)((channel_config_data_addr >> 8U) & 0xFFU);
-    packet.tx_bytes[4] = (uint8_t)(channel_config_data_addr & 0xFFU);
+    packet.tx_bytes[0] = SPI_INSTRUCTION_WRITE_RAM;
+    packet.tx_bytes[1] = (uint8_t)((channel_config_data_addr >> 8U) & 0xFFU);
+    packet.tx_bytes[2] = (uint8_t)(channel_config_data_addr & 0xFFU);
     packet.tx_bytes[3] = (uint8_t)((resistance_value >> 24U) & 0xFFU);
-    packet.tx_bytes[2] = (uint8_t)((resistance_value >> 16U) & 0xFFU);
-    packet.tx_bytes[1] = (uint8_t)((resistance_value >> 8U) & 0xFFU);
-    packet.tx_bytes[0] = (uint8_t)(resistance_value & 0xFFU);
+    packet.tx_bytes[4] = (uint8_t)((resistance_value >> 16U) & 0xFFU);
+    packet.tx_bytes[5] = (uint8_t)((resistance_value >> 8U) & 0xFFU);
+    packet.tx_bytes[6] = (uint8_t)(resistance_value & 0xFFU);
     spi_instance->transmit_receive(packet);
+}
+
+uint8_t ltc_2984::read_status_reg()
+{
+    spi::packet_t packet;
+
+    for (uint8_t i = 0; i < 8U; ++i)
+    {
+        packet.tx_bytes[i] = 0x00U;
+        packet.rx_bytes[i] = 0x00U;
+        packet.bytes_per_transaction[i] = 0x00U;
+    }
+
+    packet.packet_id = ID_INVALID;
+    packet.channel_id = spi_channel;
+    packet.chip_select.port = chip_select.port;
+    packet.chip_select.pin = chip_select.pin;
+    packet.bytes_per_transaction[0] = 4U;
+
+    packet.tx_bytes[0] = SPI_INSTRUCTION_READ_RAM;
+    packet.tx_bytes[1] = (uint8_t)((COMMAND_STATUS_REG_ADDR_MSB >> 8U) & 0xFFU);
+    packet.tx_bytes[2] = (uint8_t)(COMMAND_STATUS_REG_ADDR_LSB & 0xFFU);
+    packet.tx_bytes[3] = (uint8_t)0U;
+
+    spi_instance->transmit_receive(packet);
+    return packet.rx_bytes[3];
 }
 
 void ltc_2984::initiate_conversion(channel_id_e arg_ch_id) const
 {
-    uint8_t measurement_command = START_CONVERSION_START_BIT | arg_ch_id;
+//    uint8_t measurement_command = START_CONVERSION_START_BIT | arg_ch_id;
+    uint8_t measurement_command = START_CONVERSION_CH20;
     uint16_t channel_config_data_addr = get_channel_config_data_address(arg_ch_id);
 
     spi::packet_t packet;
@@ -192,19 +219,16 @@ void ltc_2984::initiate_conversion(channel_id_e arg_ch_id) const
     packet.channel_id = spi_channel;
     packet.chip_select.port = chip_select.port;
     packet.chip_select.pin = chip_select.pin;
-    packet.bytes_per_transaction[0] = SPI_PACKET_NUM_BYTES;
+    packet.bytes_per_transaction[0] = 4U;
 
-    packet.tx_bytes[6] = SPI_INSTRUCTION_WRITE_RAM;
-    packet.tx_bytes[5] = COMMAND_STATUS_REG_ADDR_MSB;
-    packet.tx_bytes[4] = COMMAND_STATUS_REG_ADDR_LSB;
+    packet.tx_bytes[0] = SPI_INSTRUCTION_WRITE_RAM;
+    packet.tx_bytes[1] = COMMAND_STATUS_REG_ADDR_MSB;
+    packet.tx_bytes[2] = COMMAND_STATUS_REG_ADDR_LSB;
     packet.tx_bytes[3] = (uint8_t)measurement_command;
-    packet.tx_bytes[2] = 0U;
-    packet.tx_bytes[1] = 0U;
-    packet.tx_bytes[0] = 0U;
     spi_instance->transmit_receive(packet);
 }
 
-void ltc_2984::read_conversion_result(channel_id_e arg_ch_id)
+uint32_t ltc_2984::read_conversion_result(channel_id_e arg_ch_id)
 {
     uint16_t conversion_result_addr = 0U;
     switch (arg_ch_id)
@@ -315,6 +339,7 @@ void ltc_2984::read_conversion_result(channel_id_e arg_ch_id)
         }
     }
 
+    uint32_t conversion_result;
     spi::packet_t packet;
 
     for (uint8_t i = 0; i < 8U; ++i)
@@ -328,16 +353,21 @@ void ltc_2984::read_conversion_result(channel_id_e arg_ch_id)
     packet.channel_id = spi_channel;
     packet.chip_select.port = chip_select.port;
     packet.chip_select.pin = chip_select.pin;
-    packet.bytes_per_transaction[0] = 4;
+    packet.bytes_per_transaction[0] = 7;
 
-    packet.tx_bytes[6] = SPI_INSTRUCTION_READ_RAM;
-    packet.tx_bytes[5] = (uint8_t)((conversion_result_addr >> 8U) & 0xFFU);
-    packet.tx_bytes[4] = (uint8_t)(conversion_result_addr & 0xFFU);
+    packet.tx_bytes[0] = SPI_INSTRUCTION_READ_RAM;
+    packet.tx_bytes[1] = (uint8_t)((conversion_result_addr >> 8U) & 0xFFU);
+    packet.tx_bytes[2] = (uint8_t)(conversion_result_addr & 0xFFU);
     packet.tx_bytes[3] = (uint8_t)((0U >> 24U) & 0xFFU);
-    packet.tx_bytes[2] = (uint8_t)((0U >> 16U) & 0xFFU);
-    packet.tx_bytes[1] = (uint8_t)((0U >> 8U) & 0xFFU);
-    packet.tx_bytes[0] = (uint8_t)(0U & 0xFFU);
+    packet.tx_bytes[4] = (uint8_t)((0U >> 16U) & 0xFFU);
+    packet.tx_bytes[5] = (uint8_t)((0U >> 8U) & 0xFFU);
+    packet.tx_bytes[6] = (uint8_t)(0U & 0xFFU);
     spi_instance->transmit_receive(packet);
+
+    conversion_result = (uint32_t) packet.rx_bytes[3] << 24 | (uint32_t) packet.rx_bytes[4] << 16 | (uint32_t) packet.rx_bytes[5] << 8  |
+                  (uint32_t) packet.rx_bytes[6];
+
+    return conversion_result;
 
 }
 
@@ -455,3 +485,20 @@ uint32_t ltc_2984::get_channel_config_data_address(channel_id_e arg_ch_id)
     }
     return channel_config_data_addr;
 }
+
+#pragma clang diagnostic push
+#pragma ide diagnostic ignored "cppcoreguidelines-narrowing-conversions"
+float ltc_2984::rtd_calculate_temp(uint32_t arg_raw_conversion)
+{
+    arg_raw_conversion = arg_raw_conversion & 0xFFFFFFU;
+    int32_t signed_raw_conversion = arg_raw_conversion;
+    float scaled_conversion = 0.0F;
+    if (arg_raw_conversion & 0x800000U)
+    {
+        signed_raw_conversion = signed_raw_conversion | 0xFF000000U;
+    }
+    scaled_conversion = (float)signed_raw_conversion / 1024;
+
+    return scaled_conversion;
+}
+#pragma clang diagnostic pop

@@ -133,7 +133,6 @@ class spi
             chip_select_t   chip_select;
             rtosal::message_queue_handle_t tx_message_queue;
             rtosal::message_queue_handle_t rx_message_queue;
-
         } channel_t;
 
         typedef struct

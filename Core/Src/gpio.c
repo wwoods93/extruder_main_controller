@@ -98,6 +98,12 @@ void MX_GPIO_Init()
     GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_VERY_HIGH;
     HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
 
+    /*Configure GPIO pin : LTC_2984_INTERRUPT_Pin */
+    GPIO_InitStruct.Pin = LTC_2984_INTERRUPT_Pin;
+    GPIO_InitStruct.Mode = GPIO_MODE_INPUT;
+    GPIO_InitStruct.Pull = GPIO_NOPULL;
+    HAL_GPIO_Init(LTC_2984_INTERRUPT_GPIO_Port, &GPIO_InitStruct);
+
     /*Configure GPIO pin : PA8 */
     GPIO_InitStruct.Pin = GPIO_PIN_8;
     GPIO_InitStruct.Mode = GPIO_MODE_AF_PP;

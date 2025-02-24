@@ -135,13 +135,20 @@ namespace hal
     static constexpr uint32_t TIMER_CHANNEL_ALL = 0x0000003CU;
 
     typedef TIM_HandleTypeDef timer_handle_t;
+    typedef CAN_HandleTypeDef can_handle_t;
+    typedef WWDG_HandleTypeDef wwdg_handle_t;
+    typedef IWDG_HandleTypeDef iwdg_handle_t;
+    typedef UART_HandleTypeDef uart_handle_t;
+    typedef I2C_HandleTypeDef i2c_handle_t;
+    typedef SPI_HandleTypeDef spi_handle_t;
+    typedef RTC_HandleTypeDef rtc_handle_t;
+
     typedef  void (*timer_callback_t)(timer_handle_t *arg_timer_handle);
 
     status_t timer_register_callback(timer_handle_t* arg_timer_handle, timer_callback_id_t arg_callback_id_t, timer_callback_t arg_callback);
     status_t timer_input_capture_start_interrupt(timer_handle_t* arg_timer_handle, uint32_t arg_channel);
     status_t timer_time_base_start(timer_handle_t* arg_timer_handle);
 
-    typedef I2C_HandleTypeDef i2c_handle_t;
     typedef  void (*i2c_callback_t)(i2c_handle_t *arg_i2c_handle);
 
     status_t i2c_register_callback(i2c_handle_t* arg_i2c_handle, i2c_callback_id_t arg_callback_id, i2c_callback_t arg_callback);

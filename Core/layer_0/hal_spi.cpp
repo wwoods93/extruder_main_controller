@@ -86,7 +86,7 @@ spi::procedure_status_t spi::initialize(module_t* arg_module, uint8_t arg_instan
     module->settings.crc_calculation = SPI_CONFIG_CRC_CALCULATION_DISABLE;
     module->settings.crc_polynomial = 0U;
 
-    hal::gpio_write_pin(PORT_A, PIN_10, (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(PORT_A, PIN_10, (GPIO_PinState) CHIP_SELECT_HIGH);
     if (module == nullptr)                                                              { status = PROCEDURE_STATUS_ERROR; }
     if (module->instance != SPI_1 && module->instance != SPI_2
         && module->instance != SPI_3 && module->instance != SPI_4)                      { status = PROCEDURE_STATUS_ERROR; }
@@ -204,7 +204,7 @@ spi::procedure_status_t spi::spi_transmit_receive_interrupt(uint8_t *arg_tx_data
             module->chip_select_port = active_packet.chip_select.port;
             module->chip_select_pin = active_packet.chip_select.pin;
 
-            hal::gpio_write_pin(active_packet.chip_select.port, active_packet.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+//            hal::gpio_write_pin(active_packet.chip_select.port, active_packet.chip_select.pin, (GPIO_PinState) CHIP_SELECT_LOW);
 
             enable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_RX_BUFFER_NOT_EMPTY_INTERRUPT_ENABLE | SPI_CR2_BIT_ERROR_INTERRUPT_ENABLE);
 
@@ -321,7 +321,7 @@ void spi::chip_select_set_active(uint8_t arg_channel_id)
     channel_t channel;
 
     get_channel_by_channel_id(channel, (int16_t)arg_channel_id);
-    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_SET);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_LOW);
 }
 
 void spi::chip_select_set_inactive(uint8_t arg_channel_id)
@@ -329,18 +329,29 @@ void spi::chip_select_set_inactive(uint8_t arg_channel_id)
     channel_t channel;
 
     get_channel_by_channel_id(channel, (int16_t)arg_channel_id);
-    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_RESET);
+    hal::gpio_write_pin(channel.chip_select.port, channel.chip_select.pin, (GPIO_PinState) CHIP_SELECT_HIGH);
 }
 
 void tx_2_line_8_bit_isr(spi arg_object, struct spi::_handle_t *arg_module)
 {
+    if (hal::gpio_read_pin(arg_object.active_packet.chip_select.port, arg_object.active_packet.chip_select.pin) != (GPIO_PinState) CHIP_SELECT_LOW)
+    {
+        hal::gpio_write_pin(arg_object.active_packet.chip_select.port, arg_object.active_packet.chip_select.pin, (GPIO_PinState) CHIP_SELECT_LOW);
+    }
     *(volatile uint8_t *)&arg_module->instance->DATA_REG = (*arg_module->tx_buffer_ptr);
     arg_module->tx_buffer_ptr++;
     arg_module->tx_transfer_counter--;
     if (arg_module->tx_transfer_counter == 0U)
     {
         arg_object.disable_interrupts(SPI_CR2_BIT_TX_BUFFER_EMPTY_INTERRUPT_ENABLE);
-        if (arg_module->rx_transfer_counter == 0U) { arg_object.close_isr(spi::TX_RX); }
+        if (arg_module->rx_transfer_counter == 0U)
+        {
+//            if (hal::gpio_read_pin(arg_object.active_packet.chip_select.port, arg_object.active_packet.chip_select.pin) == GPIO_PIN_RESET)
+//            {
+//                hal::gpio_write_pin(arg_object.active_packet.chip_select.port, arg_object.active_packet.chip_select.pin, GPIO_PIN_SET);
+//            }
+            arg_object.close_isr(spi::TX_RX);
+        }
     }
 }
 
